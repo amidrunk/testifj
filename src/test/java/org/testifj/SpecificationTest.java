@@ -1,11 +1,12 @@
 package org.testifj;
 
-import org.testifj.Action;
-import org.testifj.Specification;
+import org.junit.Ignore;
 
-import static org.testifj.Expect.expect;
 import static org.mockito.Mockito.mock;
+import static org.testifj.Expect.expect;
 
+@Ignore
+@SuppressWarnings("unchecked")
 public class SpecificationTest extends Specification {{
 
     final Specification specification = new Specification() { };

@@ -1,14 +1,11 @@
 package org.testifj.lang.impl;
 
-import org.testifj.lang.Attribute;
 import org.junit.Test;
-import org.testifj.lang.impl.DefaultConstructor;
+import org.testifj.lang.Attribute;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.assertEquals;
 import static org.testifj.Expect.expect;
-import static org.testifj.Given.given;
 import static org.testifj.matchers.core.Equal.equal;
 import static org.testifj.matchers.core.Not.not;
 import static org.testifj.matchers.core.StringShould.containString;
@@ -55,7 +52,7 @@ public class DefaultConstructorTest {
     @Test
     public void instanceShouldNotBeEqualToNullOrDifferentType() {
         expect(constructor).to(not(equal(null)));
-        expect((Object) constructor).to(not(equal("foo")));
+        expect((Object) constructor).to(not(equal((Object) "foo")));
     }
 
     @Test
@@ -68,7 +65,7 @@ public class DefaultConstructorTest {
 
     @Test
     public void toStringValueShouldContainPropertyValues() {
-        expect(constructor.toString()).to(containString("12354"));
+        expect(constructor.toString()).to(containString("1234"));
         expect(constructor.toString()).to(containString("<init>"));
         expect(constructor.toString()).to(containString("()V"));
     }

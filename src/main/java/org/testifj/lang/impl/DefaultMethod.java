@@ -1,6 +1,7 @@
 package org.testifj.lang.impl;
 
 import org.testifj.lang.Attribute;
+import org.testifj.lang.CodeAttribute;
 import org.testifj.lang.Method;
 
 import java.util.Arrays;
@@ -45,6 +46,17 @@ public final class DefaultMethod implements Method {
     @Override
     public List<Attribute> getAttributes() {
         return Arrays.asList(attributes);
+    }
+
+    @Override
+    public CodeAttribute getCode() {
+        for (Attribute attribute : attributes) {
+            if (attribute.getName().equals("Code")) {
+                return (CodeAttribute) attribute;
+            }
+        }
+
+        return null;
     }
 
     @Override

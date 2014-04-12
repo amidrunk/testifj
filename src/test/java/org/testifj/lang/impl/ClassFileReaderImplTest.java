@@ -1,11 +1,7 @@
 package org.testifj.lang.impl;
 
-import org.testifj.lang.ClassFile;
-import org.testifj.lang.ClassFileReader;
-import org.testifj.lang.ConstantPool;
-import org.testifj.lang.ConstantPoolEntry;
 import org.junit.Test;
-import org.testifj.lang.impl.ClassFileReaderImpl;
+import org.testifj.lang.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -14,6 +10,8 @@ import java.lang.reflect.Modifier;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.junit.Assert.*;
+import static org.testifj.Expect.expect;
+import static org.testifj.matchers.core.CollectionThat.containElement;
 
 public class ClassFileReaderImplTest {
 
@@ -86,15 +84,25 @@ public class ClassFileReaderImplTest {
 
     @Test
     public void constructorsShouldBeRead() {
-        assertTrue(classFileOf(getClass()).getConstructors().stream().filter((c) -> c.getSignature().equals("()V")).findFirst().isPresent());
+        final ClassFile classFile = classFileOf(getClass());
+
+        expect(classFile.getConstructors()).
+        to(containElement(c -> c.getSignature().equals("()V")));
     }
 
     @Test
-    public void attributesShouldBeRead() {
+    public void methodBodyShouldBeRead() {
         final ClassFile classFile = classFileOf(getClass());
 
-        System.out.println(classFile.getAttributes());
+        final Method thisMethod = classFile.getMethods().stream()
+                .filter(m -> m.getName().equals("methodBodyShouldBeRead"))
+                .findFirst()
+                .get();
 
+        final CodeAttribute codeAttribute = thisMethod.getCode();
+
+        assertNotNull(codeAttribute);
+        assertNotEquals(0, codeAttribute.getData().length);
     }
 
     protected ClassFile classFileOf(Class<?> clazz) {
@@ -104,5 +112,4 @@ public class ClassFileReaderImplTest {
             throw new RuntimeException(e);
         }
     }
-
 }

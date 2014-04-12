@@ -32,4 +32,9 @@ public class EqualTest {
         assertTrue(Equal.equal("foo").matches("foo"));
     }
 
+    @Test
+    public void equalMatcherShouldMatchForEqualArrays() {
+        assertTrue(Equal.equal(new byte[] {1, 2, 3, 4}).matches(new byte[]{1, 2, 3, 4}));
+    }
+
 }

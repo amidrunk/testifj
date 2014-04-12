@@ -42,6 +42,7 @@ public final class ClassFileReaderImpl implements ClassFileReader {
                 .withConstantPool(constantPool)
                 .withSignature(accessFlags, className, superClassName, interfaceNames)
                 .withFields(fields)
+                .withConstructors(constructors.toArray(new Constructor[constructors.size()]))
                 .withMethods(methods.toArray(new Method[methods.size()]))
                 .withAttributes(classAttributes)
                 .create();
@@ -57,7 +58,7 @@ public final class ClassFileReaderImpl implements ClassFileReader {
             final Attribute[] attributes = readAttributes(din, constantPool);
 
             if ("<init>".equals(name)) {
-
+                constructors.add(new DefaultConstructor(accessFlags, name, signature, attributes));
             } else {
                 methods.add(new DefaultMethod(accessFlags, name, signature, attributes));
             }
@@ -79,6 +80,7 @@ public final class ClassFileReaderImpl implements ClassFileReader {
         return fields;
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     protected Attribute[] readAttributes(DataInputStream din, ConstantPool constantPool) throws IOException {
         final Attribute[] attributes = new Attribute[din.readShort()];
 
@@ -89,7 +91,14 @@ public final class ClassFileReaderImpl implements ClassFileReader {
 
             din.read(buffer);
 
-            attributes[i] = new UnknownAttribute(name, buffer);
+            switch (name) {
+                case CodeAttribute.ATTRIBUTE_NAME:
+                    attributes[i] = new CodeAttributeImpl(buffer);
+                    break;
+                default:
+                    attributes[i] = new UnknownAttribute(name, buffer);
+                    break;
+            }
         }
 
         return attributes;
@@ -109,6 +118,7 @@ public final class ClassFileReaderImpl implements ClassFileReader {
         return string.replace('/', '.');
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     protected ConstantPool readConstantPool(DataInputStream din) throws IOException {
         final int constantPoolCount = din.readShort();
         final DefaultConstantPool.Builder builder = new DefaultConstantPool.Builder();

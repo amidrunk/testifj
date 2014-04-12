@@ -23,6 +23,8 @@ public final class DefaultClassFile implements ClassFile {
 
     private final Field[] fields;
 
+    private final Constructor[] constructors;
+
     private final Method[] methods;
 
     private final Attribute[] attributes;
@@ -35,6 +37,7 @@ public final class DefaultClassFile implements ClassFile {
                              String superClassName,
                              String[] interfaceNames,
                              Field[] fields,
+                             Constructor[] constructors,
                              Method[] methods,
                              Attribute[] attributes) {
         this.minorVersion = minorVersion;
@@ -45,6 +48,7 @@ public final class DefaultClassFile implements ClassFile {
         this.superClassName = superClassName;
         this.interfaceNames = interfaceNames;
         this.fields = fields;
+        this.constructors = constructors;
         this.methods = methods;
         this.attributes = attributes;
     }
@@ -97,7 +101,7 @@ public final class DefaultClassFile implements ClassFile {
 
     @Override
     public List<Constructor> getConstructors() {
-        return null;
+        return Arrays.asList(constructors);
     }
 
     @Override
@@ -109,10 +113,11 @@ public final class DefaultClassFile implements ClassFile {
         return constantPool
                 -> (accessFlags, className, superClassName, interfaceNames)
                 -> (fields)
+                -> (constructors)
                 -> (methods)
                 -> (attributes)
                 -> ()
-                -> new DefaultClassFile(minorVersion, majorVersion, constantPool, accessFlags, className, superClassName, interfaceNames, fields, methods, attributes);
+                -> new DefaultClassFile(minorVersion, majorVersion, constantPool, accessFlags, className, superClassName, interfaceNames, fields, constructors, methods, attributes);
     }
 
     @FunctionalInterface
@@ -132,7 +137,14 @@ public final class DefaultClassFile implements ClassFile {
     @FunctionalInterface
     public static interface WithFieldsWord {
 
-        WithMethodsWord withFields(Field[] fields);
+        WithConstructorsWord withFields(Field[] fields);
+
+    }
+
+    @FunctionalInterface
+    public static interface WithConstructorsWord {
+
+        WithMethodsWord withConstructors(Constructor[] constructors);
 
     }
 

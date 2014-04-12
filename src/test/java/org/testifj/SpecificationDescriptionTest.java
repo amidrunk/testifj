@@ -1,10 +1,13 @@
 package org.testifj;
 
+import org.junit.Ignore;
+
 import static org.mockito.Mockito.mock;
 import static org.testifj.matchers.core.Equal.equal;
 import static org.testifj.Expect.expect;
 
 @SuppressWarnings("unchecked")
+@Ignore
 public class SpecificationDescriptionTest extends Specification {{
 
     final Action action = mock(Action.class);

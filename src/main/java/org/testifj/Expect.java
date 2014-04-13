@@ -1,12 +1,44 @@
 package org.testifj;
 
+import org.testifj.annotations.DSL;
+import org.testifj.lang.ClassFile;
+import org.testifj.lang.Method;
 import org.testifj.lang.Procedure;
+import org.testifj.lang.impl.ByteCodeParserImpl;
+import org.testifj.lang.impl.ClassFileReaderImpl;
+import org.testifj.lang.model.Element;
 import org.testifj.matchers.core.Equal;
 
+import java.io.InputStream;
+
+@DSL
 @SuppressWarnings("unchecked")
 public final class Expect {
 
+    private static void describe(StackTraceElement stackTraceElement) throws Exception {
+        final Class<?> callingClass = Class.forName(stackTraceElement.getClassName());
+        final ClassFile classFile;
+
+        try (InputStream in = callingClass.getResourceAsStream("/" + callingClass.getName().replace('.', '/') + ".class")) {
+            classFile = new ClassFileReaderImpl().read(in);
+        }
+
+        final Method method = classFile.getMethods().stream()
+                .filter(m -> stackTraceElement.getMethodName().equals(m.getName()))
+                .findFirst().get();
+
+        final InputStream codeStream = method.getCodeForLineNumber(stackTraceElement.getLineNumber());
+        final Element[] statements = new ByteCodeParserImpl().parse(method, codeStream);
+        System.out.println(method);
+    }
+
     public static <T> ExpectInstanceContinuance<T> expect(T instance) {
+        /*try {
+            describe(Thread.currentThread().getStackTrace()[2]);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }*/
+
         return new ExpectInstanceContinuance<T>() {
             @Override
             public void to(Matcher<T> matcher) {

@@ -9,9 +9,14 @@ public final class ConstantExpressionImpl implements ConstantExpression {
 
     private final Object constant;
 
-    public ConstantExpressionImpl(Object constant) {
+    private final Class type;
+
+    public ConstantExpressionImpl(Object constant, Class type) {
         assert constant != null : "Constant can't be null";
+        assert type != null : "Type can't be null";
+
         this.constant = constant;
+        this.type = type;
     }
 
     @Override
@@ -21,7 +26,7 @@ public final class ConstantExpressionImpl implements ConstantExpression {
 
     @Override
     public Type getType() {
-        return constant.getClass();
+        return type;
     }
 
     @Override

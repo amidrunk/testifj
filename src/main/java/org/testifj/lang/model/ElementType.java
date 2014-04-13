@@ -7,6 +7,7 @@ public enum ElementType {
     BINARY_OPERATOR,
     RETURN,
     VARIABLE_REFERENCE,
-    METHOD_CALL
+    METHOD_CALL,
+    VARIABLE_ASSIGNMENT
 
 }

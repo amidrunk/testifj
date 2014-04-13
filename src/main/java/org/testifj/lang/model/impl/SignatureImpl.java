@@ -90,6 +90,10 @@ public final class SignatureImpl implements Signature {
                 '}';
     }
 
+    public static Type parseType(String string) {
+        return readType(new StringReader(string));
+    }
+
     private static Type readType(StringReader reader) {
         final int shortType = reader.read();
 

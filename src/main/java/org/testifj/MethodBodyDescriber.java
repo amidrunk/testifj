@@ -13,12 +13,15 @@ public final class MethodBodyDescriber implements Describer<Method> {
 
     private final ByteCodeParser byteCodeParser;
 
+    private final Describer<Element> methodElementDescriber;
+
     public MethodBodyDescriber() {
-        this(new ByteCodeParserImpl());
+        this(new ByteCodeParserImpl(), new MethodElementDescriber());
     }
 
-    public MethodBodyDescriber(ByteCodeParser byteCodeParser) {
+    public MethodBodyDescriber(ByteCodeParser byteCodeParser, Describer<Element> methodElementDescriber) {
         this.byteCodeParser = byteCodeParser;
+        this.methodElementDescriber = methodElementDescriber;
     }
 
     @Override
@@ -29,7 +32,7 @@ public final class MethodBodyDescriber implements Describer<Method> {
         final Element[] statements;
 
         try {
-            statements = byteCodeParser.parse(method.getClassFile(), method.getCode().getCode());
+            statements = byteCodeParser.parse(method, method.getCode().getCode());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -42,78 +45,9 @@ public final class MethodBodyDescriber implements Describer<Method> {
                 continue;
             }
 
-            append(statement, buffer);
-            buffer.append(";");
+            buffer.append(methodElementDescriber.describe(statement)).append(";");
         }
 
         return buffer.toString();
     }
-
-    private void append(Element element, StringBuilder buffer) {
-        switch (element.getElementType()) {
-            case RETURN:
-                append((Return) element, buffer);
-                break;
-            case RETURN_VALUE:
-                append((ReturnValue) element, buffer);
-                break;
-            case CONSTANT:
-                append((ConstantExpression) element, buffer);
-                break;
-            case METHOD_CALL:
-                append((MethodCall) element, buffer);
-                break;
-            case VARIABLE_REFERENCE:
-                append((LocalVariableReference) element, buffer);
-                break;
-            default:
-                throw new IllegalArgumentException("Unsupported element: " + element);
-        }
-    }
-
-    private void append(Return returnStatement, StringBuilder buffer) {
-        buffer.append("return");
-    }
-
-    private void append(ReturnValue returnValue, StringBuilder buffer) {
-        buffer.append("return ");
-        append(returnValue.getValue(), buffer);
-    }
-
-    private void append(ConstantExpression constant, StringBuilder buffer) {
-        if (constant.getType().equals(String.class)) {
-            buffer.append("\"").append(constant.getConstant()).append("\"");
-        } else {
-            buffer.append(constant.getConstant());
-        }
-    }
-
-    private void append(MethodCall methodCall, StringBuilder buffer) {
-        final Expression targetInstance = methodCall.getTargetInstance();
-        final List<Expression> parameters = methodCall.getParameters();
-
-        // Don't add "this"-references
-        if (targetInstance.getElementType() != ElementType.VARIABLE_REFERENCE
-                || !((LocalVariableReference) targetInstance).getVariableName().equals("this")) {
-            append(targetInstance, buffer);
-            buffer.append(".");
-        }
-
-        buffer.append(methodCall.getMethodName()).append("(");
-
-        for (Iterator<Expression> i = parameters.iterator(); i.hasNext(); ) {
-            append(i.next(), buffer);
-
-            if (i.hasNext()) {
-                buffer.append(", ");
-            }
-        }
-
-        buffer.append(")");
-    }
-
-    private void append(LocalVariableReference localVariableReference, StringBuilder buffer) {
-        buffer.append(localVariableReference.getVariableName());
-    }
-
 }

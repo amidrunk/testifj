@@ -1,12 +1,16 @@
 package org.testifj.lang.impl;
 
 import org.testifj.lang.*;
+import org.testifj.lang.model.impl.SignatureImpl;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -110,7 +114,46 @@ public final class ClassFileReaderImpl implements ClassFileReader {
                     final int maxLocals = codeStream.readShort();
                     final int codeLength = codeStream.readInt();
 
-                    attributes[i] = new CodeAttributeImpl(ByteBuffer.wrap(buffer), maxStack, maxLocals, ByteBuffer.wrap(buffer, 8, codeLength));
+                    codeStream.skip(codeLength);
+
+                    final List<ExceptionTableEntry> exceptionTable = readExceptionTable(constantPool, codeStream);
+                    final Attribute[] codeAttributes = readAttributes(codeStream, constantPool);
+
+                    attributes[i] = new CodeAttributeImpl(ByteBuffer.wrap(buffer), maxStack, maxLocals, ByteBuffer.wrap(buffer, 8, codeLength), exceptionTable, Arrays.asList(codeAttributes));
+                    break;
+                }
+                case LocalVariableTable.ATTRIBUTE_NAME: {
+                    final DataInputStream attributeStream = new DataInputStream(new ByteArrayInputStream(buffer));
+                    final int count = attributeStream.readShort();
+                    final LocalVariable[] localVariables = new LocalVariable[count];
+
+                    for (int j = 0; j < localVariables.length; j++) {
+                        final int startPC = attributeStream.readShort();
+                        final int variableLength = attributeStream.readShort();
+                        final String variableName = constantPool.getString(attributeStream.readShort());
+                        final Type type = SignatureImpl.parseType(constantPool.getString(attributeStream.readShort()));
+                        final int index = attributeStream.readShort();
+
+                        localVariables[j] = new LocalVariableImpl(startPC, variableLength, variableName, type, index);
+                    }
+
+                    attributes[i] = new LocalVariableTableImpl(ByteBuffer.wrap(buffer), localVariables);
+
+                    break;
+                }
+                case LineNumberTable.ATTRIBUTE_NAME: {
+                    final DataInputStream attributeStream = new DataInputStream(new ByteArrayInputStream(buffer));
+                    final int count = attributeStream.readShort();
+                    final LineNumberTableEntry[] entries = new LineNumberTableEntry[count];
+
+                    for (int j = 0; j < count; j++) {
+                        final int startPC = attributeStream.readShort();
+                        final int lineNumber = attributeStream.readShort();
+
+                        entries[j] = new LineNumberTableEntryImpl(startPC, lineNumber);
+                    }
+
+                    attributes[i] = new LineNumberTableImpl(ByteBuffer.wrap(buffer), entries);
                     break;
                 }
                 default:
@@ -120,6 +163,39 @@ public final class ClassFileReaderImpl implements ClassFileReader {
         }
 
         return attributes;
+    }
+
+    private List<ExceptionTableEntry> readExceptionTable(ConstantPool constantPool, DataInputStream in) throws IOException {
+        final int count = in.readShort();
+        final List<ExceptionTableEntry> entries = new ArrayList<>(count);
+
+        for (int i = 0; i < count; i++) {
+            final int startPC = in.readShort();
+            final int endPC = in.readShort();
+            final int handlerPC = in.readShort();
+            final int catchTypeIndex = in.readShort();
+            final String catchClassName = (catchTypeIndex == 0 ? null : constantPool.getClassName(catchTypeIndex));
+            final Type catchType = catchClassName == null ? null : getClassForName(catchClassName);
+
+            entries.add(new ExceptionTableEntryImpl(startPC, endPC, handlerPC, catchType));
+        }
+
+        return entries;
+    }
+
+    private Type getClassForName(final String catchClassName) {
+        final String javaClassName = catchClassName.replace('/', '.');
+
+        try {
+            return Class.forName(javaClassName);
+        } catch (ClassNotFoundException e) {
+            return new Type() {
+                @Override
+                public String getTypeName() {
+                    return javaClassName;
+                }
+            };
+        }
     }
 
     protected String[] readInterfaces(DataInputStream din, ConstantPool constantPool) throws IOException {

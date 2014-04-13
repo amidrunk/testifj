@@ -1,45 +1,50 @@
 package org.testifj.lang.impl;
 
 import org.junit.Test;
-import org.mockito.Mockito;
+import org.testifj.Expect;
+import org.testifj.MethodElementDescriber;
+import org.testifj.lang.ByteCodeParser;
 import org.testifj.lang.ClassFile;
 import org.testifj.lang.Method;
 import org.testifj.lang.model.Element;
+import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.OperatorType;
 import org.testifj.lang.model.impl.*;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import static org.junit.Assert.fail;
 import static org.testifj.Expect.expect;
 import static org.testifj.matchers.core.Equal.equal;
 
 public class ByteCodeParserImplTest {
 
+    private final ByteCodeParser parser = new ByteCodeParserImpl();
+
     @Test
     public void emptyMethodCanBeParsed() {
-        expect(parseMethod("emptyMethod")).to(equal(new Element[]{new ReturnImpl()}));
+        expect(parseMethodBody("emptyMethod")).to(equal(new Element[]{new ReturnImpl()}));
     }
 
     @Test
     public void methodWithReturnStatementCanBeParsed() {
-        final Element[] elements = parseMethod("methodWithIntegerReturn");
+        final Element[] elements = parseMethodBody("methodWithIntegerReturn");
 
         expect(elements).to(equal(new Element[]{
-                new ReturnValueImpl(new ConstantExpressionImpl(1234))
+                new ReturnValueImpl(new ConstantExpressionImpl(1234, int.class))
         }));
     }
 
     @Test
     public void methodWithReturnFromOtherMethod() {
-        final Element[] elements = parseMethod("exampleMethodWithReturnFromOtherMethod");
+        final Element[] elements = parseMethodBody("exampleMethodWithReturnFromOtherMethod");
 
         expect(elements).to(equal(new Element[]{
                 new ReturnValueImpl(
                         new BinaryOperatorImpl(
-                                new ConstantExpressionImpl(1),
+                                new ConstantExpressionImpl(1, int.class),
                                 OperatorType.PLUS,
                                 new MethodCallImpl(
                                         getClass(),
@@ -53,7 +58,7 @@ public class ByteCodeParserImplTest {
 
     @Test
     public void methodWithReturnFromOtherMethodWithParameters() {
-        final Element[] elements = parseMethod("exampleMethodWithMethodCallWithParameters");
+        final Element[] elements = parseMethodBody("exampleMethodWithMethodCallWithParameters");
 
         expect(elements).to(equal(new Element[]{
                 new ReturnValueImpl(
@@ -62,8 +67,49 @@ public class ByteCodeParserImplTest {
                                 "add",
                                 SignatureImpl.parse("(II)I"),
                                 new LocalVariableReferenceImpl("this", getClass()),
-                                new Expression[]{new ConstantExpressionImpl(1), new ConstantExpressionImpl(2)}))
+                                new Expression[]{new ConstantExpressionImpl(1, int.class), new ConstantExpressionImpl(2, int.class)}))
         }));
+    }
+
+    @Test
+    public void methodWithReturnOfLocalCanBeParsed() {
+        final Element[] elements = parseMethodBody("returnLocal");
+
+        final Element[] expectedElements = {
+                new VariableAssignmentImpl(new ConstantExpressionImpl(100, int.class), "n", int.class),
+                new ReturnValueImpl(new LocalVariableReferenceImpl("n", int.class))
+        };
+
+        expect(elements).to(equal(expectedElements));
+    }
+
+    @Test
+    public void expectationsCanBeParsed() {
+        int lineNumber = -1;
+
+        try {
+            expect(true).to(equal(false));
+            fail();
+        } catch (AssertionError e) {
+            lineNumber = e.getStackTrace()[1].getLineNumber();
+        }
+
+        final Element[] elements = parseLine(lineNumber);
+        expect(elements.length).toBe(1);
+
+        final String code = new MethodElementDescriber().describe(elements[0]);
+        System.out.println(code);
+
+    }
+
+    private Element[] parseLine(int lineNumber) {
+        final Method method = getMethod("expectationsCanBeParsed");
+
+        try (InputStream in = method.getCodeForLineNumber(lineNumber)) {
+            return parser.parse(method, in);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void emptyMethod() {
@@ -85,31 +131,31 @@ public class ByteCodeParserImplTest {
         return add(1, 2);
     }
 
-    private Element[] parseMethod(String methodName) {
-        final ClassFileReaderImpl classFileReader = new ClassFileReaderImpl();
+    private int returnLocal() {
+        int n = 100;
 
-        try (InputStream in = getClass().getResourceAsStream("/" + getClass().getName().replace('.', '/') + ".class")) {
-            final ClassFile classFile = classFileReader.read(in);
-            final Method method = classFile.getMethods().stream().filter(m -> m.getName().equals(methodName)).findFirst().get();
-
-            return new ByteCodeParserImpl().parse(classFile, method.getCode().getCode());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return n;
     }
 
-    private Element[] parse(int... byteCode) {
-        final byte[] bytes = new byte[byteCode.length];
-
-        for (int i = 0; i < byteCode.length; i++) {
-            bytes[i] = (byte) byteCode[i];
-        }
+    private Element[] parseMethodBody(String methodName) {
+        final Method method = getMethod(methodName);
 
         try {
-            return new ByteCodeParserImpl().parse(Mockito.mock(ClassFile.class), new ByteArrayInputStream(bytes));
+            return new ByteCodeParserImpl().parse(method, method.getCode().getCode());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
+    private Method getMethod(String name) {
+        final ClassFileReaderImpl classFileReader = new ClassFileReaderImpl();
+
+        try (InputStream in = getClass().getResourceAsStream("/" + getClass().getName().replace('.', '/') + ".class")) {
+            final ClassFile classFile = classFileReader.read(in);
+
+            return classFile.getMethods().stream().filter(m -> m.getName().equals(name)).findFirst().get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

@@ -47,7 +47,7 @@ public final class DefaultConstantPool implements ConstantPool {
 
 
     private ConstantPoolEntry getEntry(int index, ConstantPoolEntryTag expectedTag) {
-        assert (index >= 0 && index <= entries.length) : "Index must be in range [1, " + entries.length + "], was " + index;
+        assert (index > 0 && index <= entries.length) : "Index must be in range [1, " + entries.length + "], was " + index;
 
         final ConstantPoolEntry entry = entries[index - 1];
 

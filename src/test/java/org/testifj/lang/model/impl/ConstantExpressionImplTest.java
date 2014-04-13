@@ -10,13 +10,18 @@ public class ConstantExpressionImplTest {
 
     @Test
     public void constructorShouldNotAcceptNullConstant() {
-        expect(() -> new ConstantExpressionImpl(null)).toThrow(AssertionError.class);
+        expect(() -> new ConstantExpressionImpl(null, int.class)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void constructorShouldNotAcceptNullType() {
+        expect(() -> new ConstantExpressionImpl(1234, null)).toThrow(AssertionError.class);
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void constructorShouldCreateValidInstance() {
-        final ConstantExpressionImpl constant = new ConstantExpressionImpl("foobar");
+        final ConstantExpressionImpl constant = new ConstantExpressionImpl("foobar", String.class);
 
         expect(constant.getConstant()).to(equal("foobar"));
         expect(constant.getType()).to(equal((Class) String.class));

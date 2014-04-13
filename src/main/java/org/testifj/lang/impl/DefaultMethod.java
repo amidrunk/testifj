@@ -1,12 +1,13 @@
 package org.testifj.lang.impl;
 
-import org.testifj.lang.Attribute;
-import org.testifj.lang.ClassFile;
-import org.testifj.lang.CodeAttribute;
-import org.testifj.lang.Method;
+import org.testifj.lang.*;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 public final class DefaultMethod implements Method {
@@ -61,13 +62,80 @@ public final class DefaultMethod implements Method {
 
     @Override
     public CodeAttribute getCode() {
-        for (Attribute attribute : attributes) {
-            if (attribute.getName().equals("Code")) {
-                return (CodeAttribute) attribute;
-            }
+        final Optional<Attribute> optionalCodeAttribute = Arrays.asList(attributes).stream()
+                .filter(a -> a.getName().equals(CodeAttribute.ATTRIBUTE_NAME))
+                .findFirst();
+
+        return (CodeAttribute) optionalCodeAttribute
+                .orElseThrow(() -> new IllegalStateException("Code attribute is not present for method '" + getName() + "'"));
+    }
+
+    @Override
+    public InputStream getCodeForLineNumber(int lineNumber) {
+        final Optional<Attribute> attribute = getCode().getAttributes().stream()
+                .filter(a -> a.getName().equals(LineNumberTable.ATTRIBUTE_NAME))
+                .findFirst();
+
+        if (!attribute.isPresent()) {
+            throw new IllegalStateException("Line numbers are not present for method '" + getName() + "'");
         }
 
-        return null;
+        final LineNumberTable lineNumberTable = (LineNumberTable) attribute.get();
+
+        final Optional<LineNumberTableEntry> startEntry = lineNumberTable.getEntries().stream()
+                .filter(e -> e.getLineNumber() == lineNumber)
+                .findFirst();
+
+        if (!startEntry.isPresent()) {
+            throw new IllegalStateException("Code is not available for line number '" + lineNumber + "'");
+        }
+
+        final Optional<LineNumberTableEntry> endEntry = lineNumberTable.getEntries().stream()
+                .filter(e -> e.getLineNumber() > lineNumber)
+                .sorted((e1, e2) -> e1.getLineNumber() - e2.getLineNumber())
+                .findFirst();
+
+        try (InputStream inputStream = getCode().getCode()) {
+
+            inputStream.skip(startEntry.get().getStartPC());
+
+            if (endEntry.isPresent()) {
+                final byte[] buffer = new byte[endEntry.get().getStartPC() - startEntry.get().getStartPC()];
+
+                inputStream.read(buffer);
+
+                return new ByteArrayInputStream(buffer);
+            } else {
+                return inputStream;
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public LocalVariable getLocalVariableForIndex(int index) {
+        assert index >= 0 : "Index must be positive";
+
+        final Optional<Attribute> attribute = getCode().getAttributes().stream()
+                .filter(a -> a.getName().equals(LocalVariableTable.ATTRIBUTE_NAME))
+                .findFirst();
+
+        if (!attribute.isPresent()) {
+            throw new IllegalStateException("Local variable table is not present in method '" + getName() + "'");
+        }
+
+        final LocalVariableTable localVariableTable = (LocalVariableTable) attribute.get();
+
+        final Optional<LocalVariable> localVariable = localVariableTable.getLocalVariables().stream()
+                .filter(v -> v.getIndex() == index)
+                .findFirst();
+
+        if (!localVariable.isPresent()) {
+            throw new IllegalStateException("No local variable exists for index " + index);
+        }
+
+        return localVariable.get();
     }
 
     @Override

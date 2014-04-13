@@ -7,6 +7,7 @@ import org.testifj.lang.*;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
+import java.util.List;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -107,6 +108,65 @@ public class ClassFileReaderImplTest {
         assertNotEquals(0, IOUtils.toByteArray(codeAttribute.getCode()).length);
         assertTrue(codeAttribute.getMaxStack() > 0);
         assertTrue(codeAttribute.getMaxLocals() > 0);
+    }
+
+    @Test
+    public void tryCatchShouldBeIncludedInMethod() {
+        final Method methodWithTryCatch = getMethod("methodWithTryCatch");
+
+        final List<ExceptionTableEntry> exceptionTable = methodWithTryCatch.getCode().getExceptionTable();
+        expect(exceptionTable.size()).toBe(1);
+
+        final ExceptionTableEntry entry = exceptionTable.get(0);
+
+        expect(entry.getCatchType()).toBe(RuntimeException.class);
+    }
+
+    @Test
+    public void localVariablesShouldBeParsed() {
+        final Method method = getMethod("methodWithLocals");
+        final LocalVariableTable localVariableTable = (LocalVariableTable) method.getCode().getAttributes().stream()
+                .filter(a -> a.getName().equals(LocalVariableTable.ATTRIBUTE_NAME))
+                .findFirst().get();
+
+        final LocalVariable str1Variable = localVariableTable.getLocalVariables().stream().filter(lv -> lv.getVariableName().equals("str1")).findFirst().get();
+        final LocalVariable i1Variable = localVariableTable.getLocalVariables().stream().filter(lv -> lv.getVariableName().equals("i1")).findFirst().get();
+
+        assertEquals("str1", str1Variable.getVariableName());
+        assertEquals(String.class, str1Variable.getVariableType());
+
+        assertEquals("i1", i1Variable.getVariableName());
+        assertEquals(int.class, i1Variable.getVariableType());
+    }
+
+    @Test
+    public void lineNumbersShouldBeParsed() {
+        final LineNumberTable lineNumberTable = (LineNumberTable) getMethod("lineNumbersShouldBeParsed").getCode().getAttributes().stream()
+                .filter(a -> a.getName().equals(LineNumberTable.ATTRIBUTE_NAME))
+                .findFirst().get();
+
+        expect(lineNumberTable.getEntries().stream().filter(e -> e.getLineNumber() == 148).count()).toBe(1L);
+        expect(lineNumberTable.getEntries().stream().filter(e -> e.getLineNumber() == 144).count()).toBe(1L);
+    }
+
+    private void methodWithLocals() {
+        final String str1 = "foo";
+        final int i1 = 1234;
+    }
+
+    private void methodWithTryCatch() {
+        try {
+            throw new RuntimeException();
+        } catch (RuntimeException e) {
+            return;
+        }
+    }
+
+    private Method getMethod(String name) {
+        final ClassFile classFile = classFileOf(getClass());
+        return classFile.getMethods().stream()
+                .filter(m -> m.getName().equals(name))
+                .findFirst().get();
     }
 
     protected ClassFile classFileOf(Class<?> clazz) {

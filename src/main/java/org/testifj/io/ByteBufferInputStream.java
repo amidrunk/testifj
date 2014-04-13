@@ -1,5 +1,6 @@
 package org.testifj.io;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
@@ -22,7 +23,37 @@ public final class ByteBufferInputStream extends InputStream {
     }
 
     @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+        assert b != null : "Buffer can't be null";
+        assert off >= 0 : "Offset must be positive";
+        assert len >= 0 : "Length must be positive";
+
+        if (!byteBuffer.hasRemaining()) {
+            return -1;
+        }
+
+        int bytesRead = 0;
+
+        for (int i = 0; i < len && byteBuffer.hasRemaining(); i++) {
+            b[i] = byteBuffer.get();
+            bytesRead++;
+        }
+
+        return bytesRead;
+    }
+
+    @Override
     public int available() {
         return byteBuffer.remaining();
+    }
+
+    @Override
+    public long skip(long n) throws IOException {
+        final int requestedNewPosition = byteBuffer.position() + (int) n;
+        final int actualNewPosition = Math.min(requestedNewPosition, byteBuffer.capacity());
+
+        byteBuffer.position(actualNewPosition);
+
+        return n - (requestedNewPosition - actualNewPosition);
     }
 }

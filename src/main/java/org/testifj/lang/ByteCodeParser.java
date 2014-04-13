@@ -7,6 +7,6 @@ import java.io.InputStream;
 
 public interface ByteCodeParser {
 
-    Element[] parse(ClassFile classFile, InputStream in) throws IOException;
+    Element[] parse(Method method, InputStream in) throws IOException;
 
 }

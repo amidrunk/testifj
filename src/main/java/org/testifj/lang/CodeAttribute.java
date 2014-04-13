@@ -1,6 +1,7 @@
 package org.testifj.lang;
 
 import java.io.InputStream;
+import java.util.List;
 
 public interface CodeAttribute extends Attribute {
 
@@ -12,9 +13,9 @@ public interface CodeAttribute extends Attribute {
 
     InputStream getCode();
 
-    // TODO exception table
+    List<ExceptionTableEntry> getExceptionTable();
 
-    // TODO code attributes
+    List<Attribute> getAttributes();
 
     default String getName() {
         return ATTRIBUTE_NAME;

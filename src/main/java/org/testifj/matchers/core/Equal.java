@@ -1,9 +1,11 @@
 package org.testifj.matchers.core;
 
 import org.testifj.Matcher;
+import org.testifj.annotations.DSL;
 
 import java.lang.reflect.Array;
 
+@DSL
 public class Equal {
 
     public static <T> Matcher<T> equal(T expectedInstance) {

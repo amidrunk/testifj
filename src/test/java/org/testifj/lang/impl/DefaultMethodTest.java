@@ -1,9 +1,11 @@
 package org.testifj.lang.impl;
 
 import org.junit.Test;
-import org.testifj.lang.Attribute;
-import org.testifj.lang.ClassFile;
+import org.testifj.lang.*;
 
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.function.Supplier;
 
 import static org.hamcrest.CoreMatchers.containsString;
@@ -17,9 +19,11 @@ public class DefaultMethodTest {
 
     private final Supplier<ClassFile> classFileSupplier = mock(Supplier.class);
 
-    private final Attribute attribute = mock(Attribute.class);
+    private final LocalVariableTable localVariableTable = new LocalVariableTableImpl(mock(ByteBuffer.class), new LocalVariable[]{
+            new LocalVariableImpl(0, 10, "foo", String.class, 0)
+    });
 
-    private final DefaultMethod method = new DefaultMethod(classFileSupplier, 1234, "foo", "bar", new Attribute[]{attribute});
+    private final DefaultMethod method = new DefaultMethod(classFileSupplier, 1234, "foo", "bar", new Attribute[]{localVariableTable});
 
     @Test
     public void constructorShouldNotAcceptNullClassFileSupplier() {
@@ -50,7 +54,7 @@ public class DefaultMethodTest {
         assertEquals(1234, method.getAccessFlags());
         assertEquals("foo", method.getName());
         assertEquals("bar", method.getSignature());
-        assertArrayEquals(new Attribute[]{attribute}, method.getAttributes().toArray());
+        assertArrayEquals(new Attribute[]{localVariableTable}, method.getAttributes().toArray());
     }
 
     @Test
@@ -67,12 +71,30 @@ public class DefaultMethodTest {
 
     @Test
     public void instancesWithEqualPropertiesShouldBeEqual() {
-        final DefaultMethod other = new DefaultMethod(classFileSupplier, 1234, "foo", "bar", new Attribute[]{attribute});
+        final DefaultMethod other = new DefaultMethod(classFileSupplier, 1234, "foo", "bar", new Attribute[]{localVariableTable});
 
         assertEquals(1234, other.getAccessFlags());
         assertEquals("foo", other.getName());
         assertEquals("bar", other.getSignature());
-        assertArrayEquals(new Attribute[]{attribute}, other.getAttributes().toArray());
+        assertArrayEquals(new Attribute[]{localVariableTable}, other.getAttributes().toArray());
+    }
+
+    @Test
+    public void getCodeShouldFailIfCodeAttributeIsNotPresent() {
+        expect(() -> new DefaultMethod(classFileSupplier, 0, "foo", "()V", new Attribute[0]).getCode()).toThrow(IllegalStateException.class);
+    }
+
+    @Test
+    public void getCodeShouldReturnCodeAttributeIfExists() {
+        final Attribute otherAttribute = mock(Attribute.class);
+        final CodeAttribute codeAttribute = mock(CodeAttribute.class);
+
+        when(otherAttribute.getName()).thenReturn("OtherAttribute");
+        when(codeAttribute.getName()).thenReturn(CodeAttribute.ATTRIBUTE_NAME);
+
+        final DefaultMethod method = new DefaultMethod(classFileSupplier, 0, "foo", "()V", new Attribute[]{otherAttribute, codeAttribute});
+
+        expect(method.getCode()).toBe(codeAttribute);
     }
 
     @Test
@@ -80,7 +102,41 @@ public class DefaultMethodTest {
         assertThat(method.toString(), containsString("1234"));
         assertThat(method.toString(), containsString("foo"));
         assertThat(method.toString(), containsString("bar"));
-        assertThat(method.toString(), containsString(attribute.toString()));
+        assertThat(method.toString(), containsString(localVariableTable.toString()));
     }
 
+    @Test
+    public void getCodeForLineNumberShouldFailIfLineNumberTableIsNotPresent() {
+        expect(() -> method.getCodeForLineNumber(1)).toThrow(IllegalStateException.class);
+    }
+
+    @Test
+    public void getLocalVariableForIndexShouldFailForNegativeIndex() {
+        expect(() -> method.getLocalVariableForIndex(-1)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void getLocalVariableShouldFailIfIndexIsOutOfBounds() {
+        expect(() -> method.getLocalVariableForIndex(1)).toThrow(IllegalStateException.class);
+    }
+
+    @Test
+    public void getLocalVariableShouldReturnMatchingVariable() {
+        final DefaultMethod method = new DefaultMethod(classFileSupplier, 0, "foo", "()V", new Attribute[]{
+                new CodeAttributeImpl(
+                        mock(ByteBuffer.class),
+                        0, 0,
+                        mock(ByteBuffer.class),
+                        Collections.emptyList(),
+                        Arrays.asList(
+                                new LocalVariableTableImpl(mock(ByteBuffer.class), new LocalVariable[]{
+                                        new LocalVariableImpl(0, 0, "foo", String.class, 0)
+                                })
+                        ))
+        });
+
+        final LocalVariable localVariable = method.getLocalVariableForIndex(0);
+
+        expect(localVariable.getVariableName()).toBe("foo");
+    }
 }

@@ -15,6 +15,7 @@ import org.testifj.lang.model.impl.*;
 import java.io.IOException;
 import java.io.InputStream;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.testifj.Expect.expect;
 import static org.testifj.matchers.core.Equal.equal;
@@ -98,8 +99,7 @@ public class ByteCodeParserImplTest {
         expect(elements.length).toBe(1);
 
         final String code = new MethodElementDescriber().describe(elements[0]);
-        System.out.println(code);
-
+        expect(code).toBe("expect(true).to(equal(false))");
     }
 
     private Element[] parseLine(int lineNumber) {

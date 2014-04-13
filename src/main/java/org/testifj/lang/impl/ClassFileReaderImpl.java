@@ -241,7 +241,6 @@ public final class ClassFileReaderImpl implements ClassFileReader {
                     break;
                 case FLOAT:
                     builder.addEntry(new ConstantPoolEntry.FloatEntry(din.readFloat()));
-                    i++;
                     break;
                 case LONG:
                     builder.addEntry(new ConstantPoolEntry.LongEntry(din.readLong()));
@@ -249,6 +248,7 @@ public final class ClassFileReaderImpl implements ClassFileReader {
                     break;
                 case DOUBLE:
                     builder.addEntry(new ConstantPoolEntry.DoubleEntry(din.readDouble()));
+                    i++;
                     break;
                 case NAME_AND_TYPE:
                     builder.addEntry(new ConstantPoolEntry.NameAndTypeEntry(din.readShort(), din.readShort()));

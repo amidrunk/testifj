@@ -1,10 +1,7 @@
 package org.testifj.lang.impl;
 
 import org.testifj.lang.*;
-import org.testifj.lang.model.Element;
-import org.testifj.lang.model.Expression;
-import org.testifj.lang.model.OperatorType;
-import org.testifj.lang.model.Statement;
+import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.*;
 
 import java.io.IOException;
@@ -25,17 +22,13 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
         final ConstantPool constantPool = classFile.getConstantPool();
 
         final Runnable shuffleStack = () -> {
-            if (!stack.isEmpty()) {
-                if (stack.size() != 1) {
-                    throw new ClassFileFormatException("Multiple elements remaining on stack: " + stack);
-                } else {
-                    final Expression expression = stack.pop();
+            while (!stack.isEmpty()) {
+                final Expression expression = stack.remove(0);
 
-                    if (!(expression instanceof Statement)) {
-                        throw new ClassFileFormatException("Expression is not a valid statement: " + expression);
-                    } else {
-                        statements.add((Statement) expression);
-                    }
+                if (!(expression instanceof Statement)) {
+                    throw new ClassFileFormatException("Expression is not a valid statement: " + expression);
+                } else {
+                    statements.add((Statement) expression);
                 }
             }
         };
@@ -74,6 +67,24 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                 case ByteCode.istore_1: {
                     final LocalVariable localVariable = method.getLocalVariableForIndex(1);
                     statements.add(new VariableAssignmentImpl(stack.pop(), localVariable.getVariableName(), localVariable.getVariableType()));
+                    break;
+                }
+
+                case ByteCode.fstore_0:
+                case ByteCode.fstore_1:
+                case ByteCode.fstore_2:
+                case ByteCode.fstore_3: {
+                    final int index = byteCode - ByteCode.fstore_0;
+                    storeVariable(method, index, stack, float.class);
+                    break;
+                }
+
+                case ByteCode.astore_0:
+                case ByteCode.astore_1:
+                case ByteCode.astore_2:
+                case ByteCode.astore_3: {
+                    final int index = byteCode - ByteCode.astore_0;
+                    storeVariable(method, index, stack, null);
                     break;
                 }
 
@@ -120,6 +131,24 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                     stack.push(new ConstantExpressionImpl(((in.read() << 8) & 0xFF00 | in.read() & 0xFF), int.class));
                     break;
 
+                case ByteCode.ldc1: {
+                    final ConstantPoolEntry entry = constantPool.getEntry(in.read());
+
+                    switch (entry.getTag()) {
+                        case INTEGER:
+                            stack.push(new ConstantExpressionImpl(((IntegerEntry) entry).getValue(), int.class));
+                            break;
+                        case FLOAT:
+                            stack.push(new ConstantExpressionImpl(((FloatEntry) entry).getValue(), float.class));
+                            break;
+                        case STRING:
+                            stack.push(new ConstantExpressionImpl(constantPool.getString(((StringEntry) entry).getStringIndex()), String.class));
+                            break;
+                    }
+
+                    break;
+                }
+
                 // Method return
 
                 case ByteCode.return_:
@@ -165,6 +194,15 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
         shuffleStack.run();
 
         return statements.toArray(new Element[statements.size()]);
+    }
+
+    private void storeVariable(Method method, int index, Stack<Expression> stack, Class expectedType) {
+        if (expectedType != null) {
+            // TODO Check type
+        }
+
+        final LocalVariable localVariable = method.getLocalVariableForIndex(index);
+        stack.push(new VariableAssignmentImpl(stack.pop(), localVariable.getVariableName(), localVariable.getVariableType()));
     }
 
     private void invokeMethod(InputStream in, Stack<Expression> stack, ConstantPool constantPool, boolean invokeStatic, boolean isInterface) throws IOException {

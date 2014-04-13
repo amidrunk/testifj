@@ -1,13 +1,11 @@
 package org.testifj.lang.impl;
 
 import org.junit.Test;
-import org.testifj.Expect;
 import org.testifj.MethodElementDescriber;
 import org.testifj.lang.ByteCodeParser;
 import org.testifj.lang.ClassFile;
 import org.testifj.lang.Method;
 import org.testifj.lang.model.Element;
-import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.OperatorType;
 import org.testifj.lang.model.impl.*;
@@ -15,7 +13,6 @@ import org.testifj.lang.model.impl.*;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.testifj.Expect.expect;
 import static org.testifj.matchers.core.Equal.equal;
@@ -102,6 +99,17 @@ public class ByteCodeParserImplTest {
         expect(code).toBe("expect(true).to(equal(false))");
     }
 
+    @Test
+    public void methodWithReferencesToConstantsInConstantPoolCanBeParsed() {
+        final Element[] elements = parseMethodBody("methodWithConstantPoolReferences");
+
+        expect(elements.length).toBe(4);
+        expect(elements[0]).toBe(new VariableAssignmentImpl(new ConstantExpressionImpl(123456789, int.class), "n", int.class));
+        expect(elements[1]).toBe(new VariableAssignmentImpl(new ConstantExpressionImpl(123456789f, float.class), "f", float.class));
+        expect(elements[2]).toBe(new VariableAssignmentImpl(new ConstantExpressionImpl("foobar", String.class), "str", String.class));
+        expect(elements[3]).toBe(new ReturnImpl());
+    }
+
     private Element[] parseLine(int lineNumber) {
         final Method method = getMethod("expectationsCanBeParsed");
 
@@ -135,6 +143,12 @@ public class ByteCodeParserImplTest {
         int n = 100;
 
         return n;
+    }
+
+    private void methodWithConstantPoolReferences() {
+        int n = 123456789;
+        float f = 123456789f;
+        String str = "foobar";
     }
 
     private Element[] parseMethodBody(String methodName) {

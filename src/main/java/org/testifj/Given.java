@@ -2,7 +2,7 @@ package org.testifj;
 
 public final class Given {
 
-    public static<T> GivenContinuance<T> given(final T instance) {
+    public static <T> GivenContinuance<T> given(final T instance) {
         return new GivenContinuance<T>() {
             @Override
             public WhenContinuance<T> when(Action<T> action) {

@@ -44,7 +44,7 @@ public class SpecificationRunner extends Runner {
 
             notifier.fireTestStarted(testDescription);
 
-            specificationDescription.getAction().execute((description,procedure) -> new Specifier() {
+            specificationDescription.getAction().execute((description, procedure) -> new Specifier() {
                 @Override
                 public void should(String description, Procedure procedure) {
                     System.out.println("it.should('" + description + "')");

@@ -1,12 +1,16 @@
 package org.testifj.lang.impl;
 
 import org.testifj.lang.Attribute;
+import org.testifj.lang.ClassFile;
 import org.testifj.lang.Constructor;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Supplier;
 
 public final class DefaultConstructor implements Constructor {
+
+    private final Supplier<ClassFile> classFile;
 
     private final int accessFlags;
 
@@ -16,16 +20,22 @@ public final class DefaultConstructor implements Constructor {
 
     private final Attribute[] attributes;
 
-    public DefaultConstructor(int accessFlags, String name, String signature, Attribute[] attributes) {
+    public DefaultConstructor(Supplier<ClassFile> classFile, int accessFlags, String name, String signature, Attribute[] attributes) {
         assert name != null : "Constructor name can't be null (should be \"<init>\")";
         assert name.equals("<init>") : "Constructor name '" + name + "' is not valid; should be '<init>'";
         assert signature != null : "Signature can't be null";
         assert attributes != null : "Attributes can't be null";
 
+        this.classFile = classFile;
         this.accessFlags = accessFlags;
         this.name = name;
         this.signature = signature;
         this.attributes = attributes;
+    }
+
+    @Override
+    public ClassFile getClassFile() {
+        return classFile.get();
     }
 
     @Override

@@ -1,7 +1,9 @@
 package org.testifj.lang.impl;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.Test;
-import org.testifj.lang.impl.UnknownAttribute;
+
+import java.io.IOException;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.*;
@@ -22,9 +24,9 @@ public class UnknownAttributeTest {
     }
 
     @Test
-    public void constructorShouldRetainNameAndData() {
+    public void constructorShouldRetainNameAndData() throws IOException {
         assertEquals("anattr", attribute.getName());
-        assertArrayEquals(data, attribute.getData());
+        assertArrayEquals(data, IOUtils.toByteArray(attribute.getData()));
     }
 
     @Test

@@ -1,11 +1,11 @@
 package org.testifj.lang.impl;
 
-import org.testifj.lang.ConstantPoolEntry;
 import org.junit.Test;
-import org.testifj.lang.impl.DefaultConstantPool;
+import org.testifj.lang.ConstantPoolEntry;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.*;
+import static org.testifj.Expect.expect;
 
 public class DefaultConstantPoolTest {
 
@@ -32,7 +32,7 @@ public class DefaultConstantPoolTest {
                 .addEntry(new ConstantPoolEntry.LongEntry(1234L))
                 .create();
 
-        assertArrayEquals(new ConstantPoolEntry[] {
+        assertArrayEquals(new ConstantPoolEntry[]{
                 new ConstantPoolEntry.LongEntry(1234L), null
         }, constantPool.getEntries().toArray());
     }
@@ -43,7 +43,7 @@ public class DefaultConstantPoolTest {
                 .addEntry(new ConstantPoolEntry.DoubleEntry(1234d))
                 .create();
 
-        assertArrayEquals(new ConstantPoolEntry[] {
+        assertArrayEquals(new ConstantPoolEntry[]{
                 new ConstantPoolEntry.DoubleEntry(1234d), null
         }, constantPool.getEntries().toArray());
     }
@@ -172,6 +172,35 @@ public class DefaultConstantPoolTest {
             fail();
         } catch (ClassFormatError e) {
         }
+    }
+
+    @Test
+    public void getEntryShouldFailForNegativeOrZeroIndex() {
+        final DefaultConstantPool constantPool = new DefaultConstantPool.Builder()
+                .addEntry(new ConstantPoolEntry.UTF8Entry("foo"))
+                .create();
+
+        expect(() -> constantPool.getEntry(-1)).toThrow(AssertionError.class);
+        expect(() -> constantPool.getEntry(0)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void getEntryShouldFailIfIndexIsOutOfBounds() {
+        final DefaultConstantPool constantPool = new DefaultConstantPool.Builder()
+                .addEntry(new ConstantPoolEntry.UTF8Entry("foo"))
+                .create();
+
+        expect(() -> constantPool.getEntry(2)).toThrow(IndexOutOfBoundsException.class);
+    }
+
+    @Test
+    public void getEntryShouldReturnEntryAtIndex() {
+        final ConstantPoolEntry.UTF8Entry entry = new ConstantPoolEntry.UTF8Entry("foo");
+        final DefaultConstantPool constantPool = new DefaultConstantPool.Builder()
+                .addEntry(entry)
+                .create();
+
+        expect(constantPool.getEntry(1)).toBe(entry);
     }
 
 }

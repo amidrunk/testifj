@@ -1,7 +1,6 @@
 package org.testifj.lang;
 
 import org.junit.Test;
-import org.testifj.lang.ReferenceKind;
 
 import static org.junit.Assert.assertEquals;
 

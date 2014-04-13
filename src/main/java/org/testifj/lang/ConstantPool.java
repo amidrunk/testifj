@@ -10,4 +10,6 @@ public interface ConstantPool {
 
     String getString(int index);
 
+    ConstantPoolEntry getEntry(int index);
+
 }

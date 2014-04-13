@@ -1,5 +1,6 @@
 package org.testifj.lang.impl;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.testifj.lang.*;
 
@@ -87,11 +88,11 @@ public class ClassFileReaderImplTest {
         final ClassFile classFile = classFileOf(getClass());
 
         expect(classFile.getConstructors()).
-        to(containElement(c -> c.getSignature().equals("()V")));
+                to(containElement(c -> c.getSignature().equals("()V")));
     }
 
     @Test
-    public void methodBodyShouldBeRead() {
+    public void methodBodyShouldBeRead() throws IOException {
         final ClassFile classFile = classFileOf(getClass());
 
         final Method thisMethod = classFile.getMethods().stream()
@@ -102,7 +103,10 @@ public class ClassFileReaderImplTest {
         final CodeAttribute codeAttribute = thisMethod.getCode();
 
         assertNotNull(codeAttribute);
-        assertNotEquals(0, codeAttribute.getData().length);
+        assertNotEquals(0, IOUtils.toByteArray(codeAttribute.getData()).length);
+        assertNotEquals(0, IOUtils.toByteArray(codeAttribute.getCode()).length);
+        assertTrue(codeAttribute.getMaxStack() > 0);
+        assertTrue(codeAttribute.getMaxLocals() > 0);
     }
 
     protected ClassFile classFileOf(Class<?> clazz) {

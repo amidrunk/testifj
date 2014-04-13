@@ -1,20 +1,34 @@
 package org.testifj;
 
 import org.testifj.lang.Procedure;
+import org.testifj.matchers.core.Equal;
 
 @SuppressWarnings("unchecked")
 public final class Expect {
 
     public static <T> ExpectInstanceContinuance<T> expect(T instance) {
-        return matcher -> {
-            assert matcher.matches(instance) : "Instance does not match";
+        return new ExpectInstanceContinuance<T>() {
+            @Override
+            public void to(Matcher<T> matcher) {
+                assert matcher.matches(instance) : "Instance does not match. Was: \"" + instance + "\"";
+            }
+
+            @Override
+            public void toBe(Matcher<T> matcher) {
+                assert matcher.matches(instance) : "Instance does not match. Was: \"" + instance + "\"";
+            }
         };
     }
 
-    @FunctionalInterface
     public interface ExpectInstanceContinuance<T> {
 
         void to(Matcher<T> matcher);
+
+        void toBe(Matcher<T> matcher);
+
+        default void toBe(T instance) {
+            toBe(Equal.equal(instance));
+        }
 
     }
 

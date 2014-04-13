@@ -2,11 +2,15 @@ package org.testifj.lang.impl;
 
 import org.testifj.lang.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 public final class ClassFileReaderImpl implements ClassFileReader {
 
@@ -23,6 +27,9 @@ public final class ClassFileReaderImpl implements ClassFileReader {
             throw new ClassFormatError("Stream must begin with magic number (0xCAFEBABE)");
         }
 
+        final AtomicReference<ClassFile> classFileReference = new AtomicReference<>();
+        final Supplier<ClassFile> classFileSupplier = classFileReference::get;
+
         final int minorVersion = din.readShort();
         final int majorVersion = din.readShort();
         final ConstantPool constantPool = readConstantPool(din);
@@ -30,15 +37,15 @@ public final class ClassFileReaderImpl implements ClassFileReader {
         final String className = toClassName(constantPool.getClassName(din.readShort()));
         final String superClassName = toClassName(constantPool.getClassName(din.readShort()));
         final String[] interfaceNames = readInterfaces(din, constantPool);
-        final Field[] fields = readFields(din, constantPool);
+        final Field[] fields = readFields(classFileSupplier, din, constantPool);
         final List<Method> methods = new LinkedList<>();
         final List<Constructor> constructors = new LinkedList<>();
 
-        readMethods(din, constantPool, methods, constructors);
+        readMethods(classFileSupplier, din, constantPool, methods, constructors);
 
         final Attribute[] classAttributes = readAttributes(din, constantPool);
 
-        return DefaultClassFile.fromVersion(minorVersion, majorVersion)
+        final ClassFile classFile = DefaultClassFile.fromVersion(minorVersion, majorVersion)
                 .withConstantPool(constantPool)
                 .withSignature(accessFlags, className, superClassName, interfaceNames)
                 .withFields(fields)
@@ -46,9 +53,13 @@ public final class ClassFileReaderImpl implements ClassFileReader {
                 .withMethods(methods.toArray(new Method[methods.size()]))
                 .withAttributes(classAttributes)
                 .create();
+
+        classFileReference.set(classFile);
+
+        return classFile;
     }
 
-    protected void readMethods(DataInputStream din, ConstantPool constantPool, List<Method> methods, List<Constructor> constructors) throws IOException {
+    protected void readMethods(Supplier<ClassFile> classFileSupplier, DataInputStream din, ConstantPool constantPool, List<Method> methods, List<Constructor> constructors) throws IOException {
         final int count = din.readShort();
 
         for (int i = 0; i < count; i++) {
@@ -58,14 +69,14 @@ public final class ClassFileReaderImpl implements ClassFileReader {
             final Attribute[] attributes = readAttributes(din, constantPool);
 
             if ("<init>".equals(name)) {
-                constructors.add(new DefaultConstructor(accessFlags, name, signature, attributes));
+                constructors.add(new DefaultConstructor(classFileSupplier, accessFlags, name, signature, attributes));
             } else {
-                methods.add(new DefaultMethod(accessFlags, name, signature, attributes));
+                methods.add(new DefaultMethod(classFileSupplier, accessFlags, name, signature, attributes));
             }
         }
     }
 
-    protected Field[] readFields(DataInputStream din, ConstantPool constantPool) throws IOException {
+    protected Field[] readFields(Supplier<ClassFile> classFileSupplier, DataInputStream din, ConstantPool constantPool) throws IOException {
         final Field[] fields = new Field[din.readShort()];
 
         for (int i = 0; i < fields.length; i++) {
@@ -74,7 +85,7 @@ public final class ClassFileReaderImpl implements ClassFileReader {
             final String signature = constantPool.getString(din.readShort());
             final Attribute[] attributes = readAttributes(din, constantPool);
 
-            fields[i] = new DefaultField(accessFlags, name, signature, attributes);
+            fields[i] = new DefaultField(classFileSupplier, accessFlags, name, signature, attributes);
         }
 
         return fields;
@@ -92,9 +103,16 @@ public final class ClassFileReaderImpl implements ClassFileReader {
             din.read(buffer);
 
             switch (name) {
-                case CodeAttribute.ATTRIBUTE_NAME:
-                    attributes[i] = new CodeAttributeImpl(buffer);
+                case CodeAttribute.ATTRIBUTE_NAME: {
+                    final DataInputStream codeStream = new DataInputStream(new ByteArrayInputStream(buffer));
+
+                    final int maxStack = codeStream.readShort();
+                    final int maxLocals = codeStream.readShort();
+                    final int codeLength = codeStream.readInt();
+
+                    attributes[i] = new CodeAttributeImpl(ByteBuffer.wrap(buffer), maxStack, maxLocals, ByteBuffer.wrap(buffer, 8, codeLength));
                     break;
+                }
                 default:
                     attributes[i] = new UnknownAttribute(name, buffer);
                     break;

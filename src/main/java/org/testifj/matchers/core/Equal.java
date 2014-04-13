@@ -6,7 +6,7 @@ import java.lang.reflect.Array;
 
 public class Equal {
 
-    public static<T> Matcher<T> equal(T expectedInstance) {
+    public static <T> Matcher<T> equal(T expectedInstance) {
         return otherInstance -> {
             if (otherInstance == expectedInstance) {
                 return true;

@@ -22,7 +22,7 @@ public class InstanceOfTest {
 
     @Test
     public void matcherShouldNotMatchForIncorrectType() {
-       assertFalse(((Matcher) instanceOf(String.class)).matches(1234));
+        assertFalse(((Matcher) instanceOf(String.class)).matches(1234));
     }
 
     @Test
@@ -32,7 +32,8 @@ public class InstanceOfTest {
 
     @Test
     public void matcherShouldReturnTrueForSubTypeOfRequestedType() {
-        final Runnable runnable = () -> {};
+        final Runnable runnable = () -> {
+        };
 
         assertTrue(instanceOf(Runnable.class).matches(runnable));
     }

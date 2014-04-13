@@ -32,6 +32,20 @@ public final class DefaultConstantPool implements ConstantPool {
         return ((ConstantPoolEntry.UTF8Entry) getEntry(index, ConstantPoolEntryTag.UTF8)).getValue();
     }
 
+    @Override
+    public ConstantPoolEntry getEntry(int index) {
+        assert index > 0 : "Index must be > 0";
+
+        final int constantPoolIndex = index - 1;
+
+        if (constantPoolIndex >= entries.length) {
+            throw new IndexOutOfBoundsException("Index " + index + " is not a valid constant pool index; must be 1 >= index <= " + entries.length);
+        }
+
+        return entries[constantPoolIndex];
+    }
+
+
     private ConstantPoolEntry getEntry(int index, ConstantPoolEntryTag expectedTag) {
         assert (index >= 0 && index <= entries.length) : "Index must be in range [1, " + entries.length + "], was " + index;
 

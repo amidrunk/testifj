@@ -12,4 +12,6 @@ public interface Member {
 
     List<Attribute> getAttributes();
 
+    ClassFile getClassFile();
+
 }

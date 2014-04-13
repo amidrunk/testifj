@@ -2,17 +2,19 @@ package org.testifj;
 
 import org.junit.Test;
 
-import static org.testifj.Expect.expect;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.testifj.Expect.expect;
 
 public class ExpectTest {
 
     @Test
     public void expectToThrowShouldSucceedIfConditionsAreFulfilled() {
-        expect(() -> { throw new IllegalArgumentException("foo"); }).
-        toThrow(IllegalArgumentException.class).
-        where((e) -> e.getMessage().equals("foo"));
+        expect(() -> {
+            throw new IllegalArgumentException("foo");
+        }).
+                toThrow(IllegalArgumentException.class).
+                where((e) -> e.getMessage().equals("foo"));
     }
 
     @Test
@@ -20,9 +22,11 @@ public class ExpectTest {
         boolean failed = false;
 
         try {
-            expect(() -> { throw new IllegalArgumentException("foo"); }).
-            toThrow(IllegalArgumentException.class).
-            where((e) -> e.getMessage().equals("bar"));
+            expect(() -> {
+                throw new IllegalArgumentException("foo");
+            }).
+                    toThrow(IllegalArgumentException.class).
+                    where((e) -> e.getMessage().equals("bar"));
         } catch (AssertionError e) {
             failed = true;
         }
@@ -58,9 +62,11 @@ public class ExpectTest {
 
     @Test
     public void expectToThrowCanBeCreatedWithMessageMatcher() {
-        expect(() -> { throw new IllegalArgumentException("foo"); }).
-        toThrow(IllegalArgumentException.class).
-        withMessage((s) -> s.equals("foo"));
+        expect(() -> {
+            throw new IllegalArgumentException("foo");
+        }).
+                toThrow(IllegalArgumentException.class).
+                withMessage((s) -> s.equals("foo"));
     }
 
     @Test
@@ -68,14 +74,15 @@ public class ExpectTest {
         boolean failed = false;
 
         try {
-            expect(() -> { throw new IllegalArgumentException("foo"); }).toThrow(IllegalArgumentException.class).withMessage((s) -> s.equals("bar"));
+            expect(() -> {
+                throw new IllegalArgumentException("foo");
+            }).toThrow(IllegalArgumentException.class).withMessage((s) -> s.equals("bar"));
         } catch (AssertionError e) {
             failed = true;
         }
 
         assertTrue("Expectation should fail since message specification failed", failed);
     }
-
 
 
 }

@@ -34,7 +34,7 @@ public class EqualTest {
 
     @Test
     public void equalMatcherShouldMatchForEqualArrays() {
-        assertTrue(Equal.equal(new byte[] {1, 2, 3, 4}).matches(new byte[]{1, 2, 3, 4}));
+        assertTrue(Equal.equal(new byte[]{1, 2, 3, 4}).matches(new byte[]{1, 2, 3, 4}));
     }
 
 }

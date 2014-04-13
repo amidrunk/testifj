@@ -2,9 +2,6 @@ package org.testifj.lang;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.testifj.lang.ConstantPoolEntry;
-import org.testifj.lang.ConstantPoolEntryTag;
-import org.testifj.lang.ReferenceKind;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.*;
@@ -70,7 +67,7 @@ public class ConstantPoolEntryTest {
 
     @Test(expected = AssertionError.class)
     public void fieldRefEntryCannotHaveNegativeNameAndTypeIndex() {
-        new ConstantPoolEntry.FieldRefEntry(0,-1);
+        new ConstantPoolEntry.FieldRefEntry(0, -1);
     }
 
     @Test
@@ -392,7 +389,6 @@ public class ConstantPoolEntryTest {
     public void integerEntryToStringValueShouldContainValue() {
         assertThat(integerEntry.toString(), containsString("1234"));
     }
-
 
 
     @Test(expected = AssertionError.class)

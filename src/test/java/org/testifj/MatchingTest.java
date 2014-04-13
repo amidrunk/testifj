@@ -2,11 +2,10 @@ package org.testifj;
 
 import org.junit.Test;
 
-import static org.testifj.matchers.core.InstanceOf.instanceOf;
-import static org.testifj.Matching.match;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
+import static org.testifj.Matching.match;
+import static org.testifj.matchers.core.InstanceOf.instanceOf;
 
 @SuppressWarnings("unchecked")
 public class MatchingTest {

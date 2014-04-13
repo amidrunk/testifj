@@ -2,6 +2,8 @@ package org.testifj.lang.impl;
 
 import org.testifj.lang.Attribute;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.Arrays;
 
 public final class UnknownAttribute implements Attribute {
@@ -24,8 +26,8 @@ public final class UnknownAttribute implements Attribute {
     }
 
     @Override
-    public byte[] getData() {
-        return data;
+    public InputStream getData() {
+        return new ByteArrayInputStream(data);
     }
 
     @Override

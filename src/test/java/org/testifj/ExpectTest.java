@@ -137,4 +137,18 @@ public class ExpectTest {
         }
     }
 
+    @Test
+    public void customMatcherCanFail() {
+        expect(() -> expect("foo").toBe(s -> s.length() == 4))
+            .toThrow(AssertionError.class)
+            .where(e -> e.getMessage().contains("foo"));
+    }
+
+    @Test
+    public void matchAgainstInstanceShouldContainExpectedAndActualValueInDescription() {
+        expect(() -> expect("foo").toBe("bar"))
+                .toThrow(AssertionError.class)
+                .where(e -> e.getMessage().contains("foo") && e.getMessage().contains("bar"));
+    }
+
 }

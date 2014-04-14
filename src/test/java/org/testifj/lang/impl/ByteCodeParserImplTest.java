@@ -89,7 +89,7 @@ public class ByteCodeParserImplTest {
             expect(true).toBe(false);
             fail();
         } catch (AssertionError e) {
-            lineNumber = e.getStackTrace()[2].getLineNumber();
+            lineNumber = e.getStackTrace()[3].getLineNumber();
         }
 
         final Element[] elements = parseLine(lineNumber);

@@ -1,12 +1,18 @@
 package org.testifj;
 
+import org.junit.Assert;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
 import static org.testifj.Expect.expect;
+import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
 public class ExpectTest {
+
+    private final ExpectationFailureHandler expectationFailureHandler = mock(ExpectationFailureHandler.class);
 
     @Test
     public void expectToThrowShouldSucceedIfConditionsAreFulfilled() {
@@ -77,5 +83,58 @@ public class ExpectTest {
         assertTrue("Expectation should fail since message specification failed", failed);
     }
 
+    @Test
+    public void expectToThrowWithNoSpecificExceptionShouldFailIfNoExceptionIsThrown() {
+        expect(() -> expect(() -> {
+        }).toThrow()).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void expectToThrowWithNoSpecificExceptionShouldReturnIfExceptionIsThrown() {
+        try {
+            expect(() -> {
+                throw new RuntimeException();
+            }).toThrow();
+        } catch (AssertionError e) {
+            fail("No exception should have occurred");
+        }
+    }
+
+    @Test
+    public void exceptionExpectationCanBeInverted() {
+        expect(() -> {
+            expect(() -> {
+                throw new RuntimeException();
+            }).not().toThrow();
+        }).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void expectationCanBeInverted() {
+        expect(() -> expect(true).not().toBe(false)).not().toThrow();
+        expect(() -> expect(true).not().toBe(true)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void configureExpectShouldNotAcceptNullConfiguration() {
+        expect(() -> Expect.Configuration.configure(null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void configureShouldUpdateConfigurationAndReturnOldConfiguration() {
+        final Expect.Configuration newConfiguration = Expect.Configuration
+                .newBuilder()
+                .configureExpectationFailureHandler(expectationFailureHandler)
+                .build();
+
+        final Expect.Configuration oldConfiguration = Expect.Configuration.configure(newConfiguration);
+
+        try {
+            expect(Expect.Configuration.get()).toBe(newConfiguration);
+            expect(oldConfiguration).not().toBe(equalTo(null));
+        } finally {
+            Expect.Configuration.configure(oldConfiguration);
+        }
+    }
 
 }

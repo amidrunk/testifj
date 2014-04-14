@@ -4,6 +4,8 @@ import org.testifj.annotations.DSL;
 import org.testifj.lang.Procedure;
 import org.testifj.matchers.core.Equal;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -37,12 +39,14 @@ public final class Expect {
      * @return A DLS continuation that allows further specification of the instance constraint.
      */
     public static <T> ExpectValueContinuation<T> expect(T instance) {
+        final List<StackTraceElement> stackTrace = Arrays.asList(Thread.currentThread().getStackTrace());
+        final Caller caller = new Caller(stackTrace.subList(1, stackTrace.size()), 1);
+
         return new ExpectValueContinuation<T>() {
             @Override
             public void to(Matcher<T> matcher) {
                 if (!matcher.matches(instance)) {
-                    final ValueMismatchFailureImpl failure = new ValueMismatchFailureImpl(
-                            Thread.currentThread().getStackTrace(), matcher, Optional.empty(), instance);
+                    final ValueMismatchFailureImpl failure = new ValueMismatchFailureImpl(caller, matcher, Optional.empty(), instance);
 
                     Configuration.get().getExpectationFailureHandler().handleExpectationFailure(failure);
                 }
@@ -53,8 +57,7 @@ public final class Expect {
                 final Matcher<T> matcher = Equal.equal(expectedValue);
 
                 if (!matcher.matches(instance)) {
-                    final ValueMismatchFailureImpl failure = new ValueMismatchFailureImpl(
-                            Thread.currentThread().getStackTrace(), matcher, Optional.of(expectedValue), instance);
+                    final ValueMismatchFailureImpl failure = new ValueMismatchFailureImpl(caller, matcher, Optional.of(expectedValue), instance);
 
                     Configuration.get().getExpectationFailureHandler().handleExpectationFailure(failure);
                 }
@@ -168,7 +171,7 @@ public final class Expect {
          */
         private static final AtomicReference<Configuration> CONFIGURATION_REFERENCE = new AtomicReference<>(
                 Configuration.newBuilder()
-                        .configureExpectationFailureHandler(new DefaultExpectationFailureHandler())
+                        .configureExpectationFailureHandler(new DefaultExpectationFailureHandler.Builder().build())
                         .build());
 
         private final ExpectationFailureHandler expectationFailureHandler;

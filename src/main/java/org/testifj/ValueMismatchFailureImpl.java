@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public class ValueMismatchFailureImpl implements ValueMismatchFailure {
 
-    private final List<StackTraceElement> callStack;
+    private final Caller caller;
 
     private final Matcher<?> matcher;
 
@@ -15,12 +15,11 @@ public class ValueMismatchFailureImpl implements ValueMismatchFailure {
 
     private final Object value;
 
-    public ValueMismatchFailureImpl(StackTraceElement[] callStack, Matcher<?> matcher, Optional<Object> expectedValue, Object value) {
-
-        assert callStack != null : "Call stack can't be null";
+    public ValueMismatchFailureImpl(Caller caller, Matcher<?> matcher, Optional<Object> expectedValue, Object value) {
+        assert caller != null : "Caller can't be null";
         assert matcher != null : "Matcher can't be null";
 
-        this.callStack = Arrays.asList(callStack);
+        this.caller = caller;
         this.matcher = matcher;
         this.expectedValue = expectedValue;
         this.value = value;
@@ -41,9 +40,8 @@ public class ValueMismatchFailureImpl implements ValueMismatchFailure {
         return matcher;
     }
 
-    @Override
-    public List<StackTraceElement> getCallStack() {
-        return Collections.unmodifiableList(callStack);
+    public Caller getCaller() {
+        return caller;
     }
 
     @Override
@@ -53,7 +51,7 @@ public class ValueMismatchFailureImpl implements ValueMismatchFailure {
 
         ValueMismatchFailureImpl that = (ValueMismatchFailureImpl) o;
 
-        if (!callStack.equals(that.callStack)) return false;
+        if (!caller.equals(that.caller)) return false;
         if (!matcher.equals(that.matcher)) return false;
         if (!expectedValue.equals(that.expectedValue)) return false;
         if (value != null ? !value.equals(that.value) : that.value != null) return false;
@@ -63,7 +61,7 @@ public class ValueMismatchFailureImpl implements ValueMismatchFailure {
 
     @Override
     public int hashCode() {
-        int result = callStack.hashCode();
+        int result = caller.hashCode();
         result = 31 * result + matcher.hashCode();
         result = 31 * result + (expectedValue != null ? expectedValue.hashCode() : 0);
         result = 31 * result + (value != null ? value.hashCode() : 0);
@@ -73,7 +71,7 @@ public class ValueMismatchFailureImpl implements ValueMismatchFailure {
     @Override
     public String toString() {
         return "ValueMismatchFailureImpl{" +
-                "callStack=" + callStack +
+                "caller=" + caller +
                 ", matcher=" + matcher +
                 ", expectedValue=" + expectedValue +
                 ", value=" + value +

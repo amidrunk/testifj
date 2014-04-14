@@ -10,7 +10,7 @@ public class ReturnImplTest {
 
     @Test
     public void returnValueShouldHaveCorrectElementType() {
-        expect(new ReturnImpl().getElementType()).to(equal(ElementType.RETURN));
+        expect(new ReturnImpl().getElementType()).toBe(ElementType.RETURN);
     }
 
 }

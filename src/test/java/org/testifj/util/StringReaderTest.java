@@ -16,7 +16,7 @@ public class StringReaderTest {
 
     @Test
     public void remainderShouldInitiallyBeEntireString() {
-        expect(new StringReader("foo").remainder()).to(equal("foo"));
+        expect(new StringReader("foo").remainder()).toBe("foo");
     }
 
     @Test
@@ -28,8 +28,8 @@ public class StringReaderTest {
     public void readExactStringShouldReturnFalseIfStringDoesNotMatcher() {
         final StringReader reader = new StringReader("foo");
 
-        expect(reader.read("bar")).to(equal(false));
-        expect(reader.remainder()).to(equal("foo"));
+        expect(reader.read("bar")).toBe(false);
+        expect(reader.remainder()).toBe("foo");
     }
 
     @Test

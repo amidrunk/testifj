@@ -12,9 +12,7 @@ public class ExpectTest {
     public void expectToThrowShouldSucceedIfConditionsAreFulfilled() {
         expect(() -> {
             throw new IllegalArgumentException("foo");
-        }).
-                toThrow(IllegalArgumentException.class).
-                where((e) -> e.getMessage().equals("foo"));
+        }).toThrow(IllegalArgumentException.class).where((e) -> e.getMessage().equals("foo"));
     }
 
     @Test
@@ -24,9 +22,7 @@ public class ExpectTest {
         try {
             expect(() -> {
                 throw new IllegalArgumentException("foo");
-            }).
-                    toThrow(IllegalArgumentException.class).
-                    where((e) -> e.getMessage().equals("bar"));
+            }).toThrow(IllegalArgumentException.class).where((e) -> e.getMessage().equals("bar"));
         } catch (AssertionError e) {
             failed = true;
         }
@@ -39,8 +35,7 @@ public class ExpectTest {
         try {
             expect(() -> {
                 throw new IllegalArgumentException();
-            }).
-                    toThrow(IllegalArgumentException.class);
+            }).toThrow(IllegalArgumentException.class);
         } catch (AssertionError e) {
             fail();
         }
@@ -64,9 +59,7 @@ public class ExpectTest {
     public void expectToThrowCanBeCreatedWithMessageMatcher() {
         expect(() -> {
             throw new IllegalArgumentException("foo");
-        }).
-                toThrow(IllegalArgumentException.class).
-                withMessage((s) -> s.equals("foo"));
+        }).toThrow(IllegalArgumentException.class).withMessage((s) -> s.equals("foo"));
     }
 
     @Test

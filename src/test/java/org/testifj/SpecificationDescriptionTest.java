@@ -25,8 +25,8 @@ public class SpecificationDescriptionTest extends Specification {
             it.should("retain arguments", () -> {
                 final SpecificationDescription description = new SpecificationDescription("foo", action);
 
-                expect(description.getTargetName()).to(equal("foo"));
-                expect(description.getAction()).to(equal(action));
+                expect(description.getTargetName()).toBe("foo");
+                expect(description.getAction()).toBe(action);
             });
         });
 

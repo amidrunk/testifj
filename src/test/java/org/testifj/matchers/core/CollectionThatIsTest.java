@@ -12,17 +12,17 @@ public class CollectionThatIsTest {
 
     @Test
     public void emptyShouldMatchEmptyCollection() {
-        expect(CollectionThatIs.empty().matches(Collections.emptyList())).to(equal(true));
+        expect(CollectionThatIs.empty().matches(Collections.emptyList())).toBe(true);
     }
 
     @Test
     public void emptyShouldNotMatchNonEmptyCollection() {
-        expect(CollectionThatIs.empty().matches(Arrays.asList("foo"))).to(equal(false));
+        expect(CollectionThatIs.empty().matches(Arrays.asList("foo"))).toBe(false);
     }
 
     @Test
     public void emptyShouldNotMatchNull() {
-        expect(CollectionThatIs.empty().matches(null)).to(equal(false));
+        expect(CollectionThatIs.empty().matches(null)).toBe(false);
     }
 
 }

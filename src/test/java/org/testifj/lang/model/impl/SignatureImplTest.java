@@ -26,7 +26,7 @@ public class SignatureImplTest {
         final SignatureImpl signature = SignatureImpl.parse("()V");
 
         expect(signature.getParameterTypes()).toBe(empty());
-        expect(signature.getReturnType()).to(equal((Class) void.class));
+        expect(signature.getReturnType()).toBe((Class) void.class);
     }
 
     @Test

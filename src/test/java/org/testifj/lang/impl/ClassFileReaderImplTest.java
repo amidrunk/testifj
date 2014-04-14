@@ -88,8 +88,7 @@ public class ClassFileReaderImplTest {
     public void constructorsShouldBeRead() {
         final ClassFile classFile = classFileOf(getClass());
 
-        expect(classFile.getConstructors()).
-                to(containElement(c -> c.getSignature().equals("()V")));
+        expect(classFile.getConstructors()).to(containElement(c -> c.getSignature().equals("()V")));
     }
 
     @Test

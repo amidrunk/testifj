@@ -23,23 +23,23 @@ public class ByteCodeParserImplTest {
 
     @Test
     public void emptyMethodCanBeParsed() {
-        expect(parseMethodBody("emptyMethod")).to(equal(new Element[]{new ReturnImpl()}));
+        expect(parseMethodBody("emptyMethod")).toBe(new Element[]{new ReturnImpl()});
     }
 
     @Test
     public void methodWithReturnStatementCanBeParsed() {
         final Element[] elements = parseMethodBody("methodWithIntegerReturn");
 
-        expect(elements).to(equal(new Element[]{
+        expect(elements).toBe(new Element[]{
                 new ReturnValueImpl(new ConstantExpressionImpl(1234, int.class))
-        }));
+        });
     }
 
     @Test
     public void methodWithReturnFromOtherMethod() {
         final Element[] elements = parseMethodBody("exampleMethodWithReturnFromOtherMethod");
 
-        expect(elements).to(equal(new Element[]{
+        expect(elements).toBe(new Element[]{
                 new ReturnValueImpl(
                         new BinaryOperatorImpl(
                                 new ConstantExpressionImpl(1, int.class),
@@ -51,14 +51,14 @@ public class ByteCodeParserImplTest {
                                         new LocalVariableReferenceImpl("this", getClass()),
                                         new Expression[0]),
                                 int.class))
-        }));
+        });
     }
 
     @Test
     public void methodWithReturnFromOtherMethodWithParameters() {
         final Element[] elements = parseMethodBody("exampleMethodWithMethodCallWithParameters");
 
-        expect(elements).to(equal(new Element[]{
+        expect(elements).toBe(new Element[]{
                 new ReturnValueImpl(
                         new MethodCallImpl(
                                 getClass(),
@@ -66,7 +66,7 @@ public class ByteCodeParserImplTest {
                                 SignatureImpl.parse("(II)I"),
                                 new LocalVariableReferenceImpl("this", getClass()),
                                 new Expression[]{new ConstantExpressionImpl(1, int.class), new ConstantExpressionImpl(2, int.class)}))
-        }));
+        });
     }
 
     @Test
@@ -78,7 +78,7 @@ public class ByteCodeParserImplTest {
                 new ReturnValueImpl(new LocalVariableReferenceImpl("n", int.class))
         };
 
-        expect(elements).to(equal(expectedElements));
+        expect(elements).toBe(expectedElements);
     }
 
     @Test
@@ -86,17 +86,17 @@ public class ByteCodeParserImplTest {
         int lineNumber = -1;
 
         try {
-            expect(true).to(equal(false));
+            expect(true).toBe(false);
             fail();
         } catch (AssertionError e) {
-            lineNumber = e.getStackTrace()[1].getLineNumber();
+            lineNumber = e.getStackTrace()[2].getLineNumber();
         }
 
         final Element[] elements = parseLine(lineNumber);
         expect(elements.length).toBe(1);
 
         final String code = new MethodElementDescriber().describe(elements[0]);
-        expect(code).toBe("expect(true).to(equal(false))");
+        expect(code).toBe("expect(true).toBe(false)");
     }
 
     @Test

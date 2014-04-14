@@ -51,7 +51,7 @@ public class EqualTest {
         boolean failed = false;
 
         try {
-            expect(supplier.get()).to(equal("bar"));
+            expect(supplier.get()).toBe("bar");
         } catch (AssertionError e) {
             failed = true;
 

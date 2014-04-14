@@ -43,11 +43,11 @@ public class DefaultConstructorTest {
         final ClassFile classFile = mock(ClassFile.class);
         when(classFileSupplier.get()).thenReturn(classFile);
 
-        expect(constructor.getClassFile()).to(equal(classFile));
-        expect(constructor.getAccessFlags()).to(equal(1234));
-        expect(constructor.getName()).to(equal("<init>"));
-        expect(constructor.getSignature()).to(equal("()V"));
-        expect(constructor.getAttributes()).to(equal(Arrays.asList(new Attribute[]{})));
+        expect(constructor.getClassFile()).toBe(classFile);
+        expect(constructor.getAccessFlags()).toBe(1234);
+        expect(constructor.getName()).toBe("<init>");
+        expect(constructor.getSignature()).toBe("()V");
+        expect(constructor.getAttributes()).toBe(Arrays.asList(new Attribute[]{}));
     }
 
     @Test
@@ -62,7 +62,7 @@ public class DefaultConstructorTest {
 
     @Test
     public void instanceShouldBeEqualToItSelf() {
-        expect(constructor).to(equal(constructor));
+        expect(constructor).toBe(constructor);
     }
 
     @Test
@@ -75,8 +75,8 @@ public class DefaultConstructorTest {
     public void equalConstructorsShouldBeEqual() {
         final DefaultConstructor other = new DefaultConstructor(classFileSupplier, 1234, "<init>", "()V", new Attribute[]{});
 
-        expect(constructor).to(equal(other));
-        expect(constructor.hashCode()).to(equal(other.hashCode()));
+        expect(constructor).toBe(other);
+        expect(constructor.hashCode()).toBe(other.hashCode());
     }
 
     @Test

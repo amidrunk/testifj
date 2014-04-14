@@ -18,7 +18,7 @@ import java.util.function.Supplier;
 
 public final class ClassFileReaderImpl implements ClassFileReader {
 
-    private final int MAGIC_NUMBER = 0xCAFEBABE;
+    private static final int MAGIC_NUMBER = 0xCAFEBABE;
 
     @Override
     public ClassFile read(InputStream in) throws IOException, ClassFormatError {

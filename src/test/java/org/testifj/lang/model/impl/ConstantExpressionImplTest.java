@@ -23,9 +23,9 @@ public class ConstantExpressionImplTest {
     public void constructorShouldCreateValidInstance() {
         final ConstantExpressionImpl constant = new ConstantExpressionImpl("foobar", String.class);
 
-        expect(constant.getConstant()).to(equal("foobar"));
-        expect(constant.getType()).to(equal((Class) String.class));
-        expect(constant.getElementType()).to(equal(ElementType.CONSTANT));
+        expect(constant.getConstant()).toBe("foobar");
+        expect(constant.getType()).toBe((Class) String.class);
+        expect(constant.getElementType()).toBe(ElementType.CONSTANT);
     }
 
 }

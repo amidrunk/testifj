@@ -25,15 +25,15 @@ public class BinaryOperatorImplTest {
 
     @Test
     public void constructorShouldInitializeOperatorsAndOperatorType() {
-        expect(exampleOperator.getLeftOperand()).to(equal(leftOperand));
-        expect(exampleOperator.getOperatorType()).to(equal(OperatorType.PLUS));
-        expect(exampleOperator.getRightOperand()).to(equal(rightOperand));
-        expect(exampleOperator.getType()).to(equal(int.class));
+        expect(exampleOperator.getLeftOperand()).toBe(leftOperand);
+        expect(exampleOperator.getOperatorType()).toBe(OperatorType.PLUS);
+        expect(exampleOperator.getRightOperand()).toBe(rightOperand);
+        expect(exampleOperator.getType()).toBe(int.class);
     }
 
     @Test
     public void elementTypeShouldBeSpecified() {
-        expect(exampleOperator.getElementType()).to(equal(ElementType.BINARY_OPERATOR));
+        expect(exampleOperator.getElementType()).toBe(ElementType.BINARY_OPERATOR);
     }
 
 }

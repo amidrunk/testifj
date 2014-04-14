@@ -59,12 +59,12 @@ public class CodeAttributeImplTest {
         final Attribute codeAttribute = mock(Attribute.class);
         final CodeAttributeImpl attribute = new CodeAttributeImpl(ByteBuffer.wrap(attributeData), 1, 2, ByteBuffer.wrap(byteCode), Arrays.asList(exceptionTableEntry), Arrays.asList(codeAttribute));
 
-        expect(IOUtils.toByteArray(attribute.getData())).to(equal(attributeData));
-        expect(IOUtils.toByteArray(attribute.getData())).to(equal(attributeData));
-        expect(attribute.getMaxStack()).to(equal(1));
-        expect(attribute.getMaxLocals()).to(equal(2));
-        expect(IOUtils.toByteArray(attribute.getCode())).to(equal(byteCode));
-        expect(IOUtils.toByteArray(attribute.getCode())).to(equal(byteCode));
+        expect(IOUtils.toByteArray(attribute.getData())).toBe(attributeData);
+        expect(IOUtils.toByteArray(attribute.getData())).toBe(attributeData);
+        expect(attribute.getMaxStack()).toBe(1);
+        expect(attribute.getMaxLocals()).toBe(2);
+        expect(IOUtils.toByteArray(attribute.getCode())).toBe(byteCode);
+        expect(IOUtils.toByteArray(attribute.getCode())).toBe(byteCode);
         expect(attribute.getExceptionTable().toArray()).toBe(new Object[]{exceptionTableEntry});
         expect(attribute.getAttributes().toArray()).toBe(new Object[]{codeAttribute});
     }

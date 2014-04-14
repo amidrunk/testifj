@@ -21,21 +21,21 @@ public class CollectionThatTest {
     public void containsElementMatcherShouldNotMatchEmptyCollection() {
         final Matcher<Collection<Object>> matcher = CollectionThat.containElement((e) -> true);
 
-        expect(matcher.matches(Collections.emptyList())).to(equal(false));
+        expect(matcher.matches(Collections.emptyList())).toBe(false);
     }
 
     @Test
     public void containsElementMatcherShouldReturnFalseIfPredicateIsFalseForAllElements() {
         final Matcher<Collection<Object>> matcher = CollectionThat.containElement((e) -> false);
 
-        expect(matcher.matches(Arrays.asList("foo"))).to(equal(false));
+        expect(matcher.matches(Arrays.asList("foo"))).toBe(false);
     }
 
     @Test
     public void containsElementMatcherShouldReturnTrueIfPredicateIsTrueForAnyElement() {
         final Matcher<Collection<Object>> matcher = CollectionThat.containElement((e) -> e.equals("bar"));
 
-        expect(matcher.matches(Arrays.asList("foo", "bar", "baz"))).to(equal(true));
+        expect(matcher.matches(Arrays.asList("foo", "bar", "baz"))).toBe(true);
     }
 
 }

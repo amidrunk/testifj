@@ -24,22 +24,22 @@ public class MethodBodyDescriberTest {
     public void emptyMethodCanBeDescribed() {
         final String description = describe(m -> m.getName().equals("method1"));
 
-        expect(description).to(equal(""));
+        expect(description).toBe("");
     }
 
     @Test
     public void returnOfConstantCanBeDescribed() {
-        expect(describe("method2")).to(equal("return 1234;"));
+        expect(describe("method2")).toBe("return 1234;");
     }
 
     @Test
     public void methodCallCanBeDescribed() {
-        expect(describe("method3")).to(equal("method1();"));
+        expect(describe("method3")).toBe("method1();");
     }
 
     @Test
     public void methodCallWithArgumentsCanBeDescribed() {
-        expect(describe("method5")).to(equal("method4(1, 2);"));
+        expect(describe("method5")).toBe("method4(1, 2);");
     }
 
     private void method1() {

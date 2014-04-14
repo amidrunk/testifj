@@ -20,8 +20,8 @@ public class ReturnValueImplTest {
         final Expression expression = mock(Expression.class);
         final ReturnValueImpl returnValue = new ReturnValueImpl(expression);
 
-        expect(returnValue.getValue()).to(equal(expression));
-        expect(returnValue.getElementType()).to(equal(ElementType.RETURN_VALUE));
+        expect(returnValue.getValue()).toBe(expression);
+        expect(returnValue.getElementType()).toBe(ElementType.RETURN_VALUE);
     }
 
 }

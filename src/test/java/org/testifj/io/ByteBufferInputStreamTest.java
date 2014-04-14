@@ -21,7 +21,7 @@ public class ByteBufferInputStreamTest {
         final byte[] originalArray = {1, 2, 3, 4};
         final ByteBufferInputStream in = new ByteBufferInputStream(ByteBuffer.wrap(originalArray));
 
-        expect(IOUtils.toByteArray(in)).to(equal(originalArray));
+        expect(IOUtils.toByteArray(in)).toBe(originalArray);
     }
 
     @Test
@@ -29,10 +29,10 @@ public class ByteBufferInputStreamTest {
         final byte[] originalArray = {1, 2, 3, 4};
         final ByteBufferInputStream in = new ByteBufferInputStream(ByteBuffer.wrap(originalArray));
 
-        expect(in.available()).to(equal(4));
-        expect(in.read()).to(equal(1));
-        expect(in.available()).to(equal(3));
-        expect(in.read()).to(equal(2));
+        expect(in.available()).toBe(4);
+        expect(in.read()).toBe(1);
+        expect(in.available()).toBe(3);
+        expect(in.read()).toBe(2);
     }
 
     @Test

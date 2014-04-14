@@ -151,4 +151,19 @@ public class ExpectTest {
                 .where(e -> e.getMessage().contains("foo") && e.getMessage().contains("bar"));
     }
 
+    @Test
+    public void valueFromAdditionShouldBeDescribed() {
+        int m1 = 1;
+        int m2 = 2;
+        int m3 = 3;
+
+        try {
+            expect(m1 + m2 + m3).toBe(1234);
+            fail();
+        } catch (AssertionError e) {
+            expect(e.getMessage()).to((s) -> s.contains("m1 + m2 + m3 => 6"));
+            expect(e.getMessage()).to((s) -> s.contains("1234"));
+        }
+    }
+
 }

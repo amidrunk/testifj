@@ -39,7 +39,8 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
 
             if (valueMismatchFailure.getExpectedValue().isPresent()) {
                 final String expectationDescription = describe(failure.getCaller(), valueMismatchFailure.getValue());
-                throw new AssertionError("Expected \"" + valueMismatchFailure.getExpectedValue().get() + "\", was: \"" + expectationDescription + "\"");
+                throw new AssertionError("Expected " + expectationDescription + " to be " + valueMismatchFailure.getExpectedValue().get());
+                // throw new AssertionError("Expected \"" + valueMismatchFailure.getExpectedValue().get() + "\", was: \"" + expectationDescription + "\"");
             }
 
             throw new AssertionError("Was: '" + valueMismatchFailure.getValue() + "'");

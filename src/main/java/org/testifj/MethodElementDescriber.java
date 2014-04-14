@@ -35,6 +35,9 @@ public final class MethodElementDescriber implements Describer<Element> {
             case VARIABLE_REFERENCE:
                 append((LocalVariableReference) element, buffer);
                 break;
+            case BINARY_OPERATOR:
+                append((BinaryOperator) element, buffer);
+                break;
             default:
                 throw new IllegalArgumentException("Unsupported element: " + element);
         }
@@ -97,6 +100,18 @@ public final class MethodElementDescriber implements Describer<Element> {
 
     private void append(LocalVariableReference localVariableReference, StringBuilder buffer) {
         buffer.append(localVariableReference.getVariableName());
+    }
+
+    private void append(BinaryOperator binaryOperator, StringBuilder buffer) {
+        append(binaryOperator.getLeftOperand(), buffer);
+
+        switch (binaryOperator.getOperatorType()) {
+            case PLUS:
+                buffer.append(" + ");
+                break;
+        }
+
+        append(binaryOperator.getRightOperand(), buffer);
     }
 
     private boolean isDSLCall(MethodCall methodCall) {

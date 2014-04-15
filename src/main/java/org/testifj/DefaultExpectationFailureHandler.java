@@ -13,8 +13,21 @@ import org.testifj.lang.model.MethodCall;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
+import java.lang.reflect.Array;
 
+/**
+ * TODO use some MessageBuilder of sorts...
+ *
+ * MessageBuilder.newValueMismatch()
+ *      .setExpectedExpressionDescription(...)
+ *      .setExpectedValueDescription(...)
+ *      .setActualValueDescription(...)
+ *      .setActualValueDescription(...)
+ *
+ * Use advisors to enable transformation of methods etc.
+ *
+ * DSLElementDescriber
+ */
 public final class DefaultExpectationFailureHandler implements ExpectationFailureHandler {
 
     private final ClassFileReader classFileReader;
@@ -39,8 +52,8 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
 
             if (valueMismatchFailure.getExpectedValue().isPresent()) {
                 final String expectationDescription = describe(failure.getCaller(), valueMismatchFailure.getValue());
-                throw new AssertionError("Expected " + expectationDescription + " to be " + valueMismatchFailure.getExpectedValue().get());
-                // throw new AssertionError("Expected \"" + valueMismatchFailure.getExpectedValue().get() + "\", was: \"" + expectationDescription + "\"");
+
+                throw new AssertionError("Expected " + expectationDescription + " to be " + valueToString(valueMismatchFailure.getExpectedValue().get()));
             }
 
             throw new AssertionError("Was: '" + valueMismatchFailure.getValue() + "'");
@@ -79,17 +92,51 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
                 final Expression expectedValue = methodCall.getParameters().get(0);
                 final MethodCall expectCall = (MethodCall) methodCall.getTargetInstance();
                 final Expression actualValueExpression = expectCall.getParameters().get(0);
-                final String actualValueDescription = syntaxElementDescriber.describe(actualValueExpression);
+                final String actualValueExpressionDescription = syntaxElementDescriber.describe(actualValueExpression);
+                final String actualValueDescription = valueToString(actualValue);
 
-                if (String.valueOf(actualValue).equals(actualValueDescription)) {
-                    return String.valueOf(actualValue);
+                if (actualValueDescription.equals(actualValueExpressionDescription)) {
+                    return actualValueDescription;
                 } else {
-                    return actualValueDescription + " => " + actualValue;
+                    return actualValueExpressionDescription + " => " + actualValueDescription;
                 }
             }
         }
 
         return syntaxElementDescriber.describe(element);
+    }
+
+    private String valueToString(Object actualValue) {
+        // TODO Use some advisor to do this
+
+        if (actualValue == null) {
+            return "null";
+        }
+
+        if (actualValue instanceof String) {
+            return "\"" + actualValue + "\"";
+        }
+
+        if (actualValue.getClass().isArray()) {
+            final StringBuilder buffer = new StringBuilder();
+            final int length = Array.getLength(actualValue);
+
+            buffer.append("[");
+
+            for (int i = 0; i < length; i++) {
+                buffer.append(valueToString(Array.get(actualValue, i)));
+
+                if (i != length - 1) {
+                    buffer.append(", ");
+                }
+            }
+
+            buffer.append("]");
+
+            return buffer.toString();
+        }
+
+        return String.valueOf(actualValue);
     }
 
     public static final class Builder {

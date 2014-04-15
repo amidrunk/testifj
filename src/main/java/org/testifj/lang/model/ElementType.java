@@ -8,6 +8,7 @@ public enum ElementType {
     RETURN,
     VARIABLE_REFERENCE,
     METHOD_CALL,
+    FIELD_REFERENCE,
     VARIABLE_ASSIGNMENT
 
 }

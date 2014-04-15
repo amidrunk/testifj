@@ -7,7 +7,7 @@ import java.util.Collection;
 
 public final class CollectionThat {
 
-    public static <E, T extends Collection<E>> Matcher<T> containElement(Predicate<E> predicate) {
+    public static <E, T extends Collection<? extends E>> Matcher<T> containElement(Predicate<E> predicate) {
         assert predicate != null : "Predicate can't be null";
 
         return c -> {

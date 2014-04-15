@@ -47,6 +47,9 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
 
                 case ByteCode.nop:
                     break;
+                case ByteCode.pop:
+                    shuffleStack.run();
+                    break;
 
                 // Locals
 
@@ -160,6 +163,21 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                     statements.add(new ReturnValueImpl(stack.pop()));
                     break;
 
+                // Field access
+
+                case ByteCode.getfield: {
+                    final int fieldRefEntryIndex = (in.read() << 8) & 0xFF | in.read() & 0xFF;
+                    final FieldRefEntry fieldRefEntry = (FieldRefEntry) constantPool.getEntry(fieldRefEntryIndex);
+                    final NameAndTypeEntry nameAndTypeEntry = (NameAndTypeEntry) constantPool.getEntry(fieldRefEntry.getNameAndTypeIndex());
+                    final String className = constantPool.getClassName(fieldRefEntry.getClassIndex());
+                    final String fieldDescriptor = constantPool.getString(nameAndTypeEntry.getDescriptorIndex());
+                    final String fieldName = constantPool.getString(nameAndTypeEntry.getNameIndex());
+
+                    stack.push(new FieldReferenceImpl(stack.pop(), resolveType(className), SignatureImpl.parseType(fieldDescriptor), fieldName));
+
+                    break;
+                }
+
                 // Method invocation
 
                 case ByteCode.invokeinterface: {
@@ -175,6 +193,10 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                         throw new ClassFileFormatException("Interface method calls must be followed by <count:byte>, 0");
                     }
 
+                    break;
+                }
+                case ByteCode.invokevirtual: {
+                    invokeMethod(in, stack, constantPool, false, false);
                     break;
                 }
                 case ByteCode.invokespecial:

@@ -32,14 +32,15 @@ public class DefaultExpectationFailureHandlerTest {
             fail();
         } catch (AssertionError e) {
             caller = new Caller(Arrays.asList(e.getStackTrace()), 2);
+            e.printStackTrace();
         }
 
         final ExpectationFailure failure = new ValueMismatchFailureImpl(caller, Equal.equal("bar"), Optional.of("bar"), "foo");
 
         // "Expected getExampleString() => "foo" to be "bar"
-        expect(() -> handler.handleExpectationFailure(failure)).toThrow(AssertionError.class).where(e -> {
-            return e.getMessage().contains("foo") && e.getMessage().contains("bar") && e.getMessage().contains("getExampleString()");
-        });
+        expect(() -> handler.handleExpectationFailure(failure)).toThrow(AssertionError.class).where(e ->
+            e.getMessage().contains("Expected getExampleString() => \"foo\" to be \"bar\"")
+        );
     }
 
     private String getExampleString() {

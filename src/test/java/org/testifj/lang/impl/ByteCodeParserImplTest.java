@@ -110,6 +110,26 @@ public class ByteCodeParserImplTest {
         expect(elements[3]).toBe(new ReturnImpl());
     }
 
+    @Test
+    public void methodWithFieldAccessCanBeParsed() {
+        final Element[] elements = parseMethodBody("methodWithFieldAccess");
+
+        final Element[] expectedElements = {
+                new MethodCallImpl(Object.class, "toString", SignatureImpl.parse("()Ljava/lang/String;"),
+                        new FieldReferenceImpl(
+                                new LocalVariableReferenceImpl("this", ByteCodeParserImplTest.class),
+                                getClass(), ByteCodeParser.class, "parser"), new Expression[0]
+                ),
+                new ReturnImpl()
+        };
+
+        expect(elements).toBe(expectedElements);
+    }
+
+    private void methodWithFieldAccess() {
+        parser.toString();
+    }
+
     private Element[] parseLine(int lineNumber) {
         final Method method = getMethod("expectationsCanBeParsed");
 

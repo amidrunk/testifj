@@ -42,6 +42,11 @@ public class MethodBodyDescriberTest {
         expect(describe("method5")).toBe("method4(1, 2);");
     }
 
+    @Test
+    public void methodWithFieldReferenceInThisCanBeDescribed() {
+        expect(describe("methodWithFieldReferenceInThis")).toBe("describer.toString();");
+    }
+
     private void method1() {
     }
 
@@ -62,6 +67,10 @@ public class MethodBodyDescriberTest {
 
     private String describe(String methodName) {
         return describe(m -> m.getName().equals(methodName));
+    }
+
+    private void methodWithFieldReferenceInThis() {
+        describer.toString();
     }
 
     private String describe(java.util.function.Predicate<Method> predicate) {

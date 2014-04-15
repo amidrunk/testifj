@@ -38,6 +38,9 @@ public final class MethodElementDescriber implements Describer<Element> {
             case BINARY_OPERATOR:
                 append((BinaryOperator) element, buffer);
                 break;
+            case FIELD_REFERENCE:
+                append((FieldReference) element, buffer);
+                break;
             default:
                 throw new IllegalArgumentException("Unsupported element: " + element);
         }
@@ -112,6 +115,25 @@ public final class MethodElementDescriber implements Describer<Element> {
         }
 
         append(binaryOperator.getRightOperand(), buffer);
+    }
+
+    private void append(FieldReference fieldReference, StringBuilder buffer) {
+        boolean implicitTargetInstance = false;
+
+        if (fieldReference.getTargetInstance().getElementType() == ElementType.VARIABLE_REFERENCE) {
+            final LocalVariableReference variableReference = (LocalVariableReference) fieldReference.getTargetInstance();
+
+            if (variableReference.getVariableName().equals("this")) {
+                implicitTargetInstance = true;
+            }
+        }
+
+        if (!implicitTargetInstance) {
+            append(fieldReference.getTargetInstance(), buffer);
+            buffer.append(".");
+        }
+
+        buffer.append(fieldReference.getFieldName());
     }
 
     private boolean isDSLCall(MethodCall methodCall) {

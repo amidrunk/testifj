@@ -73,6 +73,14 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                     break;
                 }
 
+                case ByteCode.lstore_0:
+                case ByteCode.lstore_1:
+                case ByteCode.lstore_2:
+                case ByteCode.lstore_3: {
+                    final int index = byteCode - ByteCode.lstore_0;
+                    storeVariable(method, index, stack, long.class);
+                    break;
+                }
                 case ByteCode.fstore_0:
                 case ByteCode.fstore_1:
                 case ByteCode.fstore_2:
@@ -110,25 +118,17 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                 // Constants
 
                 case ByteCode.iconst_m1:
-                    stack.push(new ConstantExpressionImpl(-1, int.class));
-                    break;
                 case ByteCode.iconst_0:
-                    stack.push(new ConstantExpressionImpl(0, int.class));
-                    break;
                 case ByteCode.iconst_1:
-                    stack.push(new ConstantExpressionImpl(1, int.class));
-                    break;
                 case ByteCode.iconst_2:
-                    stack.push(new ConstantExpressionImpl(2, int.class));
-                    break;
                 case ByteCode.iconst_3:
-                    stack.push(new ConstantExpressionImpl(3, int.class));
-                    break;
                 case ByteCode.iconst_4:
-                    stack.push(new ConstantExpressionImpl(4, int.class));
-                    break;
                 case ByteCode.iconst_5:
-                    stack.push(new ConstantExpressionImpl(5, int.class));
+                    stack.push(new ConstantExpressionImpl(byteCode - ByteCode.iconst_0, int.class));
+                    break;
+                case ByteCode.lconst_0:
+                case ByteCode.lconst_1:
+                    stack.push(new ConstantExpressionImpl((long)(byteCode - ByteCode.lconst_0), long.class));
                     break;
                 case ByteCode.sipush:
                     stack.push(new ConstantExpressionImpl(((in.read() << 8) & 0xFF00 | in.read() & 0xFF), int.class));

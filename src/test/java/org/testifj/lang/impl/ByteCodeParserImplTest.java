@@ -175,6 +175,22 @@ public class ByteCodeParserImplTest {
         });
     }
 
+    @Test
+    public void methodWithLongConstantsCanBeParsed() {
+        final Element[] elements = parseMethodBody("methodWithLongConstants");
+
+        expect(elements).toBe(new Element[]{
+                new VariableAssignmentImpl(new ConstantExpressionImpl(0L, long.class), "l1", long.class),
+                new VariableAssignmentImpl(new ConstantExpressionImpl(1L, long.class), "l2", long.class),
+                new ReturnImpl()
+        });
+    }
+
+    private void methodWithLongConstants() {
+        long l1 = 0;
+        long l2 = 1;
+    }
+
     private void methodWithStaticFieldReference() {
         final BigDecimal b = BigDecimal.ZERO;
     }

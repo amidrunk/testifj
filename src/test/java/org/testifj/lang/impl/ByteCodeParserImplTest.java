@@ -16,6 +16,7 @@ import org.testifj.lang.model.impl.*;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.function.Supplier;
 import java.util.stream.StreamSupport;
@@ -162,6 +163,20 @@ public class ByteCodeParserImplTest {
                 new LocalVariableReferenceImpl("s", Supplier.class),
                 new Expression[0]
         ));
+    }
+
+    @Test
+    public void methodWithStaticFieldReferenceCanBeParsed() {
+        final Element[] elements = parseMethodBody("methodWithStaticFieldReference");
+
+        expect(elements).toBe(new Element[]{
+                new FieldReferenceImpl(null, BigDecimal.class, BigDecimal.class, "ZERO"),
+                new ReturnImpl()
+        });
+    }
+
+    private void methodWithStaticFieldReference() {
+        final BigDecimal b = BigDecimal.ZERO;
     }
 
     private void methodWithLambdaDeclarationAndInvocation() {

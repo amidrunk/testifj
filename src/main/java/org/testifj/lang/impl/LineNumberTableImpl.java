@@ -1,25 +1,18 @@
 package org.testifj.lang.impl;
 
-import org.testifj.io.ByteBufferInputStream;
 import org.testifj.lang.LineNumberTable;
 import org.testifj.lang.LineNumberTableEntry;
 
-import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 
 public final class LineNumberTableImpl implements LineNumberTable {
 
-    private final ByteBuffer data;
-
     private final LineNumberTableEntry[] entries;
 
-    public LineNumberTableImpl(ByteBuffer data, LineNumberTableEntry[] entries) {
-        assert data != null : "Data can't be null";
+    public LineNumberTableImpl(LineNumberTableEntry[] entries) {
         assert entries != null : "Entries can't be null";
 
-        this.data = data;
         this.entries = entries;
     }
 
@@ -29,7 +22,26 @@ public final class LineNumberTableImpl implements LineNumberTable {
     }
 
     @Override
-    public InputStream getData() {
-        return new ByteBufferInputStream(data);
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        LineNumberTableImpl that = (LineNumberTableImpl) o;
+
+        if (!Arrays.equals(entries, that.entries)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(entries);
+    }
+
+    @Override
+    public String toString() {
+        return "LineNumberTableImpl{" +
+                "entries=" + Arrays.toString(entries) +
+                '}';
     }
 }

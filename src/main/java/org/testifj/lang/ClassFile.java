@@ -1,6 +1,7 @@
 package org.testifj.lang;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ClassFile {
 
@@ -26,5 +27,6 @@ public interface ClassFile {
 
     List<Attribute> getAttributes();
 
+    Optional<BootstrapMethodsAttribute> getBootstrapMethodsAttribute();
 
 }

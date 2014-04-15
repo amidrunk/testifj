@@ -1,18 +1,19 @@
 package org.testifj.lang.impl;
 
 import org.testifj.lang.Attribute;
+import org.testifj.lang.UnknownAttribute;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Arrays;
 
-public final class UnknownAttribute implements Attribute {
+public final class UnknownAttributeImpl implements Attribute, UnknownAttribute {
 
     private final String name;
 
     private final byte[] data;
 
-    public UnknownAttribute(String name, byte[] data) {
+    public UnknownAttributeImpl(String name, byte[] data) {
         assert name != null : "name can't be null";
         assert data != null : "data can't be null";
 
@@ -36,11 +37,11 @@ public final class UnknownAttribute implements Attribute {
             return true;
         }
 
-        if (!(obj instanceof UnknownAttribute)) {
+        if (!(obj instanceof UnknownAttributeImpl)) {
             return false;
         }
 
-        final UnknownAttribute other = (UnknownAttribute) obj;
+        final UnknownAttributeImpl other = (UnknownAttributeImpl) obj;
 
         return name.equals(other.name) && Arrays.equals(data, other.data);
     }

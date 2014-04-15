@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.*;
+import static org.testifj.Expect.expect;
 
 public class ConstantPoolEntryTest {
 
@@ -547,6 +548,23 @@ public class ConstantPoolEntryTest {
     public void invokeDynamicEntryToStringValueShouldContainPropertyValues() {
         assertThat(invokeDynamicEntry.toString(), containsString("1234"));
         assertThat(invokeDynamicEntry.toString(), containsString("2345"));
+    }
+
+    @Test
+    public void asShouldNotAcceptNullType() {
+        expect(() -> invokeDynamicEntry.as(null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void asShouldFailIfTypeIsInvalid() {
+        expect(() -> invokeDynamicEntry.as(ConstantPoolEntry.UTF8Entry.class)).toThrow(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void asShouldReturnSameInstanceIfCompatible() {
+        final ConstantPoolEntry.InvokeDynamicEntry castInstance = invokeDynamicEntry.as(ConstantPoolEntry.InvokeDynamicEntry.class);
+
+        expect(castInstance).toBe(invokeDynamicEntry);
     }
 
 }

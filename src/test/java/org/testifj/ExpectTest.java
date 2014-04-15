@@ -166,4 +166,10 @@ public class ExpectTest {
         }
     }
 
+    @Test
+    public void messageOnThrownExceptionCanBeSpecified() {
+        final RuntimeException e = new RuntimeException();
+
+        // expect(() -> { throw e; }).toThrow().where(message());
+    }
 }

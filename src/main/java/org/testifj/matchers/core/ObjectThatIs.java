@@ -1,7 +1,9 @@
 package org.testifj.matchers.core;
 
 import org.testifj.Matcher;
+import org.testifj.annotations.DSL;
 
+@DSL
 public final class ObjectThatIs {
 
     public static <T> Matcher<T> equalTo(T other) {

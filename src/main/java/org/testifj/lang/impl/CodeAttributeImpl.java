@@ -41,7 +41,6 @@ public final class CodeAttributeImpl implements CodeAttribute {
         this.attributes = attributes;
     }
 
-    @Override
     public InputStream getData() {
         return new ByteBufferInputStream(data.asReadOnlyBuffer());
     }

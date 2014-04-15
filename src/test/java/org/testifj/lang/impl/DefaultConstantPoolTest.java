@@ -203,4 +203,34 @@ public class DefaultConstantPoolTest {
         expect(constantPool.getEntry(1)).toBe(entry);
     }
 
+    @Test
+    public void getEntriesShouldNotAcceptNullArg() {
+        final DefaultConstantPool constantPool = new DefaultConstantPool.Builder()
+                .create();
+
+        expect(() -> constantPool.getEntries(null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void getEntriesShouldFailIfAnyIndexIsInvalid() {
+        final DefaultConstantPool constantPool = new DefaultConstantPool.Builder()
+                .addEntry(new ConstantPoolEntry.UTF8Entry("foo"))
+                .create();
+
+        expect(() -> constantPool.getEntries(new int[]{1, 2})).toThrow(IndexOutOfBoundsException.class);
+    }
+
+    @Test
+    public void getEntriesShouldReturnMatchingEntries() {
+        final DefaultConstantPool constantPool = new DefaultConstantPool.Builder()
+                .addEntry(new ConstantPoolEntry.UTF8Entry("foo"))
+                .addEntry(new ConstantPoolEntry.UTF8Entry("bar"))
+                .create();
+
+        expect(constantPool.getEntries(new int[]{1, 2})).toBe(new ConstantPoolEntry[]{
+                new ConstantPoolEntry.UTF8Entry("foo"),
+                new ConstantPoolEntry.UTF8Entry("bar")
+        });
+    }
+
 }

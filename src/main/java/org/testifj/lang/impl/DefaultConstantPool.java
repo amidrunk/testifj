@@ -45,6 +45,18 @@ public final class DefaultConstantPool implements ConstantPool {
         return entries[constantPoolIndex];
     }
 
+    @Override
+    public ConstantPoolEntry[] getEntries(int[] indices) {
+        assert indices != null : "Indices can't be null";
+
+        final ConstantPoolEntry[] matchedEntries = new ConstantPoolEntry[indices.length];
+
+        for (int i = 0; i < indices.length; i++) {
+            matchedEntries[i] = getEntry(indices[i]);
+        }
+
+        return matchedEntries;
+    }
 
     private ConstantPoolEntry getEntry(int index, ConstantPoolEntryTag expectedTag) {
         assert (index > 0 && index <= entries.length) : "Index must be in range [1, " + entries.length + "], was " + index;

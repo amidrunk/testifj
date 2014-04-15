@@ -12,4 +12,6 @@ public interface ConstantPool {
 
     ConstantPoolEntry getEntry(int index);
 
+    ConstantPoolEntry[] getEntries(int[] indices);
+
 }

@@ -1,18 +1,21 @@
 package org.testifj;
 
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.testifj.matchers.core.Equal;
 
 import java.util.Arrays;
 import java.util.Optional;
 
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
 import static org.testifj.Expect.expect;
+import static org.testifj.matchers.core.ExceptionWhere.messageIs;
+import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
 public class DefaultExpectationFailureHandlerTest {
 
     private final ExpectationFailureHandler handler = new DefaultExpectationFailureHandler.Builder().build();
+    private final Matcher matcher = mock(Matcher.class);
 
     @Test
     public void builderShouldNotAcceptNullDependencies() {
@@ -34,22 +37,53 @@ public class DefaultExpectationFailureHandlerTest {
     }
 
     @Test
-    public void failureWithExpectedInstanceShouldGetDescribed() {
-        Caller caller = null;
+    public void failureWithExpectedValueCanBeDescribed() {
+        expect(getExampleString()).toBe("foo");
 
-        try {
-            expect(getExampleString()).toBe("bar");
-            fail();
-        } catch (AssertionError e) {
-            caller = new Caller(Arrays.asList(e.getStackTrace()), 2);
-        }
+        final Caller caller = caller(-2);
 
-        final ExpectationFailure failure = new ValueMismatchFailureImpl(caller, Equal.equal("bar"), Optional.of("bar"), "foo");
+        expect(() -> handler.handleExpectationFailure(failure(caller, "foo")))
+                .toThrow(AssertionError.class)
+                .where(messageIs(equalTo("Expected getExampleString() => \"foo\" to be \"foo\"")));
+    }
 
-        // "Expected getExampleString() => "foo" to be "bar"
-        expect(() -> handler.handleExpectationFailure(failure)).toThrow(AssertionError.class).where(e ->
-            e.getMessage().contains("Expected getExampleString() => \"foo\" to be \"bar\"")
-        );
+    @Test
+    public void failureWithExpectationExpressedThroughMatcherWithoutExpectedValueCanBeDescribed() {
+        expect("foo").toBe(equalTo("foo"));
+
+        final Caller caller = caller(-2);
+
+        expect(() -> handler.handleExpectationFailure(failure(caller, "foo")))
+                .toThrow(AssertionError.class)
+                .where(messageIs(equalTo("Expected \"foo\" to be equalTo(\"foo\")")));
+    }
+
+    @Test
+    public void invertedExpectationExpressedThroughValuesCanBeDescribed() {
+        expect("foo").not().toBe("bar");
+
+        final Caller caller = caller(-2);
+
+        expect(() -> handler.handleExpectationFailure(failure(caller, Optional.of("bar"), "foo")))
+                .toThrow(AssertionError.class)
+                .where(messageIs(equalTo("Expected \"foo\" not to be \"bar\"")));
+    }
+
+    private ValueMismatchFailureImpl failure(Caller caller, Object actualValue) {
+        return failure(caller, Optional.empty(), actualValue);
+    }
+
+    private ValueMismatchFailureImpl failure(Caller caller, Optional<Object> expectedValue, Object actualValue) {
+        return new ValueMismatchFailureImpl(caller, matcher, expectedValue, actualValue);
+    }
+
+    private Caller caller(int offset) {
+        final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        final int callerStackIndex = 2;
+
+        stackTrace[callerStackIndex] = ClassModelTestUtils.offset(stackTrace[callerStackIndex], offset);
+
+        return new Caller(Arrays.asList(stackTrace), callerStackIndex);
     }
 
     private String getExampleString() {

@@ -4,6 +4,7 @@ import org.testifj.lang.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public final class DefaultClassFile implements ClassFile {
 
@@ -107,6 +108,17 @@ public final class DefaultClassFile implements ClassFile {
     @Override
     public List<Attribute> getAttributes() {
         return Arrays.asList(attributes);
+    }
+
+    @Override
+    public Optional<BootstrapMethodsAttribute> getBootstrapMethodsAttribute() {
+        for (Attribute attribute : attributes) {
+            if (attribute.getName().equals(BootstrapMethodsAttribute.ATTRIBUTE_NAME)) {
+                return Optional.of((BootstrapMethodsAttribute) attribute);
+            }
+        }
+
+        return Optional.empty();
     }
 
     public static WithConstantPoolWord fromVersion(int minorVersion, int majorVersion) {

@@ -1,5 +1,6 @@
 package org.testifj.lang.impl;
 
+import jdk.nashorn.internal.runtime.linker.Bootstrap;
 import org.testifj.lang.*;
 import org.testifj.lang.model.impl.SignatureImpl;
 
@@ -153,11 +154,31 @@ public final class ClassFileReaderImpl implements ClassFileReader {
                         entries[j] = new LineNumberTableEntryImpl(startPC, lineNumber);
                     }
 
-                    attributes[i] = new LineNumberTableImpl(ByteBuffer.wrap(buffer), entries);
+                    attributes[i] = new LineNumberTableImpl(entries);
+                    break;
+                }
+                case BootstrapMethodsAttribute.ATTRIBUTE_NAME: {
+                    final DataInputStream attributeStream = new DataInputStream(new ByteArrayInputStream(buffer));
+                    final int count = attributeStream.readShort();
+                    final BootstrapMethod[] bootstrapMethods = new BootstrapMethod[count];
+
+                    for (int j = 0; j < count; j++) {
+                        final int bootstrapMethodRef = attributeStream.readShort();
+                        final int bootstrapArgumentsCount = attributeStream.readShort();
+                        final int[] bootstrapArguments = new int[bootstrapArgumentsCount];
+
+                        for (int n = 0; n < bootstrapArgumentsCount; n++) {
+                            bootstrapArguments[n] = attributeStream.readShort();
+                        }
+
+                        bootstrapMethods[j] = new BootstrapMethodImpl(bootstrapMethodRef, bootstrapArguments);
+                    }
+
+                    attributes[i] = new BootstrapMethodsAttributeImpl(Arrays.asList(bootstrapMethods));
                     break;
                 }
                 default:
-                    attributes[i] = new UnknownAttribute(name, buffer);
+                    attributes[i] = new UnknownAttributeImpl(name, buffer);
                     break;
             }
         }

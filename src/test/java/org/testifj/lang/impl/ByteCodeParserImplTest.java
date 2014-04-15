@@ -5,18 +5,24 @@ import org.testifj.Description;
 import org.testifj.MethodElementDescriber;
 import org.testifj.lang.ByteCodeParser;
 import org.testifj.lang.ClassFile;
+import org.testifj.lang.Lambda;
 import org.testifj.lang.Method;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.OperatorType;
+import org.testifj.lang.model.VariableAssignment;
 import org.testifj.lang.model.impl.*;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.function.Supplier;
 
 import static org.junit.Assert.fail;
 import static org.testifj.Expect.expect;
 import static org.testifj.matchers.core.Equal.equal;
+import static org.testifj.matchers.core.ObjectThatIs.equalTo;
+import static org.testifj.matchers.core.ObjectThatIs.instanceOf;
 
 public class ByteCodeParserImplTest {
 
@@ -125,6 +131,40 @@ public class ByteCodeParserImplTest {
         };
 
         expect(elements).toBe(expectedElements);
+    }
+
+    @Test
+    public void methodWithLambdaDeclarationAndInvocationCanBeParsed() throws Exception {
+        final Element[] elements = parseMethodBody("methodWithLambdaDeclarationAndInvocation");
+
+        expect(elements.length).toBe(3);
+
+        final VariableAssignment assignment = (VariableAssignment) elements[0];
+        expect(assignment.getVariableName()).toBe("s");
+        expect(assignment.getVariableType()).toBe(Supplier.class);
+        expect(assignment.getValue()).toBe(instanceOf(Lambda.class));
+
+        final Lambda lambda = (Lambda) assignment.getValue();
+        expect(lambda.getFunctionalInterface()).toBe(Supplier.class);
+        expect(lambda.getFunctionalMethodName()).toBe("get");
+        expect(lambda.getInterfaceMethodSignature()).toBe(SignatureImpl.parse("()Ljava/lang/Object;"));
+        expect(lambda.getBackingMethodSignature()).toBe(SignatureImpl.parse("()Ljava/lang/String;"));
+        expect(lambda.getDeclaringClass()).toBe(getClass());
+        expect(getClass().getDeclaredMethod(lambda.getBackingMethodName())).not().toBe(equalTo(null));
+        expect(lambda.getType()).toBe(Supplier.class);
+
+        expect(elements[1]).toBe(new MethodCallImpl(
+                Supplier.class,
+                "get",
+                SignatureImpl.parse("()Ljava/lang/Object;"),
+                new LocalVariableReferenceImpl("s", Supplier.class),
+                new Expression[0]
+        ));
+    }
+
+    private void methodWithLambdaDeclarationAndInvocation() {
+        final Supplier<String> s = () -> "Hello World!";
+        s.get();
     }
 
     private void methodWithFieldAccess() {

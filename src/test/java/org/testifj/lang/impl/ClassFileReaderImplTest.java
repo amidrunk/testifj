@@ -8,12 +8,14 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.junit.Assert.*;
 import static org.testifj.Expect.expect;
 import static org.testifj.matchers.core.CollectionThat.containElement;
+import static org.testifj.matchers.core.CollectionThatIs.empty;
 
 public class ClassFileReaderImplTest {
 
@@ -103,7 +105,6 @@ public class ClassFileReaderImplTest {
         final CodeAttribute codeAttribute = thisMethod.getCode();
 
         assertNotNull(codeAttribute);
-        assertNotEquals(0, IOUtils.toByteArray(codeAttribute.getData()).length);
         assertNotEquals(0, IOUtils.toByteArray(codeAttribute.getCode()).length);
         assertTrue(codeAttribute.getMaxStack() > 0);
         assertTrue(codeAttribute.getMaxLocals() > 0);
@@ -148,6 +149,16 @@ public class ClassFileReaderImplTest {
         expect(lineNumberTable.getEntries().stream().filter(e -> e.getLineNumber() == 144).count()).toBe(1L);
     }
 
+    @Test
+    public void bootstrapMethodAttributeShouldBeRead() {
+        final ClassFile classFile = classFileOf(ExampleClass.class);
+        final BootstrapMethodsAttribute attribute = (BootstrapMethodsAttribute) classFile.getAttributes().stream()
+                .filter(a -> a.getName().equals(BootstrapMethodsAttribute.ATTRIBUTE_NAME))
+                .findFirst().get();
+
+        expect(attribute.getBootstrapMethods()).not().toBe(empty());
+    }
+
     private void methodWithLocals() {
         final String str1 = "foo";
         final int i1 = 1234;
@@ -174,5 +185,13 @@ public class ClassFileReaderImplTest {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static class ExampleClass {
+
+        public void methodWithLambdaDeclarationAndCall() {
+            final Supplier<String> supplier = () -> "Hello World!";
+        }
+
     }
 }

@@ -205,6 +205,53 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                 case ByteCode.invokestatic:
                     invokeMethod(in, stack, constantPool, true, false);
                     break;
+                case ByteCode.invokedynamic: {
+                    final int indexRef = (in.read() << 8) & 0xFF00 | in.read() & 0xFF;
+                    final InvokeDynamicEntry invokeDynamicEntry = (InvokeDynamicEntry) constantPool.getEntry(indexRef);
+                    final NameAndTypeEntry nameAndTypeEntry = (NameAndTypeEntry) constantPool.getEntry(invokeDynamicEntry.getNameAndTypeIndex());
+                    final Signature getFunctionalInterfaceSignature = SignatureImpl.parse(constantPool.getString(nameAndTypeEntry.getDescriptorIndex()));
+                    final String functionalInterfaceMethodName = constantPool.getString(nameAndTypeEntry.getNameIndex());
+                    final BootstrapMethod bootstrapMethod = classFile.getBootstrapMethodsAttribute()
+                            .orElseThrow(() -> new ClassFileFormatException("No bootstrap methods attribute is available in class " + classFile.getName()))
+                            .getBootstrapMethods()
+                            .get(invokeDynamicEntry.getBootstrapMethodAttributeIndex());
+
+                    final MethodHandleEntry methodHandleEntry = (MethodHandleEntry) constantPool.getEntry(bootstrapMethod.getBootstrapMethodRef());
+                    final MethodRefEntry entry = (MethodRefEntry) constantPool.getEntry(methodHandleEntry.getReferenceIndex());
+                    final String className = constantPool.getClassName(entry.getClassIndex());
+                    final NameAndTypeEntry bootstrapMethodNameAndType = (NameAndTypeEntry) constantPool.getEntry(entry.getNameAndTypeIndex());
+                    final String bootstrapMethodName = constantPool.getString(bootstrapMethodNameAndType.getNameIndex());
+                    final String bootstrapMethodDescriptor = constantPool.getString(bootstrapMethodNameAndType.getDescriptorIndex());
+                    final ConstantPoolEntry[] bootstrapMethodArguments = constantPool.getEntries(bootstrapMethod.getBootstrapArguments());
+
+                    if (bootstrapMethodArguments[0].getTag() != ConstantPoolEntryTag.METHOD_TYPE) {
+                        throw new UnsupportedOperationException();
+                    }
+
+                    if (bootstrapMethodArguments[1].getTag() != ConstantPoolEntryTag.METHOD_HANDLE) {
+                        throw new UnsupportedOperationException();
+                    }
+
+                    if (bootstrapMethodArguments[2].getTag() != ConstantPoolEntryTag.METHOD_TYPE) {
+                        throw new UnsupportedOperationException();
+                    }
+
+                    final Signature functionalInterfaceMethodSignature = SignatureImpl.parse(constantPool.getString(bootstrapMethodArguments[0].as(MethodTypeEntry.class).getDescriptorIndex()));
+                    final MethodRefEntry backingMethodRefEntry = constantPool.getEntry(bootstrapMethodArguments[1].as(MethodHandleEntry.class).getReferenceIndex()).as(MethodRefEntry.class);
+                    final Type declaringType = resolveType(constantPool.getClassName(backingMethodRefEntry.getClassIndex()));
+                    final NameAndTypeEntry backingMethodNameAndType = constantPool.getEntry(backingMethodRefEntry.getNameAndTypeIndex()).as(NameAndTypeEntry.class);
+                    final String backingMethodName = constantPool.getString(backingMethodNameAndType.getNameIndex());
+                    final Signature backingMethodSignature = SignatureImpl.parse(constantPool.getString(backingMethodNameAndType.getDescriptorIndex()));
+
+                    stack.push(new LambdaImpl(
+                            getFunctionalInterfaceSignature.getReturnType(),
+                            functionalInterfaceMethodName,
+                            functionalInterfaceMethodSignature,
+                            declaringType,
+                            backingMethodName,
+                            backingMethodSignature));
+                    break;
+                }
 
                 // Invalid instructions
 

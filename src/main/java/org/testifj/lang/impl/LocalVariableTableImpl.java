@@ -28,7 +28,6 @@ public final class LocalVariableTableImpl implements LocalVariableTable {
         return Arrays.asList(localVariables);
     }
 
-    @Override
     public InputStream getData() {
         return new ByteBufferInputStream(data);
     }

@@ -2,6 +2,8 @@ package org.testifj;
 
 import org.junit.Test;
 
+import java.util.function.Supplier;
+
 import static org.testifj.Expect.expect;
 
 public class MethodBodyDescriberTest {
@@ -38,6 +40,14 @@ public class MethodBodyDescriberTest {
         expect(descriptionOf("methodWithFieldReferenceInThis")).toBe("string.toString();");
     }
 
+    @Test
+    public void methodWithLambdaCanBeDescribed() {
+        expect(descriptionOf("methodWithLambda")).toBe(
+                "Supplier<String> s = () -> \"foo\";\n" +
+                "s.get();"
+        );
+    }
+
     private String descriptionOf(String methodName) {
         return ClassModelTestUtils.describeMethod(SampleClass.class, methodName).toString();
     }
@@ -66,6 +76,12 @@ public class MethodBodyDescriberTest {
 
         private void methodWithFieldReferenceInThis() {
             string.toString();
+        }
+
+        private void methodWithLambda() {
+            Supplier<String> s = () -> "foo";
+
+            s.get();
         }
 
     }

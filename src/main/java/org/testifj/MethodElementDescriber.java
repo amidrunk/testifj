@@ -1,6 +1,7 @@
 package org.testifj;
 
 import org.testifj.annotations.DSL;
+import org.testifj.lang.Lambda;
 import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.ConstantExpressionImpl;
 
@@ -40,6 +41,9 @@ public final class MethodElementDescriber implements Describer<Element> {
                 break;
             case FIELD_REFERENCE:
                 append((FieldReference) element, buffer);
+                break;
+            case LAMBDA:
+                append((Lambda) element, buffer);
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported element: " + element);
@@ -134,6 +138,10 @@ public final class MethodElementDescriber implements Describer<Element> {
         }
 
         buffer.append(fieldReference.getFieldName());
+    }
+
+    private void append(Lambda lambda, StringBuilder buffer) {
+        throw new RuntimeException("Need access to method for lambda: " + lambda);
     }
 
     private boolean isDSLCall(MethodCall methodCall) {

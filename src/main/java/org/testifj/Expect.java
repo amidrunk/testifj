@@ -134,7 +134,16 @@ public final class Expect {
         default <E extends Throwable> ToThrowContinuance<E> toThrow(Class<E> exceptionType) {
             final Expectation<Outcome> expectation = outcome -> {
                 assert outcome.isExceptional() : "Exception of type '" + exceptionType.getName() + "' was expected";
-                assert exceptionType.isInstance(outcome.getException()) : "Exception of type '" + exceptionType.getName() + "' expected, was " + outcome.getException();
+
+                if (!exceptionType.isInstance(outcome.getException())) {
+                    if (outcome.getException() instanceof RuntimeException) {
+                        throw (RuntimeException) outcome.getException();
+                    } else {
+                        throw new AssertionError("Expectation failed with exception", outcome.getException());
+                    }
+                }
+
+                // assert exceptionType.isInstance(outcome.getException()) : "Exception of type '" + exceptionType.getName() + "' expected, was " + outcome.getException();
             };
 
             final Capture<Outcome> capturedOutcome = new Capture<>();

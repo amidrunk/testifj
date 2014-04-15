@@ -14,6 +14,7 @@ import org.testifj.lang.model.MethodCall;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Array;
+import java.util.Optional;
 
 /**
  * TODO use some MessageBuilder of sorts...
@@ -50,26 +51,15 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
 
     @Override
     public void handleExpectationFailure(ExpectationFailure failure) {
-
         if (failure instanceof ValueMismatchFailure) {
             final ValueMismatchFailure valueMismatchFailure = (ValueMismatchFailure) failure;
+            final Description description = describe(valueMismatchFailure.getCaller(), valueMismatchFailure.getValue(), valueMismatchFailure.getExpectedValue());
 
-            if (valueMismatchFailure.getExpectedValue().isPresent()) {
-                final Description actualValueDescription = describe(failure.getCaller(), valueMismatchFailure.getValue());
-                final Description expectedValueDescription = new BasicDescription().appendValue(valueMismatchFailure.getExpectedValue().get());
-
-                // TODO This should be delegated (move description format then as well)
-                throw new AssertionError("Expected "
-                        + descriptionFormat.format(actualValueDescription)
-                        + " to be "
-                        + descriptionFormat.format(expectedValueDescription));
-            }
-
-            throw new AssertionError("Was: '" + valueMismatchFailure.getValue() + "'");
+            throw new AssertionError(descriptionFormat.format(description));
         }
     }
 
-    private Description describe(Caller caller, Object actualValue) {
+    private Description describe(Caller caller, Object actualValue, Optional<Object> expectedValue) {
         final ClassFile classFile;
 
         try (InputStream in = getClass().getResourceAsStream("/" + caller.getCallerStackTraceElement().getClassName().replace('.', '/') + ".class")) {
@@ -90,34 +80,52 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
             throw new RuntimeException(e);
         }
 
-        return describe(elements[0], actualValue);
+        return describe(elements[0], actualValue, expectedValue);
     }
 
-    private Description describe(Element element, Object actualValue) {
+    private Description describe(Element element, Object actualValue, Optional<Object> expectedValue) {
         if (element.getElementType() == ElementType.METHOD_CALL) {
             final MethodCall methodCall = (MethodCall) element;
 
             if (methodCall.getMethodName().equals("toBe")) {
-                final Expression expectedValue = methodCall.getParameters().get(0);
-                final MethodCall expectCall = (MethodCall) methodCall.getTargetInstance();
+                final Expression expectedValueExpression = methodCall.getParameters().get(0);
+                final MethodCall toBeContinuation = (MethodCall) methodCall.getTargetInstance();
+                final boolean inverted = toBeContinuation.getMethodName().equals("not");
+                final MethodCall expectCall;
+
+                if (inverted) {
+                    expectCall = (MethodCall) toBeContinuation.getTargetInstance();
+                } else {
+                    expectCall = toBeContinuation;
+                }
+
                 final Expression actualValueExpression = expectCall.getParameters().get(0);
 
-                return getValueDescription(actualValueExpression, actualValue);
+                final Description actualValueDescription = getValueDescription(actualValueExpression, Optional.of(actualValue));
+                final Description expectedValueDescription = getValueDescription(expectedValueExpression, expectedValue);
+
+                return BasicDescription.from("Expected ")
+                        .appendDescription(actualValueDescription)
+                        .appendDescription(BasicDescription.from((inverted ? " not " : " ") + "to be "))
+                        .appendDescription(expectedValueDescription);
             }
         }
 
         return syntaxElementDescriber.describe(element);
     }
 
-    private Description getValueDescription(Expression valueExpression, Object value) {
+    private Description getValueDescription(Expression valueExpression, Optional<Object> optionalValue) {
         final Description actualValueExpressionDescription = syntaxElementDescriber.describe(valueExpression);
-        final Description actualValueDescription = new BasicDescription().appendValue(value);
 
-        if (areDescriptionsIdentical(actualValueExpressionDescription, actualValueDescription)) {
-            return actualValueDescription;
-        } else {
-            return actualValueExpressionDescription.appendText(" => ").appendDescription(actualValueDescription);
+        if (optionalValue.isPresent()) {
+            final Description actualValueDescription = new BasicDescription().appendValue(optionalValue.get());
+
+            if (!areDescriptionsIdentical(actualValueExpressionDescription, actualValueDescription)) {
+                return actualValueExpressionDescription.appendText(" => ").appendDescription(actualValueDescription);
+            }
         }
+
+        return actualValueExpressionDescription;
     }
 
     private boolean areDescriptionsIdentical(Description description1, Description description2) {

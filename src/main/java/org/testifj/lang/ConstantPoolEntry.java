@@ -6,6 +6,17 @@ public abstract class ConstantPoolEntry {
 
     public abstract ConstantPoolEntryTag getTag();
 
+    @SuppressWarnings("unchecked")
+    public <T extends ConstantPoolEntry> T as(Class<T> type) {
+        assert type != null : "Type can't be null";
+
+        if (!type.isInstance(this)) {
+            throw new IllegalArgumentException("Constant pool entry '" + this + "' can't be cast to '" + type.getName() + "'");
+        }
+
+        return (T) this;
+    }
+
     public static final class ClassEntry extends ConstantPoolEntry {
 
         private final int nameIndex;

@@ -11,16 +11,16 @@ import static org.junit.Assert.*;
 public class UnknownAttributeTest {
 
     private final byte[] data = "foo".getBytes();
-    private final UnknownAttribute attribute = new UnknownAttribute("anattr", data);
+    private final UnknownAttributeImpl attribute = new UnknownAttributeImpl("anattr", data);
 
     @Test(expected = AssertionError.class)
     public void constructorShouldNotAcceptNullName() {
-        new UnknownAttribute(null, new byte[]{});
+        new UnknownAttributeImpl(null, new byte[]{});
     }
 
     @Test(expected = AssertionError.class)
     public void constructorShouldNotAcceptNullData() {
-        new UnknownAttribute("foo", null);
+        new UnknownAttributeImpl("foo", null);
     }
 
     @Test
@@ -43,7 +43,7 @@ public class UnknownAttributeTest {
 
     @Test
     public void attributesWithEqualPropertiesShouldBeEqual() {
-        final UnknownAttribute other = new UnknownAttribute("anattr", data);
+        final UnknownAttributeImpl other = new UnknownAttributeImpl("anattr", data);
 
         assertEquals(attribute, other);
         assertEquals(attribute.hashCode(), other.hashCode());

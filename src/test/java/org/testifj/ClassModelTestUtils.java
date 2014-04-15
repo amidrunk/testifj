@@ -9,8 +9,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
 
-import static org.testifj.Expect.expect;
-
 public class ClassModelTestUtils {
 
     public static ClassFile classFileOf(Class<?> clazz) {
@@ -48,6 +46,15 @@ public class ClassModelTestUtils {
 
     public static Description descriptionOf(Method method) {
         return new MethodBodyDescriber().describe(method);
+    }
+
+    public static StackTraceElement offset(StackTraceElement element, int offset) {
+        return new StackTraceElement(
+                element.getClassName(),
+                element.getMethodName(),
+                element.getFileName(),
+                element.getLineNumber() + offset
+        );
     }
 
 }

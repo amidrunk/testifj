@@ -1,65 +1,76 @@
 package org.testifj;
 
 import org.testifj.annotations.DSL;
+import org.testifj.lang.ByteCodeParser;
 import org.testifj.lang.Lambda;
+import org.testifj.lang.Method;
+import org.testifj.lang.impl.ByteCodeParserImpl;
 import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.ConstantExpressionImpl;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.util.*;
 
-public final class MethodElementDescriber implements Describer<Element> {
+// TODO This should use a visitor instead
+public final class MethodElementDescriber implements Describer<CodePointer> {
 
     @Override
-    public Description describe(Element element) {
+    public Description describe(CodePointer codePointer) {
         final StringBuilder buffer = new StringBuilder();
 
-        append(element, buffer);
+        append(codePointer, buffer);
 
         return BasicDescription.from(buffer.toString());
     }
 
-    private void append(Element element, StringBuilder buffer) {
+    private void append(CodePointer codePointer, StringBuilder buffer) {
+        final Element element = codePointer.getElement();
+
         switch (element.getElementType()) {
             case RETURN:
-                append((Return) element, buffer);
+                append(codePointer, (Return) element, buffer);
                 break;
             case RETURN_VALUE:
-                append((ReturnValue) element, buffer);
+                append(codePointer, (ReturnValue) element, buffer);
                 break;
             case CONSTANT:
-                append((ConstantExpression) element, buffer);
+                append(codePointer, (ConstantExpression) element, buffer);
                 break;
             case METHOD_CALL:
-                append((MethodCall) element, buffer);
+                append(codePointer, (MethodCall) element, buffer);
                 break;
             case VARIABLE_REFERENCE:
-                append((LocalVariableReference) element, buffer);
+                append(codePointer, (LocalVariableReference) element, buffer);
                 break;
             case BINARY_OPERATOR:
-                append((BinaryOperator) element, buffer);
+                append(codePointer, (BinaryOperator) element, buffer);
                 break;
             case FIELD_REFERENCE:
-                append((FieldReference) element, buffer);
+                append(codePointer, (FieldReference) element, buffer);
+                break;
+            case VARIABLE_ASSIGNMENT:
+                append(codePointer, (VariableAssignment) element, buffer);
                 break;
             case LAMBDA:
-                append((Lambda) element, buffer);
+                append(codePointer, (Lambda) element, buffer);
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported element: " + element);
         }
     }
 
-    private void append(Return returnStatement, StringBuilder buffer) {
+    private void append(CodePointer codePointer, Return returnStatement, StringBuilder buffer) {
         buffer.append("return");
     }
 
-    private void append(ReturnValue returnValue, StringBuilder buffer) {
+    private void append(CodePointer codePointer, ReturnValue returnValue, StringBuilder buffer) {
         buffer.append("return ");
-        append(returnValue.getValue(), buffer);
+        append(codePointer.forElement(returnValue.getValue()), buffer);
     }
 
-    private void append(ConstantExpression constant, StringBuilder buffer) {
+    private void append(CodePointer codePointer, ConstantExpression constant, StringBuilder buffer) {
         if (constant.getType().equals(String.class)) {
             buffer.append("\"").append(constant.getConstant()).append("\"");
         } else {
@@ -67,7 +78,7 @@ public final class MethodElementDescriber implements Describer<Element> {
         }
     }
 
-    private void append(MethodCall methodCall, StringBuilder buffer) {
+    private void append(CodePointer codePointer, MethodCall methodCall, StringBuilder buffer) {
         final Expression targetInstance = methodCall.getTargetInstance();
         final List<Expression> parameters = methodCall.getParameters();
 
@@ -75,7 +86,7 @@ public final class MethodElementDescriber implements Describer<Element> {
             final Element unBoxed = unbox(methodCall);
 
             if (unBoxed != null) {
-                append(unBoxed, buffer);
+                append(codePointer.forElement(unBoxed), buffer);
                 return;
             }
 
@@ -87,7 +98,7 @@ public final class MethodElementDescriber implements Describer<Element> {
             // Don't add "this"-references
             if (targetInstance.getElementType() != ElementType.VARIABLE_REFERENCE
                     || !((LocalVariableReference) targetInstance).getVariableName().equals("this")) {
-                append(targetInstance, buffer);
+                append(codePointer.forElement(targetInstance), buffer);
                 buffer.append(".");
             }
         }
@@ -95,7 +106,7 @@ public final class MethodElementDescriber implements Describer<Element> {
         buffer.append(methodCall.getMethodName()).append("(");
 
         for (Iterator<Expression> i = parameters.iterator(); i.hasNext(); ) {
-            append(i.next(), buffer);
+            append(codePointer.forElement(i.next()), buffer);
 
             if (i.hasNext()) {
                 buffer.append(", ");
@@ -105,12 +116,12 @@ public final class MethodElementDescriber implements Describer<Element> {
         buffer.append(")");
     }
 
-    private void append(LocalVariableReference localVariableReference, StringBuilder buffer) {
+    private void append(CodePointer codePointer, LocalVariableReference localVariableReference, StringBuilder buffer) {
         buffer.append(localVariableReference.getVariableName());
     }
 
-    private void append(BinaryOperator binaryOperator, StringBuilder buffer) {
-        append(binaryOperator.getLeftOperand(), buffer);
+    private void append(CodePointer codePointer, BinaryOperator binaryOperator, StringBuilder buffer) {
+        append(codePointer.forElement(binaryOperator.getLeftOperand()), buffer);
 
         switch (binaryOperator.getOperatorType()) {
             case PLUS:
@@ -118,10 +129,10 @@ public final class MethodElementDescriber implements Describer<Element> {
                 break;
         }
 
-        append(binaryOperator.getRightOperand(), buffer);
+        append(codePointer.forElement(binaryOperator.getRightOperand()), buffer);
     }
 
-    private void append(FieldReference fieldReference, StringBuilder buffer) {
+    private void append(CodePointer codePointer, FieldReference fieldReference, StringBuilder buffer) {
         boolean implicitTargetInstance = false;
 
         if (fieldReference.getTargetInstance().getElementType() == ElementType.VARIABLE_REFERENCE) {
@@ -133,15 +144,38 @@ public final class MethodElementDescriber implements Describer<Element> {
         }
 
         if (!implicitTargetInstance) {
-            append(fieldReference.getTargetInstance(), buffer);
+            append(codePointer.forElement(fieldReference.getTargetInstance()), buffer);
             buffer.append(".");
         }
 
         buffer.append(fieldReference.getFieldName());
     }
 
-    private void append(Lambda lambda, StringBuilder buffer) {
-        throw new RuntimeException("Need access to method for lambda: " + lambda);
+    private void append(CodePointer codePointer, VariableAssignment variableAssignment, StringBuilder buffer) {
+        // TODO: Check if we've described declaration of the variable before, otherwise declare it
+
+        buffer.append(((Class) variableAssignment.getVariableType()).getSimpleName()).append(" ")
+                .append(variableAssignment.getVariableName())
+                .append(" = ");
+
+        append(codePointer.forElement(variableAssignment.getValue()), buffer);
+    }
+
+    private void append(CodePointer codePointer, Lambda lambda, StringBuilder buffer) {
+        final Method backingMethod = codePointer.getMethod().getClassFile().getMethods().stream()
+                .filter(m -> m.getName().equals(lambda.getBackingMethodName()))
+                .findFirst().get();
+
+        final ByteCodeParser parser = new ByteCodeParserImpl();
+        final Element[] lambdaMethodElements;
+
+        try (InputStream in = backingMethod.getCode().getCode()) {
+            lambdaMethodElements = parser.parse(backingMethod, in);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        append(codePointer.forElement(lambdaMethodElements[0]), buffer);
     }
 
     private boolean isDSLCall(MethodCall methodCall) {

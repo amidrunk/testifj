@@ -69,6 +69,17 @@ public class DefaultExpectationFailureHandlerTest {
                 .where(messageIs(equalTo("Expected \"foo\" not to be \"bar\"")));
     }
 
+    @Test
+    public void expectationWithLambdaOnConstantCanBeDescribed() {
+        expect("foo").toBe(s -> s.contains("foo"));
+
+        final Caller caller = caller(-2);
+
+        expect(() -> handler.handleExpectationFailure(failure(caller, Optional.empty(), "foo")))
+                .toThrow(AssertionError.class)
+                .where(messageIs(equalTo("Expected \"foo\" to be _.length() > 1")));
+    }
+
     private ValueMismatchFailureImpl failure(Caller caller, Object actualValue) {
         return failure(caller, Optional.empty(), actualValue);
     }

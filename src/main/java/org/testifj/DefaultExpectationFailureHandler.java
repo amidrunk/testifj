@@ -35,13 +35,13 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
 
     private final ByteCodeParser byteCodeParser;
 
-    private final Describer<Element> syntaxElementDescriber;
+    private final Describer<CodePointer> syntaxElementDescriber;
 
     private final DescriptionFormat descriptionFormat;
 
     private DefaultExpectationFailureHandler(ClassFileReader classFileReader,
                                              ByteCodeParser byteCodeParser,
-                                             Describer<Element> syntaxElementDescriber,
+                                             Describer<CodePointer> syntaxElementDescriber,
                                              DescriptionFormat descriptionFormat) {
         this.classFileReader = classFileReader;
         this.byteCodeParser = byteCodeParser;
@@ -80,10 +80,12 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
             throw new RuntimeException(e);
         }
 
-        return describe(elements[0], actualValue, expectedValue);
+        return describe(new CodePointer(callerMethod, elements[0]), actualValue, expectedValue);
     }
 
-    private Description describe(Element element, Object actualValue, Optional<Object> expectedValue) {
+    private Description describe(CodePointer codePointer, Object actualValue, Optional<Object> expectedValue) {
+        final Element element = codePointer.getElement();
+
         if (element.getElementType() == ElementType.METHOD_CALL) {
             final MethodCall methodCall = (MethodCall) element;
 
@@ -101,8 +103,8 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
 
                 final Expression actualValueExpression = expectCall.getParameters().get(0);
 
-                final Description actualValueDescription = getValueDescription(actualValueExpression, Optional.of(actualValue));
-                final Description expectedValueDescription = getValueDescription(expectedValueExpression, expectedValue);
+                final Description actualValueDescription = getValueDescription(codePointer.forElement(actualValueExpression), Optional.of(actualValue));
+                final Description expectedValueDescription = getValueDescription(codePointer.forElement(expectedValueExpression), expectedValue);
 
                 return BasicDescription.from("Expected ")
                         .appendDescription(actualValueDescription)
@@ -111,11 +113,11 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
             }
         }
 
-        return syntaxElementDescriber.describe(element);
+        return syntaxElementDescriber.describe(codePointer);
     }
 
-    private Description getValueDescription(Expression valueExpression, Optional<Object> optionalValue) {
-        final Description actualValueExpressionDescription = syntaxElementDescriber.describe(valueExpression);
+    private Description getValueDescription(CodePointer valueExpressionPointer, Optional<Object> optionalValue) {
+        final Description actualValueExpressionDescription = syntaxElementDescriber.describe(valueExpressionPointer);
 
         if (optionalValue.isPresent()) {
             final Description actualValueDescription = new BasicDescription().appendValue(optionalValue.get());
@@ -141,7 +143,7 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
 
         private ByteCodeParser byteCodeParser = new ByteCodeParserImpl();
 
-        private Describer<Element> syntaxElementDescriber = new MethodElementDescriber();
+        private Describer<CodePointer> syntaxElementDescriber = new MethodElementDescriber();
 
         private DescriptionFormat descriptionFormat = new StandardDescriptionFormat();
 
@@ -157,7 +159,7 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
             this.byteCodeParser = byteCodeParser;
         }
 
-        public void setSyntaxElementDescriber(Describer<Element> syntaxElementDescriber) {
+        public void setSyntaxElementDescriber(Describer<CodePointer> syntaxElementDescriber) {
             assert syntaxElementDescriber != null : "Syntax element describer can't be null";
 
             this.syntaxElementDescriber = syntaxElementDescriber;

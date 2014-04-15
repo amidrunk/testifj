@@ -1,6 +1,7 @@
 package org.testifj.lang.impl;
 
 import org.junit.Test;
+import org.testifj.CodePointer;
 import org.testifj.Description;
 import org.testifj.MethodElementDescriber;
 import org.testifj.lang.ByteCodeParser;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.function.Supplier;
+import java.util.stream.StreamSupport;
 
 import static org.junit.Assert.fail;
 import static org.testifj.Expect.expect;
@@ -99,7 +101,7 @@ public class ByteCodeParserImplTest {
             lineNumber = e.getStackTrace()[2].getLineNumber();
         }
 
-        final Element[] elements = parseLine(lineNumber);
+        final CodePointer[] elements = parseLine(lineNumber);
         expect(elements.length).toBe(1);
 
         final Description codeDescription = new MethodElementDescriber().describe(elements[0]);
@@ -171,11 +173,13 @@ public class ByteCodeParserImplTest {
         parser.toString();
     }
 
-    private Element[] parseLine(int lineNumber) {
+    private CodePointer[] parseLine(int lineNumber) {
         final Method method = getMethod("expectationsCanBeParsed");
 
         try (InputStream in = method.getCodeForLineNumber(lineNumber)) {
-            return parser.parse(method, in);
+            final Element[] elements = parser.parse(method, in);
+
+            return Arrays.stream(elements).map(e -> new CodePointer(method, e)).toArray(CodePointer[]::new);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

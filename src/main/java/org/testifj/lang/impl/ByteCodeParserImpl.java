@@ -159,6 +159,7 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                     shuffleStack.run();
                     statements.add(new ReturnImpl());
                     break;
+                case ByteCode.areturn:
                 case ByteCode.ireturn:
                     statements.add(new ReturnValueImpl(stack.pop()));
                     break;

@@ -13,13 +13,13 @@ public final class MethodBodyDescriber implements Describer<Method> {
 
     private final ByteCodeParser byteCodeParser;
 
-    private final Describer<Element> methodElementDescriber;
+    private final Describer<CodePointer> methodElementDescriber;
 
     public MethodBodyDescriber() {
         this(new ByteCodeParserImpl(), new MethodElementDescriber());
     }
 
-    public MethodBodyDescriber(ByteCodeParser byteCodeParser, Describer<Element> methodElementDescriber) {
+    public MethodBodyDescriber(ByteCodeParser byteCodeParser, Describer<CodePointer> methodElementDescriber) {
         this.byteCodeParser = byteCodeParser;
         this.methodElementDescriber = methodElementDescriber;
     }
@@ -45,7 +45,11 @@ public final class MethodBodyDescriber implements Describer<Method> {
                 continue;
             }
 
-            buffer.append(methodElementDescriber.describe(statement)).append(";");
+            if (i > 0) {
+                buffer.append("\n");
+            }
+
+            buffer.append(methodElementDescriber.describe(new CodePointer(method, statement))).append(";");
         }
 
         return BasicDescription.from(buffer.toString());

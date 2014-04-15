@@ -36,12 +36,16 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
 
     private final Describer<Element> syntaxElementDescriber;
 
+    private final DescriptionFormat descriptionFormat;
+
     private DefaultExpectationFailureHandler(ClassFileReader classFileReader,
                                              ByteCodeParser byteCodeParser,
-                                             Describer<Element> syntaxElementDescriber) {
+                                             Describer<Element> syntaxElementDescriber,
+                                             DescriptionFormat descriptionFormat) {
         this.classFileReader = classFileReader;
         this.byteCodeParser = byteCodeParser;
         this.syntaxElementDescriber = syntaxElementDescriber;
+        this.descriptionFormat = descriptionFormat;
     }
 
     @Override
@@ -51,16 +55,21 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
             final ValueMismatchFailure valueMismatchFailure = (ValueMismatchFailure) failure;
 
             if (valueMismatchFailure.getExpectedValue().isPresent()) {
-                final String expectationDescription = describe(failure.getCaller(), valueMismatchFailure.getValue());
+                final Description actualValueDescription = describe(failure.getCaller(), valueMismatchFailure.getValue());
+                final Description expectedValueDescription = new BasicDescription().appendValue(valueMismatchFailure.getExpectedValue().get());
 
-                throw new AssertionError("Expected " + expectationDescription + " to be " + valueToString(valueMismatchFailure.getExpectedValue().get()));
+                // TODO This should be delegated (move description format then as well)
+                throw new AssertionError("Expected "
+                        + descriptionFormat.format(actualValueDescription)
+                        + " to be "
+                        + descriptionFormat.format(expectedValueDescription));
             }
 
             throw new AssertionError("Was: '" + valueMismatchFailure.getValue() + "'");
         }
     }
 
-    private String describe(Caller caller, Object actualValue) {
+    private Description describe(Caller caller, Object actualValue) {
         final ClassFile classFile;
 
         try (InputStream in = getClass().getResourceAsStream("/" + caller.getCallerStackTraceElement().getClassName().replace('.', '/') + ".class")) {
@@ -84,7 +93,7 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
         return describe(elements[0], actualValue);
     }
 
-    private String describe(Element element, Object actualValue) {
+    private Description describe(Element element, Object actualValue) {
         if (element.getElementType() == ElementType.METHOD_CALL) {
             final MethodCall methodCall = (MethodCall) element;
 
@@ -92,51 +101,30 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
                 final Expression expectedValue = methodCall.getParameters().get(0);
                 final MethodCall expectCall = (MethodCall) methodCall.getTargetInstance();
                 final Expression actualValueExpression = expectCall.getParameters().get(0);
-                final String actualValueExpressionDescription = syntaxElementDescriber.describe(actualValueExpression);
-                final String actualValueDescription = valueToString(actualValue);
 
-                if (actualValueDescription.equals(actualValueExpressionDescription)) {
-                    return actualValueDescription;
-                } else {
-                    return actualValueExpressionDescription + " => " + actualValueDescription;
-                }
+                return getValueDescription(actualValueExpression, actualValue);
             }
         }
 
         return syntaxElementDescriber.describe(element);
     }
 
-    private String valueToString(Object actualValue) {
-        // TODO Use some advisor to do this
+    private Description getValueDescription(Expression valueExpression, Object value) {
+        final Description actualValueExpressionDescription = syntaxElementDescriber.describe(valueExpression);
+        final Description actualValueDescription = new BasicDescription().appendValue(value);
 
-        if (actualValue == null) {
-            return "null";
+        if (areDescriptionsIdentical(actualValueExpressionDescription, actualValueDescription)) {
+            return actualValueDescription;
+        } else {
+            return actualValueExpressionDescription.appendText(" => ").appendDescription(actualValueDescription);
         }
+    }
 
-        if (actualValue instanceof String) {
-            return "\"" + actualValue + "\"";
-        }
+    private boolean areDescriptionsIdentical(Description description1, Description description2) {
+        final String formattedDescription1 = descriptionFormat.format(description1);
+        final String formattedDescription2 = descriptionFormat.format(description2);
 
-        if (actualValue.getClass().isArray()) {
-            final StringBuilder buffer = new StringBuilder();
-            final int length = Array.getLength(actualValue);
-
-            buffer.append("[");
-
-            for (int i = 0; i < length; i++) {
-                buffer.append(valueToString(Array.get(actualValue, i)));
-
-                if (i != length - 1) {
-                    buffer.append(", ");
-                }
-            }
-
-            buffer.append("]");
-
-            return buffer.toString();
-        }
-
-        return String.valueOf(actualValue);
+        return formattedDescription1.equals(formattedDescription2);
     }
 
     public static final class Builder {
@@ -146,6 +134,8 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
         private ByteCodeParser byteCodeParser = new ByteCodeParserImpl();
 
         private Describer<Element> syntaxElementDescriber = new MethodElementDescriber();
+
+        private DescriptionFormat descriptionFormat = new StandardDescriptionFormat();
 
         public void setClassFileReader(ClassFileReader classFileReader) {
             assert classFileReader != null : "Class file reader can't be null";
@@ -165,9 +155,13 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
             this.syntaxElementDescriber = syntaxElementDescriber;
         }
 
-        public DefaultExpectationFailureHandler build() {
-            return new DefaultExpectationFailureHandler(classFileReader, byteCodeParser, syntaxElementDescriber);
+        public void setDescriptionFormat(DescriptionFormat descriptionFormat) {
+            assert descriptionFormat != null : "Description format can't be null";
+            this.descriptionFormat = descriptionFormat;
         }
 
+        public DefaultExpectationFailureHandler build() {
+            return new DefaultExpectationFailureHandler(classFileReader, byteCodeParser, syntaxElementDescriber, descriptionFormat);
+        }
     }
 }

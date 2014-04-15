@@ -1,6 +1,7 @@
 package org.testifj.lang.impl;
 
 import org.junit.Test;
+import org.testifj.Description;
 import org.testifj.MethodElementDescriber;
 import org.testifj.lang.ByteCodeParser;
 import org.testifj.lang.ClassFile;
@@ -95,8 +96,8 @@ public class ByteCodeParserImplTest {
         final Element[] elements = parseLine(lineNumber);
         expect(elements.length).toBe(1);
 
-        final String code = new MethodElementDescriber().describe(elements[0]);
-        expect(code).toBe("expect(true).toBe(false)");
+        final Description codeDescription = new MethodElementDescriber().describe(elements[0]);
+        expect(codeDescription.toString()).toBe("expect(true).toBe(false)");
     }
 
     @Test

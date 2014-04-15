@@ -10,12 +10,12 @@ import java.util.*;
 public final class MethodElementDescriber implements Describer<Element> {
 
     @Override
-    public String describe(Element element) {
+    public Description describe(Element element) {
         final StringBuilder buffer = new StringBuilder();
 
         append(element, buffer);
 
-        return buffer.toString();
+        return BasicDescription.from(buffer.toString());
     }
 
     private void append(Element element, StringBuilder buffer) {

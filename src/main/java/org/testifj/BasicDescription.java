@@ -23,7 +23,7 @@ public final class BasicDescription implements Description {
     }
 
     @Override
-    public BasicDescription appendText(String text) {
+    public Description appendText(String text) {
         assert text != null : "Text can't be null";
 
         if (text.isEmpty()) {
@@ -34,8 +34,24 @@ public final class BasicDescription implements Description {
     }
 
     @Override
+    public Description appendDescription(Description description) {
+        assert description != null : "Description can't be null";
+        return new BasicDescription(parts, new DescriptionPartImpl(description));
+    }
+
+    @Override
+    public Description appendValue(Object value) {
+        return new BasicDescription(parts, new ValuePartImpl(value));
+    }
+
+    @Override
     public List<Part> getParts() {
         return Collections.unmodifiableList(parts);
+    }
+
+    public static Description from(String text) {
+        assert text != null : "Text can't be null";
+        return new BasicDescription().appendText(text);
     }
 
     @Override
@@ -101,4 +117,77 @@ public final class BasicDescription implements Description {
             return text.hashCode();
         }
     }
+
+    private static final class ValuePartImpl implements ValuePart {
+
+        private final Object value;
+
+        public ValuePartImpl(Object value) {
+            this.value = value;
+        }
+
+        @Override
+        public Object getValue() {
+            return value;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            ValuePartImpl valuePart = (ValuePartImpl) o;
+
+            if (value != null ? !value.equals(valuePart.value) : valuePart.value != null) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            return value != null ? value.hashCode() : 0;
+        }
+
+        @Override
+        public String toString() {
+            return String.valueOf(value);
+        }
+    }
+
+    private static final class DescriptionPartImpl implements DescriptionPart {
+
+        private final Description description;
+
+        private DescriptionPartImpl(Description description) {
+            this.description = description;
+        }
+
+        @Override
+        public Description getDescription() {
+            return description;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            DescriptionPartImpl that = (DescriptionPartImpl) o;
+
+            if (!description.equals(that.description)) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            return description.hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return description.toString();
+        }
+    }
+
 }

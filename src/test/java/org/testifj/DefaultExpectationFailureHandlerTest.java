@@ -15,6 +15,16 @@ public class DefaultExpectationFailureHandlerTest {
     private final ExpectationFailureHandler handler = new DefaultExpectationFailureHandler.Builder().build();
 
     @Test
+    public void builderShouldNotAcceptNullDependencies() {
+        final DefaultExpectationFailureHandler.Builder builder = new DefaultExpectationFailureHandler.Builder();
+
+        expect(() -> builder.setByteCodeParser(null)).toThrow(AssertionError.class);
+        expect(() -> builder.setClassFileReader(null)).toThrow(AssertionError.class);
+        expect(() -> builder.setDescriptionFormat(null)).toThrow(AssertionError.class);
+        expect(() -> builder.setSyntaxElementDescriber(null)).toThrow(AssertionError.class);
+    }
+
+    @Test
     public void builderShouldNotAcceptInvalidDependencies() {
         final DefaultExpectationFailureHandler.Builder builder = new DefaultExpectationFailureHandler.Builder();
 
@@ -32,7 +42,6 @@ public class DefaultExpectationFailureHandlerTest {
             fail();
         } catch (AssertionError e) {
             caller = new Caller(Arrays.asList(e.getStackTrace()), 2);
-            e.printStackTrace();
         }
 
         final ExpectationFailure failure = new ValueMismatchFailureImpl(caller, Equal.equal("bar"), Optional.of("bar"), "foo");

@@ -25,7 +25,7 @@ public final class MethodBodyDescriber implements Describer<Method> {
     }
 
     @Override
-    public String describe(Method method) {
+    public Description describe(Method method) {
         assert method != null : "Method can't be null";
 
         final StringBuilder buffer = new StringBuilder();
@@ -48,6 +48,6 @@ public final class MethodBodyDescriber implements Describer<Method> {
             buffer.append(methodElementDescriber.describe(statement)).append(";");
         }
 
-        return buffer.toString();
+        return BasicDescription.from(buffer.toString());
     }
 }

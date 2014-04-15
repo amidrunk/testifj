@@ -1,6 +1,7 @@
 package org.testifj;
 
 import org.junit.Test;
+import org.testifj.matchers.core.CollectionThatIs;
 
 import java.util.List;
 
@@ -42,7 +43,7 @@ public class BasicDescriptionTest {
 
     @Test
     public void appendTextShouldReturnNewInstanceWithTextPart() {
-        final BasicDescription newDescription = emptyDescription.appendText("foo");
+        final Description newDescription = emptyDescription.appendText("foo");
         final List<Description.Part> parts = newDescription.getParts();
         expect(parts.size()).toBe(1);
 
@@ -67,8 +68,8 @@ public class BasicDescriptionTest {
 
     @Test
     public void descriptionsWithEqualTextPartsShouldBeEqual() {
-        final BasicDescription description1 = new BasicDescription().appendText("foo");
-        final BasicDescription description2 = new BasicDescription().appendText("foo");
+        final Description description1 = new BasicDescription().appendText("foo");
+        final Description description2 = new BasicDescription().appendText("foo");
 
         expect(description1).toBe(description2);
         expect(description1.hashCode()).toBe(description2.hashCode());
@@ -76,8 +77,8 @@ public class BasicDescriptionTest {
 
     @Test
     public void descriptionsWithDifferentTextPartsShouldNotBeEqual() {
-        final BasicDescription description1 = new BasicDescription().appendText("foo");
-        final BasicDescription description2 = new BasicDescription().appendText("bar");
+        final Description description1 = new BasicDescription().appendText("foo");
+        final Description description2 = new BasicDescription().appendText("bar");
 
         expect(description1).not().toBe(equalTo(description2));
         expect(description1.hashCode()).not().toBe(equalTo(description2.hashCode()));
@@ -85,10 +86,73 @@ public class BasicDescriptionTest {
 
     @Test
     public void descriptionsWithEqualPartSetsShouldNotBeEqual() {
-        final BasicDescription description1 = new BasicDescription().appendText("foo");
+        final Description description1 = new BasicDescription().appendText("foo");
 
         expect(description1).not().toBe(equalTo(emptyDescription));
         expect(description1.hashCode()).not().toBe(equalTo(emptyDescription.hashCode()));
     }
 
+    @Test
+    public void fromShouldNotAcceptNullText() {
+        expect(() -> BasicDescription.from(null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void fromShouldReturnDescriptionWithTextContents() {
+        expect(BasicDescription.from("foo")).toBe(new BasicDescription().appendText("foo"));
+    }
+
+    @Test
+    public void fromEmptyStringShouldYieldEmptyDescription() {
+        expect(BasicDescription.from("").getParts()).toBe(CollectionThatIs.empty());
+    }
+
+    @Test
+    public void appendValueShouldReturnDescriptionWithValueParty() {
+        final Description description = new BasicDescription().appendValue("foo");
+
+        expect(description.getParts().size()).toBe(1);
+        expect(description.getParts().get(0)).toBe(instanceOf(Description.ValuePart.class));
+
+        final Description.ValuePart valuePart = (Description.ValuePart) description.getParts().get(0);
+
+        expect(valuePart.getValue()).toBe("foo");
+    }
+
+    @Test
+    public void appendDescriptionShouldNotAcceptNullDescription() {
+        expect(() -> emptyDescription.appendDescription(null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void appendDescriptionShouldCreateDescriptionWithSubDescription() {
+        final Description subDescription = new BasicDescription().appendText("Hello!");
+        final Description outerDescription = emptyDescription.appendDescription(subDescription);
+
+        expect(outerDescription.getParts().size()).toBe(1);
+        expect(outerDescription.getParts().get(0)).toBe(instanceOf(Description.DescriptionPart.class));
+
+        final Description.DescriptionPart subDescriptionPart = (Description.DescriptionPart) outerDescription.getParts().get(0);
+        expect(subDescriptionPart.getDescription()).toBe(subDescription);
+    }
+
+    @Test
+    public void descriptionsWithEqualSubDescriptionsShouldBeEqual() {
+        final Description description1 = new BasicDescription().appendDescription(BasicDescription.from("foo"));
+        final Description description2 = new BasicDescription().appendDescription(BasicDescription.from("foo"));
+
+        expect(description1).toBe(equalTo(description2));
+        expect(description1.hashCode()).toBe(equalTo(description2.hashCode()));
+    }
+
+    @Test
+    public void descriptionsWithUnEqualSubDescriptionsShouldBeUnEqual() {
+        final Description description1 = new BasicDescription().appendDescription(BasicDescription.from("foo"));
+        final Description description2 = new BasicDescription().appendDescription(BasicDescription.from("bar"));
+
+        expect(description1).not().toBe(equalTo(description2));
+        expect(description1.hashCode()).not().toBe(equalTo(description2.hashCode()));
+    }
+
 }
+

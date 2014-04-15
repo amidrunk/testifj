@@ -15,22 +15,22 @@ public class MethodBodyDescriberTest {
 
     @Test
     public void emptyMethodCanBeDescribed() {
-        expect(descriptionOf("method1")).toBe("");
+        expect(descriptionOf("emptyMethod")).toBe("");
     }
 
     @Test
     public void returnOfConstantCanBeDescribed() {
-        expect(descriptionOf("method2")).toBe("return 1234;");
+        expect(descriptionOf("integerReturn")).toBe("return 1234;");
     }
 
     @Test
     public void methodCallCanBeDescribed() {
-        expect(descriptionOf("method3")).toBe("method1();");
+        expect(descriptionOf("delegatingMethod")).toBe("emptyMethod();");
     }
 
     @Test
     public void methodCallWithArgumentsCanBeDescribed() {
-        expect(descriptionOf("method5")).toBe("method4(1, 2);");
+        expect(descriptionOf("delegatingMethodWithParametersInCall")).toBe("exampleMethodWithParameters(1, 2);");
     }
 
     @Test
@@ -46,22 +46,22 @@ public class MethodBodyDescriberTest {
 
         private final String string = new String("Hello World!");
 
-        private void method1() {
+        private void emptyMethod() {
         }
 
-        private int method2() {
+        private int integerReturn() {
             return 1234;
         }
 
-        private void method3() {
-            method1();
+        private void delegatingMethod() {
+            emptyMethod();
         }
 
-        private void method4(int m, int n) {
+        private void exampleMethodWithParameters(int m, int n) {
         }
 
-        private void method5() {
-            method4(1, 2);
+        private void delegatingMethodWithParametersInCall() {
+            exampleMethodWithParameters(1, 2);
         }
 
         private void methodWithFieldReferenceInThis() {

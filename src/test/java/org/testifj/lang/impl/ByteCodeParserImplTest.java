@@ -1,9 +1,10 @@
 package org.testifj.lang.impl;
 
 import org.junit.Test;
+import org.testifj.ClassModelTestUtils;
+import org.testifj.CodeDescriber;
 import org.testifj.CodePointer;
 import org.testifj.Description;
-import org.testifj.MethodElementDescriber;
 import org.testifj.lang.ByteCodeParser;
 import org.testifj.lang.ClassFile;
 import org.testifj.lang.Lambda;
@@ -19,11 +20,9 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.function.Supplier;
-import java.util.stream.StreamSupport;
 
 import static org.junit.Assert.fail;
 import static org.testifj.Expect.expect;
-import static org.testifj.matchers.core.Equal.equal;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 import static org.testifj.matchers.core.ObjectThatIs.instanceOf;
 
@@ -50,17 +49,17 @@ public class ByteCodeParserImplTest {
         final Element[] elements = parseMethodBody("exampleMethodWithReturnFromOtherMethod");
 
         expect(elements).toBe(new Element[]{
-                new ReturnValueImpl(
-                        new BinaryOperatorImpl(
-                                new ConstantExpressionImpl(1, int.class),
-                                OperatorType.PLUS,
-                                new MethodCallImpl(
-                                        getClass(),
-                                        "methodWithIntegerReturn",
-                                        SignatureImpl.parse("()I"),
-                                        new LocalVariableReferenceImpl("this", getClass()),
-                                        new Expression[0]),
-                                int.class))
+                new ReturnValueImpl(new BinaryOperatorImpl(
+                        new ConstantExpressionImpl(1, int.class),
+                        OperatorType.PLUS,
+                        new MethodCallImpl(
+                                ExampleClass.class,
+                                "methodWithIntegerReturn",
+                                SignatureImpl.parse("()I"),
+                                new LocalVariableReferenceImpl("this", ExampleClass.class),
+                                new Expression[0]),
+                        int.class
+                ))
         });
     }
 
@@ -71,11 +70,12 @@ public class ByteCodeParserImplTest {
         expect(elements).toBe(new Element[]{
                 new ReturnValueImpl(
                         new MethodCallImpl(
-                                getClass(),
+                                ExampleClass.class,
                                 "add",
                                 SignatureImpl.parse("(II)I"),
-                                new LocalVariableReferenceImpl("this", getClass()),
-                                new Expression[]{new ConstantExpressionImpl(1, int.class), new ConstantExpressionImpl(2, int.class)}))
+                                new LocalVariableReferenceImpl("this", ExampleClass.class),
+                                new Expression[]{new ConstantExpressionImpl(1, int.class), new ConstantExpressionImpl(2, int.class)})
+                )
         });
     }
 
@@ -93,20 +93,8 @@ public class ByteCodeParserImplTest {
 
     @Test
     public void expectationsCanBeParsed() {
-        int lineNumber = -1;
-
-        try {
-            expect(true).toBe(false);
-            fail();
-        } catch (AssertionError e) {
-            lineNumber = e.getStackTrace()[2].getLineNumber();
-        }
-
-        final CodePointer[] elements = parseLine(lineNumber);
-        expect(elements.length).toBe(1);
-
-        final Description codeDescription = new MethodElementDescriber().describe(elements[0]);
-        expect(codeDescription.toString()).toBe("expect(true).toBe(false)");
+        expect(true).toBe(true);
+        expect(ClassModelTestUtils.lineToString(-1)).toBe("expect(true).toBe(true)");
     }
 
     @Test
@@ -125,10 +113,10 @@ public class ByteCodeParserImplTest {
         final Element[] elements = parseMethodBody("methodWithFieldAccess");
 
         final Element[] expectedElements = {
-                new MethodCallImpl(Object.class, "toString", SignatureImpl.parse("()Ljava/lang/String;"),
+                new MethodCallImpl(String.class, "toString", SignatureImpl.parse("()Ljava/lang/String;"),
                         new FieldReferenceImpl(
-                                new LocalVariableReferenceImpl("this", ByteCodeParserImplTest.class),
-                                getClass(), ByteCodeParser.class, "parser"), new Expression[0]
+                                new LocalVariableReferenceImpl("this", ExampleClass.class),
+                                ExampleClass.class, String.class, "string"), new Expression[0]
                 ),
                 new ReturnImpl()
         };
@@ -152,8 +140,8 @@ public class ByteCodeParserImplTest {
         expect(lambda.getFunctionalMethodName()).toBe("get");
         expect(lambda.getInterfaceMethodSignature()).toBe(SignatureImpl.parse("()Ljava/lang/Object;"));
         expect(lambda.getBackingMethodSignature()).toBe(SignatureImpl.parse("()Ljava/lang/String;"));
-        expect(lambda.getDeclaringClass()).toBe(getClass());
-        expect(getClass().getDeclaredMethod(lambda.getBackingMethodName())).not().toBe(equalTo(null));
+        expect(lambda.getDeclaringClass()).toBe(ExampleClass.class);
+        expect(ExampleClass.class.getDeclaredMethod(lambda.getBackingMethodName())).not().toBe(equalTo(null));
         expect(lambda.getType()).toBe(Supplier.class);
 
         expect(elements[1]).toBe(new MethodCallImpl(
@@ -186,86 +174,62 @@ public class ByteCodeParserImplTest {
         });
     }
 
-    private void methodWithLongConstants() {
-        long l1 = 0;
-        long l2 = 1;
-    }
-
-    private void methodWithStaticFieldReference() {
-        final BigDecimal b = BigDecimal.ZERO;
-    }
-
-    private void methodWithLambdaDeclarationAndInvocation() {
-        final Supplier<String> s = () -> "Hello World!";
-        s.get();
-    }
-
-    private void methodWithFieldAccess() {
-        parser.toString();
-    }
-
-    private CodePointer[] parseLine(int lineNumber) {
-        final Method method = getMethod("expectationsCanBeParsed");
-
-        try (InputStream in = method.getCodeForLineNumber(lineNumber)) {
-            final Element[] elements = parser.parse(method, in);
-
-            return Arrays.stream(elements).map(e -> new CodePointer(method, e)).toArray(CodePointer[]::new);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void emptyMethod() {
-    }
-
-    private int methodWithIntegerReturn() {
-        return 1234;
-    }
-
-    private int exampleMethodWithReturnFromOtherMethod() {
-        return 1 + methodWithIntegerReturn();
-    }
-
-    private int add(int a, int b) {
-        return a + b;
-    }
-
-    private int exampleMethodWithMethodCallWithParameters() {
-        return add(1, 2);
-    }
-
-    private int returnLocal() {
-        int n = 100;
-
-        return n;
-    }
-
-    private void methodWithConstantPoolReferences() {
-        int n = 123456789;
-        float f = 123456789f;
-        String str = "foobar";
-    }
-
     private Element[] parseMethodBody(String methodName) {
-        final Method method = getMethod(methodName);
-
-        try {
-            return new ByteCodeParserImpl().parse(method, method.getCode().getCode());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return ClassModelTestUtils.methodBodyOf(ExampleClass.class, methodName);
     }
 
-    private Method getMethod(String name) {
-        final ClassFileReaderImpl classFileReader = new ClassFileReaderImpl();
+    private static class ExampleClass {
 
-        try (InputStream in = getClass().getResourceAsStream("/" + getClass().getName().replace('.', '/') + ".class")) {
-            final ClassFile classFile = classFileReader.read(in);
+        private String string = new String("Hello World!");
 
-            return classFile.getMethods().stream().filter(m -> m.getName().equals(name)).findFirst().get();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        private void methodWithLongConstants() {
+            long l1 = 0;
+            long l2 = 1;
         }
+
+        private void methodWithStaticFieldReference() {
+            final BigDecimal b = BigDecimal.ZERO;
+        }
+
+        private void methodWithLambdaDeclarationAndInvocation() {
+            final Supplier<String> s = () -> "Hello World!";
+            s.get();
+        }
+
+        private void methodWithFieldAccess() {
+            string.toString();
+        }
+
+        private void emptyMethod() {
+        }
+
+        private int methodWithIntegerReturn() {
+            return 1234;
+        }
+
+        private int exampleMethodWithReturnFromOtherMethod() {
+            return 1 + methodWithIntegerReturn();
+        }
+
+        private int add(int a, int b) {
+            return a + b;
+        }
+
+        private int exampleMethodWithMethodCallWithParameters() {
+            return add(1, 2);
+        }
+
+        private int returnLocal() {
+            int n = 100;
+
+            return n;
+        }
+
+        private void methodWithConstantPoolReferences() {
+            int n = 123456789;
+            float f = 123456789f;
+            String str = "foobar";
+        }
+
     }
 }

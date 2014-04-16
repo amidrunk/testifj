@@ -6,8 +6,6 @@ import org.testifj.lang.impl.ByteCodeParserImpl;
 import org.testifj.lang.model.*;
 
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
 
 public final class MethodBodyDescriber implements Describer<Method> {
 
@@ -16,7 +14,7 @@ public final class MethodBodyDescriber implements Describer<Method> {
     private final Describer<CodePointer> methodElementDescriber;
 
     public MethodBodyDescriber() {
-        this(new ByteCodeParserImpl(), new MethodElementDescriber());
+        this(new ByteCodeParserImpl(), new CodeDescriber());
     }
 
     public MethodBodyDescriber(ByteCodeParser byteCodeParser, Describer<CodePointer> methodElementDescriber) {

@@ -14,7 +14,18 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 // TODO This should use a visitor instead
-public final class MethodElementDescriber implements Describer<CodePointer> {
+public final class CodeDescriber implements Describer<CodePointer> {
+
+    private final ByteCodeParser byteCodeParser;
+
+    public CodeDescriber() {
+        this(new ByteCodeParserImpl());
+    }
+
+    public CodeDescriber(ByteCodeParser byteCodeParser) {
+        assert byteCodeParser != null : "Byte code parser can't be null";
+        this.byteCodeParser = byteCodeParser;
+    }
 
     @Override
     public Description describe(CodePointer codePointer) {

@@ -13,7 +13,6 @@ import org.testifj.lang.model.MethodCall;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Array;
 import java.util.Optional;
 
 /**
@@ -143,7 +142,7 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
 
         private ByteCodeParser byteCodeParser = new ByteCodeParserImpl();
 
-        private Describer<CodePointer> syntaxElementDescriber = new MethodElementDescriber();
+        private Describer<CodePointer> syntaxElementDescriber = new CodeDescriber();
 
         private DescriptionFormat descriptionFormat = new StandardDescriptionFormat();
 

@@ -16,16 +16,29 @@ public final class DecompilationContextImpl implements DecompilationContext {
     private final List<Statement> statements = new LinkedList<>();
 
     @Override
-    public void reduce() {
-        checkStackNotEmpty();
-
-        final Expression stackedExpression = stack.peek();
-
-        if (!(stackedExpression instanceof Statement)) {
-            throw new IllegalStateException("Stacked expression is not an expression: " + stackedExpression);
+    public boolean reduce() {
+        if (stack.isEmpty()) {
+            return false;
         }
 
+        checkReducable(stack.peek());
+
         enlist((Statement) stack.pop());
+
+        return true;
+    }
+
+    @Override
+    public boolean reduceAll() throws IllegalStateException {
+        if (stack.isEmpty()) {
+            return false;
+        }
+
+        stack.forEach(this::checkReducable);
+        stack.forEach(e -> enlist((Statement) e));
+        stack.clear();
+
+        return true;
     }
 
     @Override
@@ -56,6 +69,12 @@ public final class DecompilationContextImpl implements DecompilationContext {
     private void checkStackNotEmpty() {
         if (stack.isEmpty()) {
             throw new IllegalStateException("No syntax element is available on the stack");
+        }
+    }
+
+    private void checkReducable(Expression stackedExpression) {
+        if (!(stackedExpression instanceof Statement)) {
+            throw new IllegalStateException("Stacked expression is not an expression: " + stackedExpression);
         }
     }
 }

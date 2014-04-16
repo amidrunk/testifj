@@ -64,8 +64,8 @@ public class DecompilationContextImplTest {
     }
 
     @Test
-    public void reduceShouldFailIfStackIsEmpty() {
-        expect(context::reduce).toThrow(IllegalStateException.class);
+    public void reduceShouldReturnFalseIfStackIsEmpty() {
+        expect(context.reduce()).toBe(false);
     }
 
     @Test
@@ -85,6 +85,30 @@ public class DecompilationContextImplTest {
 
         expect(context.getStatements().toArray()).toBe(new Object[]{statement});
         expect(context.pop()).toBe(expression);
+    }
+
+    @Test
+    public void reduceAllShouldReturnFalseIfStackIsEmpty() {
+        expect(context.reduceAll()).toBe(false);
+    }
+
+    @Test
+    public void reduceAllShouldFailIfStackContainsNonStatement() {
+        context.push(mock(Expression.class));
+
+        expect(context::reduceAll).toThrow(IllegalStateException.class);
+    }
+
+    @Test
+    public void reduceAllShouldReduceAllStatementsToStatementList() {
+        final MethodCall statement1 = mock(MethodCall.class, "s1");
+        final MethodCall statement2 = mock(MethodCall.class, "s2");
+
+        context.push(statement1);
+        context.push(statement2);
+
+        expect(context.reduceAll()).toBe(true);
+        expect(context.getStatements().toArray()).toBe(new Object[]{statement1, statement2});
     }
 
 }

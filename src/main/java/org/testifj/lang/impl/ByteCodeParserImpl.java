@@ -1,6 +1,7 @@
 package org.testifj.lang.impl;
 
 import org.testifj.lang.*;
+import org.testifj.lang.imlp.DecompilationContextImpl;
 import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.*;
 
@@ -17,21 +18,8 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
     @Override
     public Element[] parse(Method method, InputStream in) throws IOException {
         final ClassFile classFile = method.getClassFile();
-        final Stack<Expression> stack = new Stack<>();
-        final ArrayList<Statement> statements = new ArrayList<>();
         final ConstantPool constantPool = classFile.getConstantPool();
-
-        final Runnable shuffleStack = () -> {
-            while (!stack.isEmpty()) {
-                final Expression expression = stack.remove(0);
-
-                if (!(expression instanceof Statement)) {
-                    throw new ClassFileFormatException("Expression is not a valid statement: " + expression);
-                } else {
-                    statements.add((Statement) expression);
-                }
-            }
-        };
+        final DecompilationContext decompilationContext = new DecompilationContextImpl();
 
         while (true) {
             final int n = in.read();
@@ -48,7 +36,7 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                 case ByteCode.nop:
                     break;
                 case ByteCode.pop:
-                    shuffleStack.run();
+                    decompilationContext.reduceAll();
                     break;
 
                 // Locals
@@ -57,19 +45,23 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                 case ByteCode.aload_1:
                 case ByteCode.aload_2:
                 case ByteCode.aload_3: {
-                    loadVariable(method, byteCode - ByteCode.aload_0, stack); // TODO Check type
+                    loadVariable(method, byteCode - ByteCode.aload_0, decompilationContext); // TODO Check type
                     break;
                 }
                 case ByteCode.iload_0:
                 case ByteCode.iload_1:
                 case ByteCode.iload_2:
                 case ByteCode.iload_3: {
-                    loadVariable(method, byteCode - ByteCode.iload_0, stack);  // TODO Check type
+                    loadVariable(method, byteCode - ByteCode.iload_0, decompilationContext);  // TODO Check type
                     break;
                 }
                 case ByteCode.istore_1: {
                     final LocalVariable localVariable = method.getLocalVariableForIndex(1);
-                    statements.add(new VariableAssignmentImpl(stack.pop(), localVariable.getVariableName(), localVariable.getVariableType()));
+                    final Expression value = decompilationContext.pop();
+                    final VariableAssignmentImpl variableAssignment = new VariableAssignmentImpl(value,
+                            localVariable.getVariableName(), localVariable.getVariableType());
+
+                    decompilationContext.enlist(variableAssignment);
                     break;
                 }
 
@@ -78,7 +70,7 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                 case ByteCode.lstore_2:
                 case ByteCode.lstore_3: {
                     final int index = byteCode - ByteCode.lstore_0;
-                    storeVariable(method, index, stack, long.class);
+                    storeVariable(method, index, decompilationContext, long.class);
                     break;
                 }
                 case ByteCode.fstore_0:
@@ -86,7 +78,7 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                 case ByteCode.fstore_2:
                 case ByteCode.fstore_3: {
                     final int index = byteCode - ByteCode.fstore_0;
-                    storeVariable(method, index, stack, float.class);
+                    storeVariable(method, index, decompilationContext, float.class);
                     break;
                 }
 
@@ -95,24 +87,24 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                 case ByteCode.astore_2:
                 case ByteCode.astore_3: {
                     final int index = byteCode - ByteCode.astore_0;
-                    storeVariable(method, index, stack, null);
+                    storeVariable(method, index, decompilationContext, null);
                     break;
                 }
 
                 // Operators
 
                 case ByteCode.iadd:
-                    final Expression rightOperand = stack.pop();
-                    final Expression leftOperand = stack.pop();
+                    final Expression rightOperand = decompilationContext.pop();
+                    final Expression leftOperand = decompilationContext.pop();
 
-                    stack.push(new BinaryOperatorImpl(leftOperand, OperatorType.PLUS, rightOperand, int.class));
+                    decompilationContext.push(new BinaryOperatorImpl(leftOperand, OperatorType.PLUS, rightOperand, int.class));
 
                     break;
 
                 // Push constants onto stack
 
                 case ByteCode.bipush:
-                    stack.push(new ConstantExpressionImpl(in.read(), int.class));
+                    decompilationContext.push(new ConstantExpressionImpl(in.read(), int.class));
                     break;
 
                 // Constants
@@ -124,14 +116,14 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                 case ByteCode.iconst_3:
                 case ByteCode.iconst_4:
                 case ByteCode.iconst_5:
-                    stack.push(new ConstantExpressionImpl(byteCode - ByteCode.iconst_0, int.class));
+                    decompilationContext.push(new ConstantExpressionImpl(byteCode - ByteCode.iconst_0, int.class));
                     break;
                 case ByteCode.lconst_0:
                 case ByteCode.lconst_1:
-                    stack.push(new ConstantExpressionImpl((long)(byteCode - ByteCode.lconst_0), long.class));
+                    decompilationContext.push(new ConstantExpressionImpl((long)(byteCode - ByteCode.lconst_0), long.class));
                     break;
                 case ByteCode.sipush:
-                    stack.push(new ConstantExpressionImpl(((in.read() << 8) & 0xFF00 | in.read() & 0xFF), int.class));
+                    decompilationContext.push(new ConstantExpressionImpl(((in.read() << 8) & 0xFF00 | in.read() & 0xFF), int.class));
                     break;
 
                 case ByteCode.ldc1: {
@@ -139,13 +131,13 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
 
                     switch (entry.getTag()) {
                         case INTEGER:
-                            stack.push(new ConstantExpressionImpl(((IntegerEntry) entry).getValue(), int.class));
+                            decompilationContext.push(new ConstantExpressionImpl(((IntegerEntry) entry).getValue(), int.class));
                             break;
                         case FLOAT:
-                            stack.push(new ConstantExpressionImpl(((FloatEntry) entry).getValue(), float.class));
+                            decompilationContext.push(new ConstantExpressionImpl(((FloatEntry) entry).getValue(), float.class));
                             break;
                         case STRING:
-                            stack.push(new ConstantExpressionImpl(constantPool.getString(((StringEntry) entry).getStringIndex()), String.class));
+                            decompilationContext.push(new ConstantExpressionImpl(constantPool.getString(((StringEntry) entry).getStringIndex()), String.class));
                             break;
                     }
 
@@ -156,12 +148,12 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
 
                 case ByteCode.return_:
                     // Expecting empty stack; stacked expressions are statements
-                    shuffleStack.run();
-                    statements.add(new ReturnImpl());
+                    decompilationContext.reduceAll();
+                    decompilationContext.enlist(new ReturnImpl());
                     break;
                 case ByteCode.areturn:
                 case ByteCode.ireturn:
-                    statements.add(new ReturnValueImpl(stack.pop()));
+                    decompilationContext.enlist(new ReturnValueImpl(decompilationContext.pop()));
                     break;
 
                 // Field access
@@ -174,7 +166,7 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                     final String fieldDescriptor = constantPool.getString(nameAndTypeEntry.getDescriptorIndex());
                     final String fieldName = constantPool.getString(nameAndTypeEntry.getNameIndex());
 
-                    stack.push(new FieldReferenceImpl(stack.pop(), resolveType(className), SignatureImpl.parseType(fieldDescriptor), fieldName));
+                    decompilationContext.push(new FieldReferenceImpl(decompilationContext.pop(), resolveType(className), SignatureImpl.parseType(fieldDescriptor), fieldName));
 
                     break;
                 }
@@ -182,7 +174,7 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                 // Method invocation
 
                 case ByteCode.invokeinterface: {
-                    invokeMethod(in, stack, constantPool, false, true);
+                    invokeMethod(in, decompilationContext, constantPool, false, true);
 
                     final int count = in.read();
 
@@ -197,14 +189,14 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                     break;
                 }
                 case ByteCode.invokevirtual: {
-                    invokeMethod(in, stack, constantPool, false, false);
+                    invokeMethod(in, decompilationContext, constantPool, false, false);
                     break;
                 }
                 case ByteCode.invokespecial:
-                    invokeMethod(in, stack, constantPool, false, false);
+                    invokeMethod(in, decompilationContext, constantPool, false, false);
                     break;
                 case ByteCode.invokestatic:
-                    invokeMethod(in, stack, constantPool, true, false);
+                    invokeMethod(in, decompilationContext, constantPool, true, false);
                     break;
                 case ByteCode.invokedynamic: {
                     final int indexRef = (in.read() << 8) & 0xFF00 | in.read() & 0xFF;
@@ -244,7 +236,7 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                     final String backingMethodName = constantPool.getString(backingMethodNameAndType.getNameIndex());
                     final Signature backingMethodSignature = SignatureImpl.parse(constantPool.getString(backingMethodNameAndType.getDescriptorIndex()));
 
-                    stack.push(new LambdaImpl(
+                    decompilationContext.push(new LambdaImpl(
                             getFunctionalInterfaceSignature.getReturnType(),
                             functionalInterfaceMethodName,
                             functionalInterfaceMethodSignature,
@@ -261,21 +253,21 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
             }
         }
 
-        shuffleStack.run();
+        decompilationContext.reduceAll();
 
-        return statements.toArray(new Element[statements.size()]);
+        return decompilationContext.getStatements().stream().toArray(Element[]::new);
     }
 
-    private void storeVariable(Method method, int index, Stack<Expression> stack, Class expectedType) {
+    private void storeVariable(Method method, int index, DecompilationContext context, Class expectedType) {
         if (expectedType != null) {
             // TODO Check type
         }
 
         final LocalVariable localVariable = method.getLocalVariableForIndex(index);
-        stack.push(new VariableAssignmentImpl(stack.pop(), localVariable.getVariableName(), localVariable.getVariableType()));
+        context.push(new VariableAssignmentImpl(context.pop(), localVariable.getVariableName(), localVariable.getVariableType()));
     }
 
-    private void invokeMethod(InputStream in, Stack<Expression> stack, ConstantPool constantPool, boolean invokeStatic, boolean isInterface) throws IOException {
+    private void invokeMethod(InputStream in, DecompilationContext context, ConstantPool constantPool, boolean invokeStatic, boolean isInterface) throws IOException {
         final ClassEntry classEntry;
         final NameAndTypeEntry methodNameAndType;
         final int methodRefIndex = (in.read() << 8) & 0xFF00 | in.read() & 0xFF;
@@ -299,17 +291,17 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
         final Expression[] parameters = new Expression[signature.getParameterTypes().size()];
 
         for (int i = parameters.length - 1; i >= 0; i--) {
-            parameters[i] = stack.pop();
+            parameters[i] = context.pop();
         }
 
-        final Expression targetInstance = (invokeStatic ? null : stack.pop());
+        final Expression targetInstance = (invokeStatic ? null : context.pop());
 
-        stack.push(new MethodCallImpl(resolveType(targetClassName), methodName, signature, targetInstance, parameters));
+        context.push(new MethodCallImpl(resolveType(targetClassName), methodName, signature, targetInstance, parameters));
     }
 
-    private void loadVariable(Method method, int index, Stack<Expression> stack) {
+    private void loadVariable(Method method, int index, DecompilationContext context) {
         final LocalVariable localVariable = method.getLocalVariableForIndex(index);
-        stack.push(new LocalVariableReferenceImpl(localVariable.getVariableName(), localVariable.getVariableType()));
+        context.push(new LocalVariableReferenceImpl(localVariable.getVariableName(), localVariable.getVariableType()));
     }
 
     private Type resolveType(String className) {

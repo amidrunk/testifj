@@ -11,10 +11,19 @@ public interface DecompilationContext {
      * Reduces the stack, i.e. pops the stack and puts the stacked statement on in the
      * statement list. The element on the stack must be a valid statement.
      *
+     * @return Whether or not any element was reduced.
      * @throws java.lang.IllegalStateException Thrown if there's no expression on the stack
      *                                         or the stacked expression is not a valid statement.
      */
-    void reduce() throws IllegalStateException;
+    boolean reduce() throws IllegalStateException;
+
+    /**
+     * Reduces the stack until empty. All elements must be statements.
+     *
+     * @return Whether or not any element was reduced.
+     * @throws IllegalStateException Thrown if any element is not a statement.
+     */
+    boolean reduceAll() throws IllegalStateException;
 
     /**
      * Called by the decompiler when a statements has been reduced and needs to be enlisted.

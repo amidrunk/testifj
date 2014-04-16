@@ -24,8 +24,8 @@ public class LocalVariableImplTest {
 
         expect(variableTable.getStartPC()).toBe(1);
         expect(variableTable.getLength()).toBe(2);
-        expect(variableTable.getVariableName()).toBe("foo");
-        expect(variableTable.getVariableType()).toBe(String.class);
+        expect(variableTable.getName()).toBe("foo");
+        expect(variableTable.getType()).toBe(String.class);
         expect(variableTable.getIndex()).toBe(3);
     }
 

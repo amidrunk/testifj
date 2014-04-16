@@ -8,9 +8,9 @@ public interface LocalVariable {
 
     int getLength();
 
-    String getVariableName();
+    String getName();
 
-    Type getVariableType();
+    Type getType();
 
     int getIndex();
 

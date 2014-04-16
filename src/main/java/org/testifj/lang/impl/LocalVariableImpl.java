@@ -41,12 +41,12 @@ public class LocalVariableImpl implements LocalVariable {
     }
 
     @Override
-    public String getVariableName() {
+    public String getName() {
         return variableName;
     }
 
     @Override
-    public Type getVariableType() {
+    public Type getType() {
         return variableType;
     }
 

@@ -56,7 +56,7 @@ public class ByteCodeParserImplTest {
                                 ExampleClass.class,
                                 "methodWithIntegerReturn",
                                 SignatureImpl.parse("()I"),
-                                new LocalVariableReferenceImpl("this", ExampleClass.class),
+                                new LocalVariableReferenceImpl("this", ExampleClass.class, 0),
                                 new Expression[0]),
                         int.class
                 ))
@@ -73,7 +73,7 @@ public class ByteCodeParserImplTest {
                                 ExampleClass.class,
                                 "add",
                                 SignatureImpl.parse("(II)I"),
-                                new LocalVariableReferenceImpl("this", ExampleClass.class),
+                                new LocalVariableReferenceImpl("this", ExampleClass.class, 0),
                                 new Expression[]{new ConstantExpressionImpl(1, int.class), new ConstantExpressionImpl(2, int.class)})
                 )
         });
@@ -85,7 +85,7 @@ public class ByteCodeParserImplTest {
 
         final Element[] expectedElements = {
                 new VariableAssignmentImpl(new ConstantExpressionImpl(100, int.class), "n", int.class),
-                new ReturnValueImpl(new LocalVariableReferenceImpl("n", int.class))
+                new ReturnValueImpl(new LocalVariableReferenceImpl("n", int.class, 1))
         };
 
         expect(elements).toBe(expectedElements);
@@ -115,7 +115,7 @@ public class ByteCodeParserImplTest {
         final Element[] expectedElements = {
                 new MethodCallImpl(String.class, "toString", SignatureImpl.parse("()Ljava/lang/String;"),
                         new FieldReferenceImpl(
-                                new LocalVariableReferenceImpl("this", ExampleClass.class),
+                                new LocalVariableReferenceImpl("this", ExampleClass.class, 1),
                                 ExampleClass.class, String.class, "string"), new Expression[0]
                 ),
                 new ReturnImpl()
@@ -132,10 +132,12 @@ public class ByteCodeParserImplTest {
 
         final VariableAssignment assignment = (VariableAssignment) elements[0];
         expect(assignment.getVariableName()).toBe("s");
+
         expect(assignment.getVariableType()).toBe(Supplier.class);
         expect(assignment.getValue()).toBe(instanceOf(Lambda.class));
 
         final Lambda lambda = (Lambda) assignment.getValue();
+
         expect(lambda.getFunctionalInterface()).toBe(Supplier.class);
         expect(lambda.getFunctionalMethodName()).toBe("get");
         expect(lambda.getInterfaceMethodSignature()).toBe(SignatureImpl.parse("()Ljava/lang/Object;"));
@@ -148,7 +150,7 @@ public class ByteCodeParserImplTest {
                 Supplier.class,
                 "get",
                 SignatureImpl.parse("()Ljava/lang/Object;"),
-                new LocalVariableReferenceImpl("s", Supplier.class),
+                new LocalVariableReferenceImpl("s", Supplier.class, 1),
                 new Expression[0]
         ));
     }

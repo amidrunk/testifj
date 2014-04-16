@@ -108,7 +108,7 @@ public final class CodeDescriber implements Describer<CodePointer> {
         } else {
             // Don't add "this"-references
             if (targetInstance.getElementType() != ElementType.VARIABLE_REFERENCE
-                    || !((LocalVariableReference) targetInstance).getVariableName().equals("this")) {
+                    || !((LocalVariableReference) targetInstance).getName().equals("this")) {
                 append(codePointer.forElement(targetInstance), buffer);
                 buffer.append(".");
             }
@@ -128,7 +128,7 @@ public final class CodeDescriber implements Describer<CodePointer> {
     }
 
     private void append(CodePointer codePointer, LocalVariableReference localVariableReference, StringBuilder buffer) {
-        buffer.append(localVariableReference.getVariableName());
+        buffer.append(localVariableReference.getName());
     }
 
     private void append(CodePointer codePointer, BinaryOperator binaryOperator, StringBuilder buffer) {
@@ -149,7 +149,7 @@ public final class CodeDescriber implements Describer<CodePointer> {
         if (fieldReference.getTargetInstance().getElementType() == ElementType.VARIABLE_REFERENCE) {
             final LocalVariableReference variableReference = (LocalVariableReference) fieldReference.getTargetInstance();
 
-            if (variableReference.getVariableName().equals("this")) {
+            if (variableReference.getName().equals("this")) {
                 implicitTargetInstance = true;
             }
         }

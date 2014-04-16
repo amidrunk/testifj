@@ -1,5 +1,6 @@
 package org.testifj.lang.model.impl;
 
+import org.testifj.lang.Procedure;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.LocalVariableReference;
 
@@ -11,16 +12,20 @@ public class LocalVariableReferenceImpl implements LocalVariableReference {
 
     private final Type variableType;
 
-    public LocalVariableReferenceImpl(String variableName, Type variableType) {
+    private final int index;
+
+    public LocalVariableReferenceImpl(String variableName, Type variableType, int index) {
         assert variableName != null && !variableName.isEmpty() : "Variable name can't be null or empty";
         assert variableType != null : "Variable type can't be null";
+        assert index >= 0 : "Index must be positive";
 
         this.variableName = variableName;
         this.variableType = variableType;
+        this.index = index;
     }
 
     @Override
-    public String getVariableName() {
+    public String getName() {
         return variableName;
     }
 
@@ -32,6 +37,10 @@ public class LocalVariableReferenceImpl implements LocalVariableReference {
     @Override
     public ElementType getElementType() {
         return ElementType.VARIABLE_REFERENCE;
+    }
+
+    public int getIndex() {
+        return index;
     }
 
     @Override

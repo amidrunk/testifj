@@ -137,6 +137,6 @@ public class DefaultMethodTest {
 
         final LocalVariable localVariable = method.getLocalVariableForIndex(0);
 
-        expect(localVariable.getVariableName()).toBe("foo");
+        expect(localVariable.getName()).toBe("foo");
     }
 }

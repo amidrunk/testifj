@@ -8,8 +8,6 @@ import org.testifj.lang.model.impl.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Stack;
 
 import static org.testifj.lang.ConstantPoolEntry.*;
 
@@ -45,21 +43,21 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                 case ByteCode.aload_1:
                 case ByteCode.aload_2:
                 case ByteCode.aload_3: {
-                    loadVariable(method, byteCode - ByteCode.aload_0, decompilationContext); // TODO Check type
+                    ByteCodes.loadVariable(decompilationContext, method, byteCode - ByteCode.aload_0, Object.class);
                     break;
                 }
                 case ByteCode.iload_0:
                 case ByteCode.iload_1:
                 case ByteCode.iload_2:
                 case ByteCode.iload_3: {
-                    loadVariable(method, byteCode - ByteCode.iload_0, decompilationContext);  // TODO Check type
+                    ByteCodes.loadVariable(decompilationContext, method, byteCode - ByteCode.iload_0, int.class);
                     break;
                 }
                 case ByteCode.istore_1: {
                     final LocalVariable localVariable = method.getLocalVariableForIndex(1);
                     final Expression value = decompilationContext.pop();
                     final VariableAssignmentImpl variableAssignment = new VariableAssignmentImpl(value,
-                            localVariable.getVariableName(), localVariable.getVariableType());
+                            localVariable.getName(), localVariable.getType());
 
                     decompilationContext.enlist(variableAssignment);
                     break;
@@ -174,7 +172,7 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                 // Method invocation
 
                 case ByteCode.invokeinterface: {
-                    invokeMethod(in, decompilationContext, constantPool, false, true);
+                    invokeMethod(decompilationContext, in, constantPool, false, true);
 
                     final int count = in.read();
 
@@ -189,14 +187,14 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                     break;
                 }
                 case ByteCode.invokevirtual: {
-                    invokeMethod(in, decompilationContext, constantPool, false, false);
+                    invokeMethod(decompilationContext, in, constantPool, false, false);
                     break;
                 }
                 case ByteCode.invokespecial:
-                    invokeMethod(in, decompilationContext, constantPool, false, false);
+                    invokeMethod(decompilationContext, in, constantPool, false, false);
                     break;
                 case ByteCode.invokestatic:
-                    invokeMethod(in, decompilationContext, constantPool, true, false);
+                    invokeMethod(decompilationContext, in, constantPool, true, false);
                     break;
                 case ByteCode.invokedynamic: {
                     final int indexRef = (in.read() << 8) & 0xFF00 | in.read() & 0xFF;
@@ -264,10 +262,10 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
         }
 
         final LocalVariable localVariable = method.getLocalVariableForIndex(index);
-        context.push(new VariableAssignmentImpl(context.pop(), localVariable.getVariableName(), localVariable.getVariableType()));
+        context.push(new VariableAssignmentImpl(context.pop(), localVariable.getName(), localVariable.getType()));
     }
 
-    private void invokeMethod(InputStream in, DecompilationContext context, ConstantPool constantPool, boolean invokeStatic, boolean isInterface) throws IOException {
+    private void invokeMethod(DecompilationContext context, InputStream in, ConstantPool constantPool, boolean invokeStatic, boolean isInterface) throws IOException {
         final ClassEntry classEntry;
         final NameAndTypeEntry methodNameAndType;
         final int methodRefIndex = (in.read() << 8) & 0xFF00 | in.read() & 0xFF;
@@ -297,11 +295,6 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
         final Expression targetInstance = (invokeStatic ? null : context.pop());
 
         context.push(new MethodCallImpl(resolveType(targetClassName), methodName, signature, targetInstance, parameters));
-    }
-
-    private void loadVariable(Method method, int index, DecompilationContext context) {
-        final LocalVariable localVariable = method.getLocalVariableForIndex(index);
-        context.push(new LocalVariableReferenceImpl(localVariable.getVariableName(), localVariable.getVariableType()));
     }
 
     private Type resolveType(String className) {

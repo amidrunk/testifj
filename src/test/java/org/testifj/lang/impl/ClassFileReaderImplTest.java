@@ -129,14 +129,14 @@ public class ClassFileReaderImplTest {
                 .filter(a -> a.getName().equals(LocalVariableTable.ATTRIBUTE_NAME))
                 .findFirst().get();
 
-        final LocalVariable str1Variable = localVariableTable.getLocalVariables().stream().filter(lv -> lv.getVariableName().equals("str1")).findFirst().get();
-        final LocalVariable i1Variable = localVariableTable.getLocalVariables().stream().filter(lv -> lv.getVariableName().equals("i1")).findFirst().get();
+        final LocalVariable str1Variable = localVariableTable.getLocalVariables().stream().filter(lv -> lv.getName().equals("str1")).findFirst().get();
+        final LocalVariable i1Variable = localVariableTable.getLocalVariables().stream().filter(lv -> lv.getName().equals("i1")).findFirst().get();
 
-        assertEquals("str1", str1Variable.getVariableName());
-        assertEquals(String.class, str1Variable.getVariableType());
+        assertEquals("str1", str1Variable.getName());
+        assertEquals(String.class, str1Variable.getType());
 
-        assertEquals("i1", i1Variable.getVariableName());
-        assertEquals(int.class, i1Variable.getVariableType());
+        assertEquals("i1", i1Variable.getName());
+        assertEquals(int.class, i1Variable.getType());
     }
 
     @Test

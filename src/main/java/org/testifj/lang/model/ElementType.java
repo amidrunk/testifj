@@ -10,6 +10,7 @@ public enum ElementType {
     METHOD_CALL,
     FIELD_REFERENCE,
     VARIABLE_ASSIGNMENT,
-    LAMBDA
+    LAMBDA,
+    JUMP, BRANCH
 
 }

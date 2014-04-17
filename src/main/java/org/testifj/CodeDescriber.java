@@ -146,8 +146,8 @@ public final class CodeDescriber implements Describer<CodePointer> {
     private void append(CodePointer codePointer, FieldReference fieldReference, StringBuilder buffer) {
         boolean implicitTargetInstance = false;
 
-        if (fieldReference.getTargetInstance().getElementType() == ElementType.VARIABLE_REFERENCE) {
-            final LocalVariableReference variableReference = (LocalVariableReference) fieldReference.getTargetInstance();
+        if (fieldReference.getTargetInstance().get().getElementType() == ElementType.VARIABLE_REFERENCE) {
+            final LocalVariableReference variableReference = (LocalVariableReference) fieldReference.getTargetInstance().get();
 
             if (variableReference.getName().equals("this")) {
                 implicitTargetInstance = true;
@@ -155,7 +155,7 @@ public final class CodeDescriber implements Describer<CodePointer> {
         }
 
         if (!implicitTargetInstance) {
-            append(codePointer.forElement(fieldReference.getTargetInstance()), buffer);
+            append(codePointer.forElement(fieldReference.getTargetInstance().get()), buffer);
             buffer.append(".");
         }
 

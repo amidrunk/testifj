@@ -72,35 +72,26 @@ public final class DefaultMethod implements Method {
 
     @Override
     public InputStream getCodeForLineNumber(int lineNumber) {
-        final Optional<Attribute> attribute = getCode().getAttributes().stream()
+        final LineNumberTable lineNumberTable = (LineNumberTable) getCode().getAttributes().stream()
                 .filter(a -> a.getName().equals(LineNumberTable.ATTRIBUTE_NAME))
-                .findFirst();
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Line numbers are not present for method '" + getName() + "'"));
 
-        if (!attribute.isPresent()) {
-            throw new IllegalStateException("Line numbers are not present for method '" + getName() + "'");
-        }
-
-        final LineNumberTable lineNumberTable = (LineNumberTable) attribute.get();
-
-        final Optional<LineNumberTableEntry> startEntry = lineNumberTable.getEntries().stream()
+        final LineNumberTableEntry startEntry = lineNumberTable.getEntries().stream()
                 .filter(e -> e.getLineNumber() == lineNumber)
-                .findFirst();
-
-        if (!startEntry.isPresent()) {
-            throw new IllegalStateException("Code is not available for line number '" + lineNumber + "'");
-        }
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Code is not available for line number '" + lineNumber + "'"));
 
         final Optional<LineNumberTableEntry> endEntry = lineNumberTable.getEntries().stream()
-                .filter(e -> e.getLineNumber() > lineNumber)
-                .sorted((e1, e2) -> e1.getLineNumber() - e2.getLineNumber())
+                .filter(e -> e.getStartPC() > startEntry.getStartPC())
+                .sorted((e1, e2) -> e1.getStartPC() - e2.getStartPC())
                 .findFirst();
 
         try (InputStream inputStream = getCode().getCode()) {
-
-            inputStream.skip(startEntry.get().getStartPC());
+            inputStream.skip(startEntry.getStartPC());
 
             if (endEntry.isPresent()) {
-                final byte[] buffer = new byte[endEntry.get().getStartPC() - startEntry.get().getStartPC()];
+                final byte[] buffer = new byte[endEntry.get().getStartPC() - startEntry.getStartPC()];
 
                 inputStream.read(buffer);
 

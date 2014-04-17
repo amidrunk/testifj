@@ -1,28 +1,43 @@
 package org.testifj.lang.impl;
 
-import org.testifj.lang.ClassFileFormatException;
-import org.testifj.lang.DecompilationContext;
-import org.testifj.lang.LocalVariable;
-import org.testifj.lang.Method;
+import org.testifj.lang.*;
+import org.testifj.lang.model.Expression;
+import org.testifj.lang.model.impl.FieldReferenceImpl;
 import org.testifj.lang.model.impl.LocalVariableReferenceImpl;
+import org.testifj.lang.model.impl.VariableAssignmentImpl;
+
+import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.List;
 
 public final class ByteCodes {
 
-    public static void loadVariable(DecompilationContext context, Method method, int index, Class<?> expectedType) {
+    public static void loadVariable(DecompilationContext context, Method method, int index) {
         final LocalVariable localVariable = method.getLocalVariableForIndex(index);
-
-        if (expectedType.isPrimitive()) {
-            if (!localVariable.getType().equals(expectedType)) {
-                throw new ClassFileFormatException("Expected type of local variable '" + localVariable.getName()
-                        + "' to be " + expectedType.getName()
-                        + ", but was " + localVariable.getType().getTypeName());
-            }
-        } else if (localVariable.getType() instanceof Class && ((Class) localVariable.getType()).isPrimitive()) {
-            throw new ClassFileFormatException("Expected local variable '" + localVariable.getName()
-                    + "' to be non-primitive, was " + ((Class) localVariable.getType()).getName());
-        }
 
         context.push(new LocalVariableReferenceImpl(localVariable.getName(), localVariable.getType(), index));
     }
 
+    public static void storeVariable(DecompilationContext context, Method method, int index) {
+        final LocalVariable localVariable = method.getLocalVariableForIndex(index);
+        final Expression value = context.pop();
+
+        context.push(new VariableAssignmentImpl(value, localVariable.getName(), localVariable.getType()));
+    }
+
+    public static void getStatic(DecompilationContext context, Type declaringType, Type fieldType, String fieldName) {
+        context.push(new FieldReferenceImpl(null, declaringType, fieldType, fieldName));
+    }
+
+    public static void getField(DecompilationContext context, Type declaringType, Type fieldType, String fieldName) {
+        context.push(new FieldReferenceImpl(context.pop(), declaringType, fieldType, fieldName));
+    }
+
+    public static void getField(DecompilationContext context, Type declaringType, Type fieldType, String fieldName, boolean isStatic) {
+        if (isStatic) {
+            getStatic(context, declaringType, fieldType, fieldName);
+        } else {
+            getField(context, declaringType, fieldType, fieldName);
+        }
+    }
 }

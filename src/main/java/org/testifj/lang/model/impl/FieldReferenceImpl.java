@@ -5,6 +5,7 @@ import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.FieldReference;
 
 import java.lang.reflect.Type;
+import java.util.Optional;
 
 public final class FieldReferenceImpl implements FieldReference {
 
@@ -15,9 +16,9 @@ public final class FieldReferenceImpl implements FieldReference {
     private final Type fieldType;
 
     private final String fieldName;
+    private boolean aStatic;
 
     public FieldReferenceImpl(Expression targetInstance, Type declaringType, Type fieldType, String fieldName) {
-        assert targetInstance != null : "Target instance can't be null";
         assert declaringType != null : "Declaring type can't be null";
         assert fieldType != null : "Field type can't be null";
         assert fieldName != null && !fieldName.isEmpty() : "Field name can't be null or empty";
@@ -29,8 +30,8 @@ public final class FieldReferenceImpl implements FieldReference {
     }
 
     @Override
-    public Expression getTargetInstance() {
-        return targetInstance;
+    public Optional<Expression> getTargetInstance() {
+        return (targetInstance == null ? Optional.<Expression>empty() : Optional.of(targetInstance));
     }
 
     @Override
@@ -57,6 +58,10 @@ public final class FieldReferenceImpl implements FieldReference {
         return ElementType.FIELD_REFERENCE;
     }
 
+    public boolean isStatic() {
+        return (targetInstance == null);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -64,27 +69,34 @@ public final class FieldReferenceImpl implements FieldReference {
 
         FieldReferenceImpl that = (FieldReferenceImpl) o;
 
+        if (aStatic != that.aStatic) return false;
         if (!declaringType.equals(that.declaringType)) return false;
         if (!fieldName.equals(that.fieldName)) return false;
         if (!fieldType.equals(that.fieldType)) return false;
+        if (targetInstance != null ? !targetInstance.equals(that.targetInstance) : that.targetInstance != null)
+            return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        int result = declaringType.hashCode();
+        int result = targetInstance != null ? targetInstance.hashCode() : 0;
+        result = 31 * result + declaringType.hashCode();
         result = 31 * result + fieldType.hashCode();
         result = 31 * result + fieldName.hashCode();
+        result = 31 * result + (aStatic ? 1 : 0);
         return result;
     }
 
     @Override
     public String toString() {
         return "FieldReferenceImpl{" +
-                "declaringType=" + declaringType +
+                "targetInstance=" + (targetInstance == null ? "<static>" : targetInstance)+
+                ", declaringType=" + declaringType +
                 ", fieldType=" + fieldType +
                 ", fieldName='" + fieldName + '\'' +
+                ", aStatic=" + aStatic +
                 '}';
     }
 }

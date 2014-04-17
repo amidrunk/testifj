@@ -54,7 +54,8 @@ public final class ConstantExpressionImpl implements ConstantExpression {
     @Override
     public String toString() {
         return "ConstantExpressionImpl{" +
-                "constant=" + constant +
+                "constant=" + constant + ", " +
+                "type=" + type +
                 '}';
     }
 }

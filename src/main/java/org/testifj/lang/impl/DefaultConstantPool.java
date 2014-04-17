@@ -1,12 +1,13 @@
 package org.testifj.lang.impl;
 
-import org.testifj.lang.ConstantPool;
-import org.testifj.lang.ConstantPoolEntry;
-import org.testifj.lang.ConstantPoolEntryTag;
+import org.testifj.lang.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static org.testifj.lang.ConstantPoolEntry.FieldRefEntry;
+import static org.testifj.lang.ConstantPoolEntry.NameAndTypeEntry;
 
 public final class DefaultConstantPool implements ConstantPool {
 
@@ -46,6 +47,21 @@ public final class DefaultConstantPool implements ConstantPool {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
+    public <T extends ConstantPoolEntry> T getEntry(int index, Class<T> type) {
+        assert type != null : "Type can't be null";
+
+        final ConstantPoolEntry entry = getEntry(index);
+
+        if (!type.isInstance(entry)) {
+            throw new IllegalArgumentException("Expected entry of type " + type.getName()
+                    + " at constant pool index " + index + ", actually was " + entry);
+        }
+
+        return (T) entry;
+    }
+
+    @Override
     public ConstantPoolEntry[] getEntries(int[] indices) {
         assert indices != null : "Indices can't be null";
 
@@ -58,13 +74,24 @@ public final class DefaultConstantPool implements ConstantPool {
         return matchedEntries;
     }
 
+    @Override
+    public FieldDescriptor getFieldDescriptor(int index) {
+        final FieldRefEntry fieldRefEntry = getEntry(index, FieldRefEntry.class);
+        final NameAndTypeEntry nameAndType = getEntry(fieldRefEntry.getNameAndTypeIndex(), NameAndTypeEntry.class);
+        final String className = getClassName(fieldRefEntry.getClassIndex());
+        final String fieldDescriptor = getString(nameAndType.getDescriptorIndex());
+        final String fieldName= getString(nameAndType.getNameIndex());
+
+        return new FieldDescriptorImpl(className, fieldDescriptor, fieldName);
+    }
+
     private ConstantPoolEntry getEntry(int index, ConstantPoolEntryTag expectedTag) {
         assert (index > 0 && index <= entries.length) : "Index must be in range [1, " + entries.length + "], was " + index;
 
         final ConstantPoolEntry entry = entries[index - 1];
 
         if (entry.getTag() != expectedTag) {
-            throw new ClassFormatError("Invalid class pool entry at index " + index + "; expected " + expectedTag + ", was: " + entry);
+            throw new ClassFileFormatException("Invalid class pool entry at index " + index + "; expected " + expectedTag + ", was: " + entry);
         }
 
         return entry;

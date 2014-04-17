@@ -5,7 +5,15 @@ import org.testifj.lang.ClassFileFormatException;
 import org.testifj.lang.DecompilationContext;
 import org.testifj.lang.LocalVariable;
 import org.testifj.lang.Method;
+import org.testifj.lang.model.Expression;
+import org.testifj.lang.model.impl.ConstantExpressionImpl;
+import org.testifj.lang.model.impl.FieldReferenceImpl;
 import org.testifj.lang.model.impl.LocalVariableReferenceImpl;
+import org.testifj.lang.model.impl.VariableAssignmentImpl;
+
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -15,42 +23,80 @@ import static org.testifj.Expect.expect;
 
 public class ByteCodesTest {
 
+    private final List<Class<?>> primitives = Arrays.asList(
+            byte.class, short.class, char.class,  int.class,
+            long.class, float.class, double.class, boolean.class);
+
     private final DecompilationContext dc = mock(DecompilationContext.class);
+
     private final Method method = mock(Method.class);
 
     @Test
     public void loadVariableShouldPushVariableReferenceOntoStack() {
-        final LocalVariable localVariable = getLocalVariable("myVariable", String.class, 1);
+        expectLocalVariable(getLocalVariable("myVariable", String.class, 1));
 
-        when(method.getLocalVariableForIndex(eq(1))).thenReturn(localVariable);
-
-        ByteCodes.loadVariable(dc, method, 1, Object.class);
+        ByteCodes.loadVariable(dc, method, 1);
 
         verify(dc).push(eq(new LocalVariableReferenceImpl("myVariable", String.class, 1)));
     }
 
     @Test
-    public void loadVariableShouldFailIfVariableTypeIsNotCorrect() {
-        final LocalVariable local = mock(LocalVariable.class);
+    public void storeVariableShouldPushAssignmentToStack() {
+        final ConstantExpressionImpl value = new ConstantExpressionImpl("aValue", String.class);
 
-        when(local.getType()).thenReturn(Object.class);
-        when(method.getLocalVariableForIndex(1)).thenReturn(local);
+        expectLocalVariable(getLocalVariable("foo", String.class, 1));
+        when(dc.pop()).thenReturn(value);
 
-        expect(() -> ByteCodes.loadVariable(dc, method, 1, byte.class)).toThrow(ClassFileFormatException.class);
-        expect(() -> ByteCodes.loadVariable(dc, method, 1, short.class)).toThrow(ClassFileFormatException.class);
-        expect(() -> ByteCodes.loadVariable(dc, method, 1, char.class)).toThrow(ClassFileFormatException.class);
-        expect(() -> ByteCodes.loadVariable(dc, method, 1, int.class)).toThrow(ClassFileFormatException.class);
-        expect(() -> ByteCodes.loadVariable(dc, method, 1, float.class)).toThrow(ClassFileFormatException.class);
-        expect(() -> ByteCodes.loadVariable(dc, method, 1, double.class)).toThrow(ClassFileFormatException.class);
-        expect(() -> ByteCodes.loadVariable(dc, method, 1, long.class)).toThrow(ClassFileFormatException.class);
-        expect(() -> ByteCodes.loadVariable(dc, method, 1, boolean.class)).toThrow(ClassFileFormatException.class);
+        ByteCodes.storeVariable(dc, method, 1);
 
-        when(local.getType()).thenReturn(int.class);
-
-        expect(() -> ByteCodes.loadVariable(dc, method, 1, String.class)).toThrow(ClassFileFormatException.class);
+        verify(dc).push(new VariableAssignmentImpl(value, "foo", String.class));
     }
 
-    private LocalVariable getLocalVariable(String name, Class<String> type, int index) {
+    @Test
+    public void getFieldShouldPushFieldReferenceToStack() {
+        final ConstantExpressionImpl constant = new ConstantExpressionImpl("MyString", String.class);
+
+        when(dc.pop()).thenReturn(constant);
+
+        ByteCodes.getField(dc, String.class, String.class, "foo");
+
+        verify(dc).push(new FieldReferenceImpl(constant, String.class, String.class, "foo"));
+    }
+
+    @Test
+    public void getStaticShouldPushStaticFieldReferenceToStack() {
+        ByteCodes.getStatic(dc, BigDecimal.class, BigDecimal.class, "ONE");
+
+        verify(dc).push(new FieldReferenceImpl(null, BigDecimal.class, BigDecimal.class, "ONE"));
+    }
+
+    @Test
+    public void getFieldForStaticShouldPushStatic() {
+        ByteCodes.getField(dc, String.class, String.class, "foo", true);
+
+        verify(dc).push(eq(new FieldReferenceImpl(null, String.class, String.class, "foo")));
+    }
+
+    @Test
+    public void getFieldForNonStaticShouldPushFieldRef() {
+        final Expression value = mock(Expression.class);
+
+        when(dc.pop()).thenReturn(value);
+
+        ByteCodes.getField(dc, String.class, String.class, "foo", false);
+
+        verify(dc).push(new FieldReferenceImpl(value, String.class, String.class, "foo"));
+    }
+
+    @Test
+    public void booleanVariableCanBeLoadedFromInt() {
+        expectLocalVariable(getLocalVariable("test", boolean.class, 1));
+        ByteCodes.loadVariable(dc, method, 1);
+
+        verify(dc).push(new LocalVariableReferenceImpl("test", boolean.class, 1));
+    }
+
+    private LocalVariable getLocalVariable(String name, Class<?> type, int index) {
         final LocalVariable localVariable = mock(LocalVariable.class);
 
         when(localVariable.getName()).thenReturn(name);
@@ -58,6 +104,10 @@ public class ByteCodesTest {
         when(localVariable.getIndex()).thenReturn(index);
 
         return localVariable;
+    }
+
+    private void expectLocalVariable(LocalVariable localVariable) {
+        when(method.getLocalVariableForIndex(eq(localVariable.getIndex()))).thenReturn(localVariable);
     }
 
 }

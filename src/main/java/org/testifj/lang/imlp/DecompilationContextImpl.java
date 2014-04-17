@@ -23,7 +23,7 @@ public final class DecompilationContextImpl implements DecompilationContext {
 
         checkReducable(stack.peek());
 
-        enlist((Statement) stack.pop());
+        statements.add((Statement) stack.pop());
 
         return true;
     }
@@ -35,7 +35,7 @@ public final class DecompilationContextImpl implements DecompilationContext {
         }
 
         stack.forEach(this::checkReducable);
-        stack.forEach(e -> enlist((Statement) e));
+        stack.forEach(e -> statements.add((Statement) e));
         stack.clear();
 
         return true;
@@ -44,6 +44,8 @@ public final class DecompilationContextImpl implements DecompilationContext {
     @Override
     public void enlist(Statement statement) {
         assert statement != null : "Statement can't be null";
+
+        reduceAll();
 
         statements.add(statement);
     }
@@ -64,6 +66,18 @@ public final class DecompilationContextImpl implements DecompilationContext {
     @Override
     public List<Statement> getStatements() {
         return Collections.unmodifiableList(statements);
+    }
+
+    @Override
+    public boolean hasStackedExpressions() {
+        return !stack.isEmpty();
+    }
+
+    @Override
+    public void replaceStatement(int index, Statement newStatement) {
+        assert newStatement != null : "New statement can't be null";
+
+        statements.set(index, newStatement);
     }
 
     private void checkStackNotEmpty() {

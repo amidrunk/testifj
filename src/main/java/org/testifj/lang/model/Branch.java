@@ -1,0 +1,13 @@
+package org.testifj.lang.model;
+
+public interface Branch extends Statement {
+
+    Expression getLeftOperand();
+
+    OperatorType getOperatorType();
+
+    Expression getRightOperand();
+
+    int getTargetPC();
+
+}

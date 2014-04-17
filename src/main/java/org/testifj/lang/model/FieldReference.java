@@ -1,10 +1,11 @@
 package org.testifj.lang.model;
 
 import java.lang.reflect.Type;
+import java.util.Optional;
 
 public interface FieldReference extends Expression {
 
-    Expression getTargetInstance();
+    Optional<Expression> getTargetInstance();
 
     Type getDeclaringType();
 

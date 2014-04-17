@@ -157,12 +157,13 @@ public class ByteCodeParserImplTest {
 
     @Test
     public void methodWithStaticFieldReferenceCanBeParsed() {
-        final Element[] elements = parseMethodBody("methodWithStaticFieldReference");
-
-        expect(elements).toBe(new Element[]{
-                new FieldReferenceImpl(null, BigDecimal.class, BigDecimal.class, "ZERO"),
+        final Element[] actualElements = parseMethodBody("methodWithStaticFieldReference");
+        final Element[] expectedElements = {
+                new VariableAssignmentImpl(new FieldReferenceImpl(null, BigDecimal.class, BigDecimal.class, "ZERO"), "b", BigDecimal.class),
                 new ReturnImpl()
-        });
+        };
+
+        expect(actualElements).toBe(expectedElements);
     }
 
     @Test
@@ -176,6 +177,24 @@ public class ByteCodeParserImplTest {
         });
     }
 
+    @Test
+    public void methodWithByteConstantsCanBeParsed() {
+        final Element[] elements = parseMethodBody("methodWithByteConstants");
+
+        expect(elements).toBe(new Element[]{
+                new VariableAssignmentImpl(new ConstantExpressionImpl(0, int.class), "b1", byte.class),
+                new VariableAssignmentImpl(new ConstantExpressionImpl(1, int.class), "b2", byte.class),
+                new VariableAssignmentImpl(new ConstantExpressionImpl(2, int.class), "b3", byte.class),
+                new ReturnImpl()
+        });
+    }
+
+    @Test
+    public void methodWithBooleanComparisonCanBeParsed() {
+        final Element[] elements = parseMethodBody("methodWithBooleanComparison");
+        System.out.println(Arrays.asList(elements));
+    }
+
     private Element[] parseMethodBody(String methodName) {
         return ClassModelTestUtils.methodBodyOf(ExampleClass.class, methodName);
     }
@@ -187,6 +206,12 @@ public class ByteCodeParserImplTest {
         private void methodWithLongConstants() {
             long l1 = 0;
             long l2 = 1;
+        }
+
+        private void methodWithByteConstants() {
+            byte b1 = 0;
+            byte b2 = 1;
+            byte b3 = 2;
         }
 
         private void methodWithStaticFieldReference() {
@@ -231,6 +256,10 @@ public class ByteCodeParserImplTest {
             int n = 123456789;
             float f = 123456789f;
             String str = "foobar";
+        }
+
+        private void methodWithBooleanComparison() {
+            boolean b = "str".length() == 3;
         }
 
     }

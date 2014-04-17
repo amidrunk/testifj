@@ -56,4 +56,8 @@ public interface DecompilationContext {
      */
     List<Statement> getStatements();
 
+    boolean hasStackedExpressions();
+
+    void replaceStatement(int index, Statement newStatement);
+
 }

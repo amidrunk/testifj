@@ -1,6 +1,5 @@
 package org.testifj.matchers.core;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.function.Supplier;
@@ -9,7 +8,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.testifj.Expect.expect;
 import static org.testifj.matchers.core.Equal.equal;
-import static org.testifj.matchers.core.StringShould.containString;
 
 public class EqualTest {
 
@@ -44,7 +42,6 @@ public class EqualTest {
     }
 
     @Test
-    @Ignore("Add when Expect generates descriptions")
     public void failedExpectationShouldContainDescription() {
         final Supplier<String> supplier = () -> "foo";
 
@@ -53,11 +50,8 @@ public class EqualTest {
         try {
             expect(supplier.get()).toBe("bar");
         } catch (AssertionError e) {
+            expect(e.getMessage()).toBe("Expected supplier.get() => \"foo\" to be \"bar\"");
             failed = true;
-
-            expect(e.getMessage()).to(containString("supplier.get()"));
-            expect(e.getMessage()).to(containString("\"foo\""));
-            expect(e.getMessage()).to(containString("\"bar\""));
         }
 
         expect(failed).toBe(true);

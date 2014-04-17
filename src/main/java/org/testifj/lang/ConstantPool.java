@@ -12,6 +12,10 @@ public interface ConstantPool {
 
     ConstantPoolEntry getEntry(int index);
 
+    <T extends ConstantPoolEntry> T getEntry(int index, Class<T> type);
+
     ConstantPoolEntry[] getEntries(int[] indices);
+
+    FieldDescriptor getFieldDescriptor(int index);
 
 }

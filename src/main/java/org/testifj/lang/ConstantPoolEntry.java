@@ -110,7 +110,7 @@ public abstract class ConstantPoolEntry {
 
         @Override
         public String toString() {
-            return "ConstantPoolEntry{classIndex=" + classIndex + ", nameAndTypeIndex=" + nameAndTypeIndex + "}";
+            return "FieldRefEntry{classIndex=" + classIndex + ", nameAndTypeIndex=" + nameAndTypeIndex + "}";
         }
     }
 

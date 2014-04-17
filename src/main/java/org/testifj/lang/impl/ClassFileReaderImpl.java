@@ -74,9 +74,9 @@ public final class ClassFileReaderImpl implements ClassFileReader {
             final Attribute[] attributes = readAttributes(din, constantPool);
 
             if ("<init>".equals(name)) {
-                constructors.add(new DefaultConstructor(classFileSupplier, accessFlags, name, signature, attributes));
+                constructors.add(new DefaultConstructor(classFileSupplier, accessFlags, name, SignatureImpl.parse(signature), attributes));
             } else {
-                methods.add(new DefaultMethod(classFileSupplier, accessFlags, name, signature, attributes));
+                methods.add(new DefaultMethod(classFileSupplier, accessFlags, name, SignatureImpl.parse(signature), attributes));
             }
         }
     }
@@ -90,7 +90,7 @@ public final class ClassFileReaderImpl implements ClassFileReader {
             final String signature = constantPool.getString(din.readShort());
             final Attribute[] attributes = readAttributes(din, constantPool);
 
-            fields[i] = new DefaultField(classFileSupplier, accessFlags, name, signature, attributes);
+            fields[i] = new DefaultField(classFileSupplier, accessFlags, name, SignatureImpl.parseType(signature), attributes);
         }
 
         return fields;
@@ -138,7 +138,7 @@ public final class ClassFileReaderImpl implements ClassFileReader {
                         localVariables[j] = new LocalVariableImpl(startPC, variableLength, variableName, type, index);
                     }
 
-                    attributes[i] = new LocalVariableTableImpl(ByteBuffer.wrap(buffer), localVariables);
+                    attributes[i] = new LocalVariableTableImpl(localVariables);
 
                     break;
                 }

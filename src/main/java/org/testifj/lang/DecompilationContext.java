@@ -60,4 +60,6 @@ public interface DecompilationContext {
 
     void replaceStatement(int index, Statement newStatement);
 
+    void removeStatement(int index);
+
 }

@@ -18,4 +18,6 @@ public interface ConstantPool {
 
     FieldDescriptor getFieldDescriptor(int index);
 
+    long getLong(int index);
+
 }

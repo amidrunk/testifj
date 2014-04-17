@@ -80,6 +80,11 @@ public final class DecompilationContextImpl implements DecompilationContext {
         statements.set(index, newStatement);
     }
 
+    @Override
+    public void removeStatement(int index) {
+        statements.remove(index);
+    }
+
     private void checkStackNotEmpty() {
         if (stack.isEmpty()) {
             throw new IllegalStateException("No syntax element is available on the stack");

@@ -3,6 +3,7 @@ package org.testifj.lang.impl;
 import org.testifj.lang.Attribute;
 import org.testifj.lang.ClassFile;
 import org.testifj.lang.Constructor;
+import org.testifj.lang.model.Signature;
 
 import java.util.Arrays;
 import java.util.List;
@@ -16,11 +17,11 @@ public final class DefaultConstructor implements Constructor {
 
     private final String name;
 
-    private final String signature;
+    private final Signature signature;
 
     private final Attribute[] attributes;
 
-    public DefaultConstructor(Supplier<ClassFile> classFile, int accessFlags, String name, String signature, Attribute[] attributes) {
+    public DefaultConstructor(Supplier<ClassFile> classFile, int accessFlags, String name, Signature signature, Attribute[] attributes) {
         assert name != null : "Constructor name can't be null (should be \"<init>\")";
         assert name.equals("<init>") : "Constructor name '" + name + "' is not valid; should be '<init>'";
         assert signature != null : "Signature can't be null";
@@ -49,7 +50,7 @@ public final class DefaultConstructor implements Constructor {
     }
 
     @Override
-    public String getSignature() {
+    public Signature getSignature() {
         return signature;
     }
 

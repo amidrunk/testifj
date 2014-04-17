@@ -1,12 +1,20 @@
 package org.testifj.lang.impl;
 
 import org.testifj.lang.Lambda;
+import org.testifj.lang.ReferenceKind;
 import org.testifj.lang.model.ElementType;
+import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.Signature;
 
 import java.lang.reflect.Type;
+import java.util.Optional;
 
+// TODO ReferenceKind is probably a discriminator... different sub classes
 public class LambdaImpl implements Lambda {
+
+    private final Optional<Expression> self;
+
+    private final ReferenceKind referenceKind;
 
     private final Type functionalInterface;
 
@@ -20,13 +28,31 @@ public class LambdaImpl implements Lambda {
 
     private final Signature backingMethodSignature;
 
-    public LambdaImpl(Type functionalInterface, String functionalMethodName, Signature interfaceMethodSignature, Type declaringClass, String backingMethodName, Signature backingMethodSignature) {
+    public LambdaImpl(Optional<Expression> self,
+                      ReferenceKind referenceKind,
+                      Type functionalInterface,
+                      String functionalMethodName,
+                      Signature interfaceMethodSignature,
+                      Type declaringClass,
+                      String backingMethodName,
+                      Signature backingMethodSignature) {
+        this.self = self;
+        this.referenceKind = referenceKind;
         this.functionalInterface = functionalInterface;
         this.functionalMethodName = functionalMethodName;
         this.interfaceMethodSignature = interfaceMethodSignature;
         this.declaringClass = declaringClass;
         this.backingMethodName = backingMethodName;
         this.backingMethodSignature = backingMethodSignature;
+    }
+
+    @Override
+    public ReferenceKind getReferenceKind() {
+        return referenceKind;
+    }
+
+    public Optional<Expression> getSelf() {
+        return self;
     }
 
     @Override
@@ -100,7 +126,8 @@ public class LambdaImpl implements Lambda {
     @Override
     public String toString() {
         return "LambdaImpl{" +
-                "functionalInterface=" + functionalInterface +
+                "self=" + self+
+                ", functionalInterface=" + functionalInterface +
                 ", functionalMethodName='" + functionalMethodName + '\'' +
                 ", interfaceMethodSignature=" + interfaceMethodSignature +
                 ", declaringClass=" + declaringClass +

@@ -8,8 +8,6 @@ public interface Member {
 
     String getName();
 
-    String getSignature();
-
     List<Attribute> getAttributes();
 
     ClassFile getClassFile();

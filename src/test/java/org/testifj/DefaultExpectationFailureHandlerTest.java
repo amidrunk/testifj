@@ -80,6 +80,17 @@ public class DefaultExpectationFailureHandlerTest {
                 .where(messageIs(equalTo("Expected \"foo\" to be _.length() > 1")));
     }
 
+    @Test
+    public void expectedExceptionFailureShouldDescribeProcedureAndExpectedExpression() {
+        try {
+            expect(this::doStuff).toThrow(RuntimeException.class);
+            fail();
+        } catch (AssertionError e) {
+            expect(e.getMessage()).toBe(
+                "Expected \"doStuff()\" to throw java.lang.RuntimeException");
+        }
+    }
+
     private ValueMismatchFailureImpl failure(Caller caller, Object actualValue) {
         return failure(caller, Optional.empty(), actualValue);
     }
@@ -99,6 +110,10 @@ public class DefaultExpectationFailureHandlerTest {
 
     private String getExampleString() {
         return "foo";
+    }
+
+    private void doStuff() {
+
     }
 
 }

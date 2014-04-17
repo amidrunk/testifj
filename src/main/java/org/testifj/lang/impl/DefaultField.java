@@ -4,6 +4,7 @@ import org.testifj.lang.Attribute;
 import org.testifj.lang.ClassFile;
 import org.testifj.lang.Field;
 
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
@@ -16,20 +17,20 @@ public final class DefaultField implements Field {
 
     private final String name;
 
-    private final String signature;
+    private final Type type;
 
     private final Attribute[] attributes;
 
-    public DefaultField(Supplier<ClassFile> classFile, int accessFlags, String name, String signature, Attribute[] attributes) {
+    public DefaultField(Supplier<ClassFile> classFile, int accessFlags, String name, Type type, Attribute[] attributes) {
         assert classFile != null : "Class file can't be null";
         assert name != null : "name can't be null";
-        assert signature != null : "signature can't be null";
+        assert type != null : "Type can't be null";
         assert attributes != null : "attributes can't be null";
 
         this.classFile = classFile;
         this.accessFlags = accessFlags;
         this.name = name;
-        this.signature = signature;
+        this.type = type;
         this.attributes = attributes;
     }
 
@@ -49,8 +50,8 @@ public final class DefaultField implements Field {
     }
 
     @Override
-    public String getSignature() {
-        return signature;
+    public Type getType() {
+        return type;
     }
 
     @Override
@@ -72,7 +73,7 @@ public final class DefaultField implements Field {
 
         return accessFlags == other.accessFlags
                 && name.equals(other.name)
-                && signature.equals(other.signature)
+                && type.equals(other.type)
                 && Arrays.equals(attributes, other.attributes);
     }
 
@@ -81,7 +82,7 @@ public final class DefaultField implements Field {
         return Arrays.hashCode(new int[]{
                 accessFlags,
                 name.hashCode(),
-                signature.hashCode(),
+                type.hashCode(),
                 Arrays.hashCode(attributes)
         });
     }
@@ -91,7 +92,7 @@ public final class DefaultField implements Field {
         return "DefaultField{"
                 + "accessFlags=" + accessFlags + ", "
                 + "name=\"" + name + "\", "
-                + "signature=\"" + signature + "\", "
+                + "type=\"" + type + "\", "
                 + "attributes=" + Arrays.asList(attributes)
                 + "}";
     }

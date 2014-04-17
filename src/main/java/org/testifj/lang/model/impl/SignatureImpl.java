@@ -13,11 +13,14 @@ import java.util.regex.Pattern;
 
 public final class SignatureImpl implements Signature {
 
+    private final String specification;
+
     private final Type[] parameterTypes;
 
     private final Type returnType;
 
-    private SignatureImpl(Type[] parameterTypes, Type returnType) {
+    private SignatureImpl(String specification, Type[] parameterTypes, Type returnType) {
+        this.specification = specification;
         this.parameterTypes = parameterTypes;
         this.returnType = returnType;
     }
@@ -59,7 +62,7 @@ public final class SignatureImpl implements Signature {
 
         final Type returnType = readType(reader);
 
-        return new SignatureImpl(parameterTypes.toArray(new Type[parameterTypes.size()]), returnType);
+        return new SignatureImpl(spec, parameterTypes.toArray(new Type[parameterTypes.size()]), returnType);
     }
 
     @Override
@@ -84,10 +87,7 @@ public final class SignatureImpl implements Signature {
 
     @Override
     public String toString() {
-        return "SignatureImpl{" +
-                "parameterTypes=" + Arrays.toString(parameterTypes) +
-                ", returnType=" + returnType +
-                '}';
+        return specification;
     }
 
     public static Type parseType(String string) {

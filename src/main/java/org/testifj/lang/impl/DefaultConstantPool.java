@@ -85,6 +85,11 @@ public final class DefaultConstantPool implements ConstantPool {
         return new FieldDescriptorImpl(className, fieldDescriptor, fieldName);
     }
 
+    @Override
+    public long getLong(int index) {
+        return getEntry(index, ConstantPoolEntry.LongEntry.class).getValue();
+    }
+
     private ConstantPoolEntry getEntry(int index, ConstantPoolEntryTag expectedTag) {
         assert (index > 0 && index <= entries.length) : "Index must be in range [1, " + entries.length + "], was " + index;
 

@@ -14,6 +14,7 @@ import org.testifj.lang.model.MethodCall;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
+import java.util.function.BiFunction;
 
 /**
  * TODO use some MessageBuilder of sorts...
@@ -51,38 +52,31 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
     @Override
     public void handleExpectationFailure(ExpectationFailure failure) {
         if (failure instanceof ValueMismatchFailure) {
-            final ValueMismatchFailure valueMismatchFailure = (ValueMismatchFailure) failure;
-            final Description description = describe(valueMismatchFailure.getCaller(), valueMismatchFailure.getValue(), valueMismatchFailure.getExpectedValue());
-
-            throw new AssertionError(descriptionFormat.format(description));
+            handleValueMismatchFailure((ValueMismatchFailure) failure);
+        } else if (failure instanceof ExpectedExceptionNotThrown) {
+            handleExpectedExceptionNotThrownException((ExpectedExceptionNotThrown) failure);
         }
     }
 
-    private Description describe(Caller caller, Object actualValue, Optional<Object> expectedValue) {
-        final ClassFile classFile;
+    private void handleValueMismatchFailure(ValueMismatchFailure failure) {
+        final Description description = forCaller(failure.getCaller(), (method,elements)
+                -> describeValueMismatch(new CodePointer(method, elements[0]), failure.getValue(), failure.getExpectedValue()));
 
-        try (InputStream in = getClass().getResourceAsStream("/" + caller.getCallerStackTraceElement().getClassName().replace('.', '/') + ".class")) {
-            classFile = classFileReader.read(in);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        final Method callerMethod = classFile.getMethods().stream()
-                .filter(m -> m.getName().equals(caller.getCallerStackTraceElement().getMethodName()))
-                .findFirst().get();
-
-        final Element[] elements;
-
-        try (InputStream codeForLineNumber = callerMethod.getCodeForLineNumber(caller.getCallerStackTraceElement().getLineNumber())) {
-            elements = byteCodeParser.parse(callerMethod, codeForLineNumber);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return describe(new CodePointer(callerMethod, elements[0]), actualValue, expectedValue);
+        throw new AssertionError(descriptionFormat.format(description));
     }
 
-    private Description describe(CodePointer codePointer, Object actualValue, Optional<Object> expectedValue) {
+    private void handleExpectedExceptionNotThrownException(ExpectedExceptionNotThrown failure) {
+        final Description description = forCaller(failure.getCaller(), (method, elements) -> {
+            final Description procedureDescription = syntaxElementDescriber.describe(new CodePointer(method, elements[0]));
+            return BasicDescription.from("Expected [")
+                    .appendDescription(procedureDescription)
+                    .appendText("] to trow " + failure.getExpectedException().getName());
+        });
+
+        throw new AssertionError(description.toString());
+    }
+
+    private Description describeValueMismatch(CodePointer codePointer, Object actualValue, Optional<Object> expectedValue) {
         final Element element = codePointer.getElement();
 
         if (element.getElementType() == ElementType.METHOD_CALL) {
@@ -102,7 +96,7 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
 
                 final Expression actualValueExpression = expectCall.getParameters().get(0);
 
-                final Description actualValueDescription = getValueDescription(codePointer.forElement(actualValueExpression), Optional.of(actualValue));
+                final Description actualValueDescription = getValueDescription(codePointer.forElement(actualValueExpression), Optional.ofNullable(actualValue));
                 final Description expectedValueDescription = getValueDescription(codePointer.forElement(expectedValueExpression), expectedValue);
 
                 return BasicDescription.from("Expected ")
@@ -134,6 +128,30 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
         final String formattedDescription2 = descriptionFormat.format(description2);
 
         return formattedDescription1.equals(formattedDescription2);
+    }
+
+    private <T> T forCaller(Caller caller, BiFunction<Method, Element[], T> syntaxElementsHandler) {
+        final ClassFile classFile;
+
+        try (InputStream in = getClass().getResourceAsStream("/" + caller.getCallerStackTraceElement().getClassName().replace('.', '/') + ".class")) {
+            classFile = classFileReader.read(in);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        final Method callerMethod = classFile.getMethods().stream()
+                .filter(m -> m.getName().equals(caller.getCallerStackTraceElement().getMethodName()))
+                .findFirst().get();
+
+        final Element[] elements;
+
+        try (InputStream codeForLineNumber = callerMethod.getCodeForLineNumber(caller.getCallerStackTraceElement().getLineNumber())) {
+            elements = byteCodeParser.parse(callerMethod, codeForLineNumber);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return syntaxElementsHandler.apply(callerMethod, elements);
     }
 
     public static final class Builder {

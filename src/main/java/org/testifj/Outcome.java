@@ -1,33 +1,39 @@
 package org.testifj;
 
+import java.util.Optional;
+
 public final class Outcome {
 
-    private final Throwable exception;
+    private final Caller caller;
 
-    private Outcome(Throwable exception) {
-        this.exception = exception;
+    private final Optional<Throwable> exception;
+
+    private Outcome(Caller caller, Optional<Throwable> optionalThrowable) {
+        this.caller = caller;
+        this.exception = optionalThrowable;
     }
 
-    public Throwable getException() {
-        if (!isExceptional()) {
-            throw new IllegalStateException("Outcome is not exceptional");
-        }
-
+    public Optional<Throwable> getException() {
         return exception;
     }
 
     public boolean isExceptional() {
-        return (exception != null);
+        return exception.isPresent();
     }
 
-    public static Outcome exceptional(Throwable exception) {
+    public Caller getCaller() {
+        return caller;
+    }
+
+    public static Outcome exceptional(Caller caller, Throwable exception) {
+        assert caller != null : "Caller can't be null";
         assert exception != null : "Exception can't be null for exceptional outcomes";
 
-        return new Outcome(exception);
+        return new Outcome(caller, Optional.of(exception));
     }
 
-    public static Outcome successful() {
-        return new Outcome(null);
+    public static Outcome successful(Caller caller) {
+        assert caller != null : "Caller can't be null";
+        return new Outcome(caller, Optional.empty());
     }
-
 }

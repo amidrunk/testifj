@@ -1,6 +1,7 @@
 package org.testifj;
 
 import org.testifj.annotations.DSL;
+import org.testifj.impl.ExpectedExceptionNotThrownImpl;
 import org.testifj.lang.Procedure;
 import org.testifj.matchers.core.Equal;
 
@@ -65,24 +66,6 @@ public final class Expect {
         };
     }
 
-    public interface ExpectValueContinuation<T> {
-
-        void to(Matcher<T> matcher);
-
-        default void toBe(Matcher<T> matcher) {
-            to(matcher);
-        }
-
-        default void toBe(T instance) {
-            toBe(Equal.equal(instance));
-        }
-
-        default ExpectValueContinuation<T> not() {
-            return matcher -> ExpectValueContinuation.this.to(instance -> !matcher.matches(instance));
-        }
-
-    }
-
     /**
      * Initializes an expectation on a void-return procedure. Expectations on the outcome of the
      * procedure can be tested, which is exceptional or non-exceptional.
@@ -91,14 +74,17 @@ public final class Expect {
      * @return A continuance that allows for further expectation specification.
      */
     public static ExpectProcedureContinuation expect(Procedure procedure) {
+        final List<StackTraceElement> stackTrace = Arrays.asList(Thread.currentThread().getStackTrace());
+        final Caller caller = new Caller(stackTrace.subList(1, stackTrace.size()), 1);
+
         return expectation -> {
             Outcome outcome;
 
             try {
                 procedure.call();
-                outcome = Outcome.successful();
+                outcome = Outcome.successful(caller);
             } catch (Throwable e) {
-                outcome = Outcome.exceptional(e);
+                outcome = Outcome.exceptional(caller, e);
             }
 
             expectation.verify(outcome);
@@ -133,13 +119,18 @@ public final class Expect {
 
         default <E extends Throwable> ToThrowContinuance<E> toThrow(Class<E> exceptionType) {
             final Expectation<Outcome> expectation = outcome -> {
+                if (!outcome.isExceptional()) {
+                    Configuration.get().getExpectationFailureHandler().handleExpectationFailure(
+                            new ExpectedExceptionNotThrownImpl(outcome.getCaller(), exceptionType));
+                }
+
                 assert outcome.isExceptional() : "Exception of type '" + exceptionType.getName() + "' was expected";
 
-                if (!exceptionType.isInstance(outcome.getException())) {
-                    if (outcome.getException() instanceof RuntimeException) {
-                        throw (RuntimeException) outcome.getException();
+                if (!exceptionType.isInstance(outcome.getException().get())) {
+                    if (outcome.getException().get() instanceof RuntimeException) {
+                        throw (RuntimeException) outcome.getException().get();
                     } else {
-                        throw new AssertionError("Expectation failed with exception", outcome.getException());
+                        throw new AssertionError("Expectation failed with exception", outcome.getException().get());
                     }
                 }
 
@@ -151,7 +142,7 @@ public final class Expect {
             to(expectation.capture(capturedOutcome));
 
             return matcher -> {
-                assert ((Matcher) matcher).matches(capturedOutcome.get().getException());
+                assert ((Matcher) matcher).matches(capturedOutcome.get().getException().get());
             };
         }
 

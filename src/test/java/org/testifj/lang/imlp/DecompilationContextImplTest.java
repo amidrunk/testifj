@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.MethodCall;
 import org.testifj.lang.model.Statement;
+import org.testifj.matchers.core.CollectionThatIs;
 
 import static org.mockito.Matchers.contains;
 import static org.mockito.Mockito.mock;
@@ -143,6 +144,20 @@ public class DecompilationContextImplTest {
         expect(() -> context.replaceStatement(-1, mock(Statement.class))).toThrow(IndexOutOfBoundsException.class);
         expect(() -> context.replaceStatement(1, mock(Statement.class))).toThrow(IndexOutOfBoundsException.class);
         expect(() -> context.replaceStatement(0, null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void removeStatementShouldFailForInvalidIndex() {
+        expect(() -> context.removeStatement(-1)).toThrow(IndexOutOfBoundsException.class);
+        expect(() -> context.removeStatement(1)).toThrow(IndexOutOfBoundsException.class);
+    }
+
+    @Test
+    public void removeStatementShouldRemoveStatementAtIndex() {
+        context.enlist(mock(Statement.class));
+        context.removeStatement(0);
+
+        expect(context.getStatements()).toBe(empty());
     }
 
 }

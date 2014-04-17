@@ -190,9 +190,33 @@ public class ByteCodeParserImplTest {
     }
 
     @Test
-    public void methodWithBooleanComparisonCanBeParsed() {
-        final Element[] elements = parseMethodBody("methodWithBooleanComparison");
-        System.out.println(Arrays.asList(elements));
+    public void methodWithEqComparisonCanBeParsed() {
+        final Element[] elements = parseMethodBody("methodWithEqComparison");
+
+        expect(elements).toBe(new Element[]{
+                new VariableAssignmentImpl(
+                        new BinaryOperatorImpl(
+                                new MethodCallImpl(String.class, "length", SignatureImpl.parse("()I"),
+                                        new ConstantExpressionImpl("str", String.class), new Expression[0]), OperatorType.EQ, new ConstantExpressionImpl(3, int.class), boolean.class), "b1", boolean.class),
+                new ReturnImpl()
+        });
+    }
+
+    @Test
+    public void constantsOfAllTypesCanBeParsed() {
+        final Element[] elements = parseMethodBody("constantsOfAllTypes");
+
+        expect(elements).toBe(new Element[]{
+                new VariableAssignmentImpl(new ConstantExpressionImpl(1, int.class), "z", boolean.class),
+                new VariableAssignmentImpl(new ConstantExpressionImpl(100, int.class), "b", byte.class),
+                new VariableAssignmentImpl(new ConstantExpressionImpl(200, int.class), "s", short.class),
+                new VariableAssignmentImpl(new ConstantExpressionImpl(300, int.class), "c", char.class),
+                new VariableAssignmentImpl(new ConstantExpressionImpl(400, int.class), "n", int.class),
+                new VariableAssignmentImpl(new ConstantExpressionImpl(500L, long.class), "l", long.class),
+                new VariableAssignmentImpl(new ConstantExpressionImpl(600.1234f, float.class), "f", float.class),
+                new VariableAssignmentImpl(new ConstantExpressionImpl(700.1234d, double.class), "d", double.class),
+                new ReturnImpl()
+        });
     }
 
     private Element[] parseMethodBody(String methodName) {
@@ -202,6 +226,17 @@ public class ByteCodeParserImplTest {
     private static class ExampleClass {
 
         private String string = new String("Hello World!");
+
+        private void constantsOfAllTypes() {
+            boolean z = true;
+            byte b = 100;
+            short s = 200;
+            char c = 300;
+            int n = 400;
+            long l = 500;
+            float f = 600.1234f;
+            double d = 700.1234d;
+        }
 
         private void methodWithLongConstants() {
             long l1 = 0;
@@ -258,8 +293,8 @@ public class ByteCodeParserImplTest {
             String str = "foobar";
         }
 
-        private void methodWithBooleanComparison() {
-            boolean b = "str".length() == 3;
+        private void methodWithEqComparison() {
+            boolean b1 = "str".length() == 3;
         }
 
     }

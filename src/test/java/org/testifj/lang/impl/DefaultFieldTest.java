@@ -11,6 +11,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
+import static org.testifj.matchers.core.StringShould.containString;
 
 @SuppressWarnings("unchecked")
 public class DefaultFieldTest {
@@ -19,16 +20,16 @@ public class DefaultFieldTest {
 
     private final Supplier<ClassFile> classFileSupplier = mock(Supplier.class);
 
-    private final DefaultField field = new DefaultField(classFileSupplier, 1234, "foo", "bar", new Attribute[]{attribute});
+    private final DefaultField field = new DefaultField(classFileSupplier, 1234, "foo", String.class, new Attribute[]{attribute});
 
     @Test
     public void constructorShouldNotAcceptNullClassFileSupplier() {
-        expect(() -> new DefaultField(null, 0, "foo", "bar", new Attribute[0])).toThrow(AssertionError.class);
+        expect(() -> new DefaultField(null, 0, "foo", String.class, new Attribute[0])).toThrow(AssertionError.class);
     }
 
     @Test(expected = AssertionError.class)
     public void constructorShouldNotAcceptNullName() {
-        new DefaultField(classFileSupplier, 0, null, "foo", new Attribute[]{});
+        new DefaultField(classFileSupplier, 0, null, String.class, new Attribute[]{});
     }
 
     @Test(expected = AssertionError.class)
@@ -38,7 +39,7 @@ public class DefaultFieldTest {
 
     @Test(expected = AssertionError.class)
     public void constructorShouldNotAcceptNullAttributes() {
-        new DefaultField(classFileSupplier, 0, "foo", "bar", null);
+        new DefaultField(classFileSupplier, 0, "foo", String.class, null);
     }
 
     @Test
@@ -50,7 +51,7 @@ public class DefaultFieldTest {
         assertEquals(classFile, field.getClassFile());
         assertEquals(1234, field.getAccessFlags());
         assertEquals("foo", field.getName());
-        assertEquals("bar", field.getSignature());
+        assertEquals(String.class, field.getType());
         assertArrayEquals(new Attribute[]{attribute}, field.getAttributes().toArray());
     }
 
@@ -68,7 +69,7 @@ public class DefaultFieldTest {
 
     @Test
     public void fieldsWithEqualPropertiesShouldBeEqual() {
-        final DefaultField other = new DefaultField(classFileSupplier, 1234, "foo", "bar", new Attribute[]{attribute});
+        final DefaultField other = new DefaultField(classFileSupplier, 1234, "foo", String.class, new Attribute[]{attribute});
 
         assertEquals(field, other);
         assertEquals(field.hashCode(), other.hashCode());
@@ -76,10 +77,10 @@ public class DefaultFieldTest {
 
     @Test
     public void toStringValueShouldContainPropertyValues() {
-        assertThat(field.toString(), containsString("1234"));
-        assertThat(field.toString(), containsString("foo"));
-        assertThat(field.toString(), containsString("bar"));
-        assertThat(field.toString(), containsString(attribute.toString()));
+        expect(field.toString()).to(containString("1234"));
+        expect(field.toString()).to(containString("foo"));
+        expect(field.toString()).to(containString(String.class.getName()));
+        expect(field.toString()).to(containString(attribute.toString()));
     }
 
 }

@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import static org.testifj.lang.ConstantPoolEntry.*;
@@ -52,6 +53,8 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
 
                 case ByteCode.nop:
                     break;
+                case ByteCode.pop2:
+                    // TODO any additional handling for this?
                 case ByteCode.pop:
                     context.reduceAll();
                     break;
@@ -79,11 +82,17 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
 
                 // Store local variable
 
+                case ByteCode.istore:
+                    ByteCodes.storeVariable(context, method, in.read());
+                    break;
                 case ByteCode.istore_0:
                 case ByteCode.istore_1:
                 case ByteCode.istore_2:
                 case ByteCode.istore_3:
                     ByteCodes.storeVariable(context, method, byteCode - ByteCode.istore_0);
+                    break;
+                case ByteCode.lstore:
+                    ByteCodes.storeVariable(context, method, in.read());
                     break;
                 case ByteCode.lstore_0:
                 case ByteCode.lstore_1:
@@ -91,11 +100,26 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                 case ByteCode.lstore_3:
                     ByteCodes.storeVariable(context, method, byteCode - ByteCode.lstore_0);
                     break;
+                case ByteCode.fstore:
+                    ByteCodes.storeVariable(context, method, in.read());
+                    break;
                 case ByteCode.fstore_0:
                 case ByteCode.fstore_1:
                 case ByteCode.fstore_2:
                 case ByteCode.fstore_3:
                     ByteCodes.storeVariable(context, method, byteCode - ByteCode.fstore_0);
+                    break;
+                case ByteCode.dstore:
+                    ByteCodes.storeVariable(context, method, in.read());
+                    break;
+                case ByteCode.dstore_0:
+                case ByteCode.dstore_1:
+                case ByteCode.dstore_2:
+                case ByteCode.dstore_3:
+                    ByteCodes.storeVariable(context, method, byteCode - ByteCode.dstore_0);
+                    break;
+                case ByteCode.astore:
+                    ByteCodes.storeVariable(context, method, in.read());
                     break;
                 case ByteCode.astore_0:
                 case ByteCode.astore_1:
@@ -125,6 +149,24 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
 
                 // Constants
 
+                case ByteCode.ldc2w: {
+                    final int index = in.readUnsignedShort();
+                    final ConstantPoolEntry entry = constantPool.getEntry(index);
+
+                    switch (entry.getTag()) {
+                        case LONG:
+                            context.push(new ConstantExpressionImpl(((LongEntry) entry).getValue(), long.class));
+                            break;
+                        case DOUBLE:
+                            context.push(new ConstantExpressionImpl(((DoubleEntry) entry).getValue(), double.class));
+                            break;
+                        default:
+                            throw new ClassFileFormatException("Invalid constant pool entry at "
+                                    + index + ". Expected long or double, but was " + entry);
+                    }
+
+                    break;
+                }
                 case ByteCode.iconst_m1:
                 case ByteCode.iconst_0:
                 case ByteCode.iconst_1:
@@ -155,6 +197,12 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                         case STRING:
                             context.push(new ConstantExpressionImpl(constantPool.getString(((StringEntry) entry).getStringIndex()), String.class));
                             break;
+                        case CLASS:
+                            final Type type = resolveType(constantPool.getString(((ClassEntry) entry).getNameIndex()));
+                            context.push(new ConstantExpressionImpl(type, Class.class));
+                            break;
+                        default:
+                            throw new ClassFileFormatException("Unsupported constant pool entry: " + entry);
                     }
 
                     break;
@@ -200,6 +248,7 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                 }
 
                 case ByteCode.goto_: {
+                    // TODO This should be some added feature that hooks goto and matches a sequence
                     final int relativePC = pc.get();
                     final int offset = (in.read() << 8) & 0xFF00 | in.read() & 0xFF;
                     final int targetPC = relativePC + offset;
@@ -209,7 +258,20 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                         final Statement lastStatement = statements.get(statements.size() - 1);
 
                         pc.lookAhead(targetPC, () -> {
-                            System.out.println("Ok, clear the stack now...");
+                            final Expression leftBranch = context.pop();
+                            final Expression rightBranch = context.pop();
+                            final Branch branchExpression = (Branch) lastStatement;
+
+                            if (leftBranch.getElementType() == ElementType.CONSTANT && rightBranch.getElementType() == ElementType.CONSTANT) {
+                                final ConstantExpression trueValue = (ConstantExpression) leftBranch;
+                                final ConstantExpression falseValue = (ConstantExpression) rightBranch;
+
+                                // == comparison
+                                if (branchExpression.getOperatorType() == OperatorType.NE && trueValue.getConstant().equals(0) && falseValue.getConstant().equals(1)) {
+                                    context.removeStatement(context.getStatements().size() - 1);
+                                    context.push(new BinaryOperatorImpl(branchExpression.getLeftOperand(), OperatorType.EQ, branchExpression.getRightOperand(), boolean.class));
+                                }
+                            }
                         });
                     }
 
@@ -280,8 +342,26 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                     final NameAndTypeEntry backingMethodNameAndType = constantPool.getEntry(backingMethodRefEntry.getNameAndTypeIndex()).as(NameAndTypeEntry.class);
                     final String backingMethodName = constantPool.getString(backingMethodNameAndType.getNameIndex());
                     final Signature backingMethodSignature = SignatureImpl.parse(constantPool.getString(backingMethodNameAndType.getDescriptorIndex()));
+                    final Optional<Expression> self;
+                    final ReferenceKind referenceKind = ((MethodHandleEntry) bootstrapMethodArguments[1]).getReferenceKind();
+
+                    switch (referenceKind) {
+                        case INVOKE_STATIC:
+                            self = Optional.empty();
+                            break;
+                        case INVOKE_VIRTUAL:
+                            self = Optional.empty();
+                            break;
+                        case INVOKE_SPECIAL:
+                            self = Optional.of(context.pop());
+                            break;
+                        default:
+                            throw new UnsupportedOperationException("Reference kind not supported for dynamic invoke: " + referenceKind);
+                    }
 
                     context.push(new LambdaImpl(
+                            self,
+                            referenceKind,
                             getFunctionalInterfaceSignature.getReturnType(),
                             functionalInterfaceMethodName,
                             functionalInterfaceMethodSignature,

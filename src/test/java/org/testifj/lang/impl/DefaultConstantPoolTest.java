@@ -267,6 +267,20 @@ public class DefaultConstantPoolTest {
         expect(fieldDescriptor.getDescriptor()).toBe("I");
     }
 
+    @Test
+    public void getLongShouldFailIfEntryIsNotALongEntry() {
+        final DefaultConstantPool constantPool = createConstantPool(new UTF8Entry("foo"));
+
+        expect(() -> constantPool.getLong(1)).toThrow(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void getLongShouldReturnValueOfLongEntry() {
+        final DefaultConstantPool constantPool = createConstantPool(new LongEntry(1234L));
+
+        expect(constantPool.getLong(1)).toBe(1234L);
+    }
+
     private DefaultConstantPool createConstantPool(ConstantPoolEntry ... entries) {
         final DefaultConstantPool.Builder builder = new DefaultConstantPool.Builder();
 

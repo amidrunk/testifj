@@ -1,6 +1,7 @@
 package org.testifj.lang.impl;
 
 import org.testifj.lang.*;
+import org.testifj.lang.model.Signature;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -18,11 +19,11 @@ public final class DefaultMethod implements Method {
 
     private final String name;
 
-    private final String signature;
+    private final Signature signature;
 
     private final Attribute[] attributes;
 
-    public DefaultMethod(Supplier<ClassFile> classFile, int accessFlags, String name, String signature, Attribute[] attributes) {
+    public DefaultMethod(Supplier<ClassFile> classFile, int accessFlags, String name, Signature signature, Attribute[] attributes) {
         assert classFile != null : "Class file can't be null";
         assert name != null : "name can't be null";
         assert signature != null : "signature can't be null";
@@ -51,7 +52,7 @@ public final class DefaultMethod implements Method {
     }
 
     @Override
-    public String getSignature() {
+    public Signature getSignature() {
         return signature;
     }
 
@@ -127,6 +128,14 @@ public final class DefaultMethod implements Method {
         }
 
         return localVariable.get();
+    }
+
+    @Override
+    public Optional<LocalVariableTable> getLocalVariableTable() {
+        return getCode().getAttributes().stream()
+                .filter(a -> a.getName().equals(LocalVariableTable.ATTRIBUTE_NAME))
+                .map(a -> (LocalVariableTable) a)
+                .findFirst();
     }
 
     @Override

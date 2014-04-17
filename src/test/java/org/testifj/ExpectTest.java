@@ -1,12 +1,16 @@
 package org.testifj;
 
-import org.junit.Assert;
+import org.hamcrest.*;
+import org.hamcrest.Description;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.testifj.Expect.expect;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
@@ -52,8 +56,7 @@ public class ExpectTest {
         boolean failed = false;
 
         try {
-            expect(() -> {
-            }).toThrow(IllegalArgumentException.class);
+            expect(() -> {}).toThrow(IllegalArgumentException.class);
         } catch (AssertionError e) {
             failed = true;
         }
@@ -168,8 +171,63 @@ public class ExpectTest {
 
     @Test
     public void messageOnThrownExceptionCanBeSpecified() {
-        final RuntimeException e = new RuntimeException();
+        final RuntimeException e = new RuntimeException("foo");
 
-        // expect(() -> { throw e; }).toThrow().where(message());
+        expect(() -> { throw e; }).toThrow(RuntimeException.class).withMessage(equalTo("foo"));
+
+        boolean failed = false;
+
+        try {
+            expect(() -> { throw e; }).toThrow(RuntimeException.class).withMessage(equalTo("bar"));
+        } catch (AssertionError e1) {
+            expect(e1.getMessage()).toBe("Expected \"throw e;\" to throw java.lang.RuntimeException withMessage(equalTo(\"bar\"))");
+            failed = true;
+        }
+
+        expect(failed).toBe(true);
+    }
+
+    @Test
+    public void expectationFailureHandlerShouldBeCalledWhenExpectedExceptionIsNotThrown() {
+        final Expect.Configuration defaultConfiguration = Expect.Configuration
+                .configure(Expect.Configuration.newBuilder()
+                        .configureExpectationFailureHandler(expectationFailureHandler)
+                        .build());
+
+        try {
+            expect(this::nop).toThrow(RuntimeException.class);
+            fail();
+        } catch (AssertionError e) {
+            verify(expectationFailureHandler).handleExpectationFailure(argThat(isExpectedExceptionFailure(RuntimeException.class)));
+        } finally {
+            Expect.Configuration.configure(defaultConfiguration);
+        }
+    }
+
+    private BaseMatcher<ExpectationFailure> isExpectedExceptionFailure(final Class<? extends Throwable> expectedException) {
+        return new BaseMatcher<ExpectationFailure>() {
+            @Override
+            public boolean matches(Object item) {
+                if (!(item instanceof ExpectedExceptionNotThrown)) {
+                    return false;
+                }
+
+                final ExpectedExceptionNotThrown expectedExceptionNotThrown = (ExpectedExceptionNotThrown) item;
+
+                if (!expectedExceptionNotThrown.getExpectedException().equals(expectedException)) {
+                    return false;
+                }
+
+                return true;
+            }
+
+            @Override
+            public void describeTo(Description description) {
+                description.appendText("isExpectedExpectationFailure(expectedException=" + expectedException.getName() + ")");
+            }
+        };
+    }
+
+    private void nop() {
     }
 }

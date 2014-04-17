@@ -82,7 +82,7 @@ public class ClassModelTestUtils {
     }
 
     public static CodePointer[] codeForLineOffset(int delta) {
-        return codeForLineOffset(2, delta);
+        return codeForLineOffset(3, delta);
     }
 
     public static CodePointer[] codeForLineOffset(int stackTraceIndex, int delta) {

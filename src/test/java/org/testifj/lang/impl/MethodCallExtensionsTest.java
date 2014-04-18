@@ -13,7 +13,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
 
@@ -32,13 +35,27 @@ public class MethodCallExtensionsTest {
     }
 
     @Test
+    public void configureShouldNotAcceptNullConfigurationBuilder() {
+        expect(() -> MethodCallExtensions.configure(null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void configureShouldConfigureSupportForInterfaceMethodCall() {
+        final DecompilerConfiguration.Builder builder = mock(DecompilerConfiguration.Builder.class);
+
+        MethodCallExtensions.configure(builder);
+
+        verify(builder).extend(eq(ByteCode.invokeinterface), any());
+    }
+
+    @Test
     public void invokeInterfaceWithNoArgsAndNoReturnShouldPushMethodCall() {
         final ConstantPool constantPool = interfaceMethodRefPool("java/lang/String", "myMethod", "()V");
         final LocalVariableReferenceImpl instance = new LocalVariableReferenceImpl("myVariable", String.class, 1);
 
         context.push(instance);
 
-        decompile(constantPool, in(ByteCode.invokeinterface, 0, 1), MethodCallExtensions.invokeinterface());
+        decompile(constantPool, in(ByteCode.invokeinterface, 0, 1, 1), MethodCallExtensions.invokeinterface());
 
         expect(context.getStackedExpressions().toArray()).toBe(new Object[]{
                 new MethodCallImpl(
@@ -51,6 +68,17 @@ public class MethodCallExtensionsTest {
     }
 
     @Test
+    public void invokeInterfaceShouldFailIfSubsequentByteIsZero() {
+        final ConstantPool constantPool = interfaceMethodRefPool("java/lang/String", "myMethod", "()V");
+
+        context.push(new ConstantExpressionImpl("foo", String.class));
+
+        expect(() -> {
+            decompile(constantPool, in(ByteCode.invokeinterface, 0, 1, 0), MethodCallExtensions.invokeinterface());
+        }).toThrow(ClassFileFormatException.class);
+    }
+
+    @Test
     public void invokeInterfaceWithArgumentsShouldPushMethodCallWithArgs() {
         final ConstantPool constantPool = interfaceMethodRefPool("java/lang/String", "myMethod", "(Ljava/lang/String;)V");
 
@@ -60,7 +88,7 @@ public class MethodCallExtensionsTest {
         context.push(instance);
         context.push(arg1);
 
-        decompile(constantPool, in(ByteCode.invokeinterface, 0, 1), MethodCallExtensions.invokeinterface());
+        decompile(constantPool, in(ByteCode.invokeinterface, 0, 1, 1), MethodCallExtensions.invokeinterface());
 
         expect(context.getStackedExpressions().toArray()).toBe(new Object[]{
                 new MethodCallImpl(

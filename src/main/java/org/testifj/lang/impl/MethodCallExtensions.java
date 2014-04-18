@@ -1,8 +1,6 @@
 package org.testifj.lang.impl;
 
-import org.testifj.lang.DecompilerConfiguration;
-import org.testifj.lang.DecompilerExtension;
-import org.testifj.lang.InterfaceMethodRefDescriptor;
+import org.testifj.lang.*;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.Signature;
 import org.testifj.lang.model.impl.MethodCallImpl;
@@ -12,7 +10,10 @@ import java.lang.reflect.Type;
 
 public final class MethodCallExtensions {
 
-    public static void configure(DecompilerConfiguration configure) {
+    public static void configure(DecompilerConfiguration.Builder configurationBuilder) {
+        assert configurationBuilder != null : "Configuration builder can't be null";
+
+        configurationBuilder.extend(ByteCode.invokeinterface, invokeinterface());
     }
 
     public static DecompilerExtension invokeinterface() {
@@ -31,6 +32,10 @@ public final class MethodCallExtensions {
                     SignatureImpl.parse(descriptor.getDescriptor()),
                     context.pop(),
                     arguments));
+
+            if (code.nextUnsignedByte() == 0) {
+                throw new ClassFileFormatException("Expected byte subsequent to interface method invocation to be non-zero");
+            }
 
             return true;
         };

@@ -35,6 +35,7 @@ public final class DecompilerImpl implements Decompiler {
         final DecompilerConfigurationImpl.Builder builder = new DecompilerConfigurationImpl.Builder();
 
         InvokeDynamicExtensions.configure(builder);
+        MethodCallExtensions.configure(builder);
 
         return builder.build();
     }
@@ -299,7 +300,8 @@ public final class DecompilerImpl implements Decompiler {
 
                 // Method invocation
 
-                case ByteCode.invokeinterface: {
+                //case ByteCode.invokeinterface: {
+                case -2: {
                     invokeMethod(context, codeStream, constantPool, false, true);
 
                     final int count = codeStream.nextByte();

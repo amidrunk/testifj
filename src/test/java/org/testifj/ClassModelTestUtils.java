@@ -1,11 +1,10 @@
 package org.testifj;
 
-import org.testifj.lang.ByteCodeParser;
 import org.testifj.lang.ClassFile;
 import org.testifj.lang.ClassFileReader;
 import org.testifj.lang.Method;
-import org.testifj.lang.impl.ByteCodeParserImpl;
 import org.testifj.lang.impl.ClassFileReaderImpl;
+import org.testifj.lang.impl.DecompilerImpl;
 import org.testifj.lang.model.Element;
 
 import java.io.IOException;
@@ -69,7 +68,7 @@ public class ClassModelTestUtils {
 
     public static Element[] methodBodyOf(Method method) {
         try (InputStream code = method.getCode().getCode()) {
-            return new ByteCodeParserImpl().parse(method, code);
+            return new DecompilerImpl().parse(method, code);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -98,12 +97,24 @@ public class ClassModelTestUtils {
         }
 
         try (InputStream in = method.getCodeForLineNumber(callerStackTraceElement.getLineNumber() + delta)) {
-            return Arrays.stream(new ByteCodeParserImpl().parse(method, in))
+            return Arrays.stream(new DecompilerImpl().parse(method, in))
                     .map(e -> new CodePointer(method, e))
                     .toArray(CodePointer[]::new);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static Caller callerForOffset(int offset) {
+        final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+
+        stackTrace[2] = offset(stackTrace[2], offset);
+
+        return new Caller(Arrays.asList(stackTrace), 2);
+    }
+
+    public static String toCode(CodePointer codePointer) {
+        return new CodeDescriber().describe(codePointer).toString();
     }
 
 }

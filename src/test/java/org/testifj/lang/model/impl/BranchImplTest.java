@@ -1,7 +1,6 @@
 package org.testifj.lang.model.impl;
 
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.OperatorType;

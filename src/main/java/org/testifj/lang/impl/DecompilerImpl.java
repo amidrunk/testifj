@@ -1,52 +1,65 @@
 package org.testifj.lang.impl;
 
 import org.testifj.lang.*;
-import org.testifj.lang.imlp.DecompilationContextImpl;
 import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.*;
 
-import java.io.DataInput;
-import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import static org.testifj.lang.ConstantPoolEntry.*;
 
-public final class ByteCodeParserImpl implements ByteCodeParser {
+public final class DecompilerImpl implements Decompiler {
+
+    private final DecompilerConfiguration configuration;
+
+    private final DecompilerConfiguration coreConfiguration;
+
+    public DecompilerImpl() {
+        this(new DecompilerConfigurationImpl.Builder().build());
+    }
+
+    public DecompilerImpl(DecompilerConfiguration configuration) {
+        assert configuration != null : "Configuration can't be null";
+
+        this.configuration = configuration;
+        this.coreConfiguration = createCoreConfiguration();
+    }
+
+    private static DecompilerConfiguration createCoreConfiguration() {
+        final DecompilerConfigurationImpl.Builder builder = new DecompilerConfigurationImpl.Builder();
+
+        InvokeDynamicExtensions.configure(builder);
+
+        return builder.build();
+    }
 
     @Override
     public Element[] parse(Method method, InputStream stream) throws IOException {
         final ClassFile classFile = method.getClassFile();
         final ConstantPool constantPool = classFile.getConstantPool();
-        final DecompilationContext context = new DecompilationContextImpl();
-        final ProgramCounter pc = new ProgramCounter(-1);
-
-        final DataInputStream in = new DataInputStream(new InputStream() {
-            @Override
-            public int read() throws IOException {
-                final int n = stream.read();
-
-                if (n != -1) {
-                    pc.advance();
-                }
-
-                return n;
-            }
-        });
+        final DecompilationContext context = new DecompilationContextImpl(this, method, new ProgramCounterImpl(-1), new SimpleTypeResolver());
+        final CodeStream codeStream = new InputStreamCodeStream(stream, context.getProgramCounter());
 
         while (true) {
-            final int n = in.read();
+            final int byteCode;
 
-            if (n == -1) {
+            try {
+                byteCode = codeStream.nextInstruction();
+            } catch (EOFException e) {
                 break;
             }
 
-            final int byteCode = n & 0xFF;
+            final DecompilerExtension userExtension = configuration.getDecompilerExtension(context, byteCode);
+
+            if (userExtension != null && userExtension.decompile(context, codeStream, byteCode)) {
+                continue;
+            }
 
             switch (byteCode) {
                 // Various
@@ -54,13 +67,19 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                 case ByteCode.nop:
                     break;
                 case ByteCode.pop2:
-                    // TODO any additional handling for this?
+                    if (context.reduce()) {
+                        context.reduce();
+                    }
+
+                    break;
                 case ByteCode.pop:
-                    context.reduceAll();
+                    context.reduce();
                     break;
 
                 // Load local variable
-
+                case ByteCode.aload:
+                    ByteCodes.loadVariable(context, method, codeStream.nextByte());
+                    break;
                 case ByteCode.aload_0:
                 case ByteCode.aload_1:
                 case ByteCode.aload_2:
@@ -83,7 +102,7 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                 // Store local variable
 
                 case ByteCode.istore:
-                    ByteCodes.storeVariable(context, method, in.read());
+                    ByteCodes.storeVariable(context, method, codeStream.nextByte());
                     break;
                 case ByteCode.istore_0:
                 case ByteCode.istore_1:
@@ -92,7 +111,7 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                     ByteCodes.storeVariable(context, method, byteCode - ByteCode.istore_0);
                     break;
                 case ByteCode.lstore:
-                    ByteCodes.storeVariable(context, method, in.read());
+                    ByteCodes.storeVariable(context, method, codeStream.nextByte());
                     break;
                 case ByteCode.lstore_0:
                 case ByteCode.lstore_1:
@@ -101,7 +120,7 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                     ByteCodes.storeVariable(context, method, byteCode - ByteCode.lstore_0);
                     break;
                 case ByteCode.fstore:
-                    ByteCodes.storeVariable(context, method, in.read());
+                    ByteCodes.storeVariable(context, method, codeStream.nextByte());
                     break;
                 case ByteCode.fstore_0:
                 case ByteCode.fstore_1:
@@ -110,7 +129,7 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                     ByteCodes.storeVariable(context, method, byteCode - ByteCode.fstore_0);
                     break;
                 case ByteCode.dstore:
-                    ByteCodes.storeVariable(context, method, in.read());
+                    ByteCodes.storeVariable(context, method, codeStream.nextByte());
                     break;
                 case ByteCode.dstore_0:
                 case ByteCode.dstore_1:
@@ -119,7 +138,7 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                     ByteCodes.storeVariable(context, method, byteCode - ByteCode.dstore_0);
                     break;
                 case ByteCode.astore:
-                    ByteCodes.storeVariable(context, method, in.read());
+                    ByteCodes.storeVariable(context, method, codeStream.nextByte());
                     break;
                 case ByteCode.astore_0:
                 case ByteCode.astore_1:
@@ -144,13 +163,13 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                 // Push constants onto stack
 
                 case ByteCode.bipush:
-                    context.push(new ConstantExpressionImpl(in.read(), int.class));
+                    context.push(new ConstantExpressionImpl(codeStream.nextByte(), int.class));
                     break;
 
                 // Constants
 
                 case ByteCode.ldc2w: {
-                    final int index = in.readUnsignedShort();
+                    final int index = codeStream.nextUnsignedShort();
                     final ConstantPoolEntry entry = constantPool.getEntry(index);
 
                     switch (entry.getTag()) {
@@ -181,11 +200,11 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                     context.push(new ConstantExpressionImpl((long) (byteCode - ByteCode.lconst_0), long.class));
                     break;
                 case ByteCode.sipush:
-                    context.push(new ConstantExpressionImpl(((in.read() << 8) & 0xFF00 | in.read() & 0xFF), int.class));
+                    context.push(new ConstantExpressionImpl(codeStream.nextUnsignedShort(), int.class));
                     break;
 
                 case ByteCode.ldc1: {
-                    final ConstantPoolEntry entry = constantPool.getEntry(in.read());
+                    final ConstantPoolEntry entry = constantPool.getEntry(codeStream.nextUnsignedByte());
 
                     switch (entry.getTag()) {
                         case INTEGER:
@@ -223,14 +242,14 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                 // Field access
                 case ByteCode.getstatic:
                 case ByteCode.getfield: {
-                    final int fieldRefEntryIndex = (in.read() << 8) & 0xFF | in.read() & 0xFF;
-                    final FieldDescriptor fieldDescriptor = constantPool.getFieldDescriptor(fieldRefEntryIndex);
+                    final int fieldRefEntryIndex = codeStream.nextUnsignedShort();
+                    final FieldRefDescriptor fieldRefDescriptor = constantPool.getFieldRefDescriptor(fieldRefEntryIndex);
 
                     ByteCodes.getField(
                             context,
-                            resolveType(fieldDescriptor.getClassName()),
-                            SignatureImpl.parseType(fieldDescriptor.getDescriptor()),
-                            fieldDescriptor.getName(),
+                            resolveType(fieldRefDescriptor.getClassName()),
+                            SignatureImpl.parseType(fieldRefDescriptor.getDescriptor()),
+                            fieldRefDescriptor.getName(),
                             byteCode == ByteCode.getstatic);
 
                     break;
@@ -239,7 +258,7 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                 // Control flow
 
                 case ByteCode.if_icmpne: {
-                    final int targetPC = pc.get() + (in.read() << 8) & 0xFF00 | in.read() & 0xFF;
+                    final int targetPC = context.getProgramCounter().get() + codeStream.nextUnsignedShort();
                     final Expression rightOperand = context.pop();
                     final Expression leftOperand = context.pop();
 
@@ -249,15 +268,15 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
 
                 case ByteCode.goto_: {
                     // TODO This should be some added feature that hooks goto and matches a sequence
-                    final int relativePC = pc.get();
-                    final int offset = (in.read() << 8) & 0xFF00 | in.read() & 0xFF;
+                    final int relativePC = context.getProgramCounter().get();
+                    final int offset = codeStream.nextUnsignedShort();
                     final int targetPC = relativePC + offset;
 
                     if (context.hasStackedExpressions()) {
                         final List<Statement> statements = context.getStatements();
                         final Statement lastStatement = statements.get(statements.size() - 1);
 
-                        pc.lookAhead(targetPC, () -> {
+                        context.getProgramCounter().lookAhead(targetPC, () -> {
                             final Expression leftBranch = context.pop();
                             final Expression rightBranch = context.pop();
                             final Branch branchExpression = (Branch) lastStatement;
@@ -281,69 +300,68 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                 // Method invocation
 
                 case ByteCode.invokeinterface: {
-                    invokeMethod(context, in, constantPool, false, true);
+                    invokeMethod(context, codeStream, constantPool, false, true);
 
-                    final int count = in.read();
+                    final int count = codeStream.nextByte();
 
                     if (count == 0) {
                         throw new ClassFileFormatException("Count field subsequent to interface method invocation must not be zero");
                     }
 
-                    if (in.read() != 0) {
+                    if (codeStream.nextByte() != 0) {
                         throw new ClassFileFormatException("Interface method calls must be followed by <count:byte>, 0");
                     }
 
                     break;
                 }
                 case ByteCode.invokevirtual: {
-                    invokeMethod(context, in, constantPool, false, false);
+                    invokeMethod(context, codeStream, constantPool, false, false);
                     break;
                 }
                 case ByteCode.invokespecial:
-                    invokeMethod(context, in, constantPool, false, false);
+                    invokeMethod(context, codeStream, constantPool, false, false);
                     break;
                 case ByteCode.invokestatic:
-                    invokeMethod(context, in, constantPool, true, false);
+                    invokeMethod(context, codeStream, constantPool, true, false);
                     break;
-                case ByteCode.invokedynamic: {
-                    final int indexRef = (in.read() << 8) & 0xFF00 | in.read() & 0xFF;
-                    final InvokeDynamicEntry invokeDynamicEntry = (InvokeDynamicEntry) constantPool.getEntry(indexRef);
-                    final NameAndTypeEntry nameAndTypeEntry = (NameAndTypeEntry) constantPool.getEntry(invokeDynamicEntry.getNameAndTypeIndex());
-                    final Signature getFunctionalInterfaceSignature = SignatureImpl.parse(constantPool.getString(nameAndTypeEntry.getDescriptorIndex()));
-                    final String functionalInterfaceMethodName = constantPool.getString(nameAndTypeEntry.getNameIndex());
+
+                case -1: {
+                // case ByteCode.invokedynamic: {
+                    final int indexRef = codeStream.nextUnsignedShort();
+                    final InvokeDynamicDescriptor invokeDynamicDescriptor = constantPool.getInvokeDynamicDescriptor(indexRef);
+
+                    final Signature getFunctionalInterfaceSignature = SignatureImpl.parse(invokeDynamicDescriptor.getMethodDescriptor());
+                    final String functionalInterfaceMethodName = invokeDynamicDescriptor.getMethodName();
+
                     final BootstrapMethod bootstrapMethod = classFile.getBootstrapMethodsAttribute()
                             .orElseThrow(() -> new ClassFileFormatException("No bootstrap methods attribute is available in class " + classFile.getName()))
                             .getBootstrapMethods()
-                            .get(invokeDynamicEntry.getBootstrapMethodAttributeIndex());
+                            .get(invokeDynamicDescriptor.getBootstrapMethodAttributeIndex());
 
-                    final MethodHandleEntry methodHandleEntry = (MethodHandleEntry) constantPool.getEntry(bootstrapMethod.getBootstrapMethodRef());
-                    final MethodRefEntry entry = (MethodRefEntry) constantPool.getEntry(methodHandleEntry.getReferenceIndex());
-                    final String className = constantPool.getClassName(entry.getClassIndex());
-                    final NameAndTypeEntry bootstrapMethodNameAndType = (NameAndTypeEntry) constantPool.getEntry(entry.getNameAndTypeIndex());
-                    final String bootstrapMethodName = constantPool.getString(bootstrapMethodNameAndType.getNameIndex());
-                    final String bootstrapMethodDescriptor = constantPool.getString(bootstrapMethodNameAndType.getDescriptorIndex());
-                    final ConstantPoolEntry[] bootstrapMethodArguments = constantPool.getEntries(bootstrapMethod.getBootstrapArguments());
+                    final MethodHandleDescriptor methodHandle = constantPool.getMethodHandleDescriptor(bootstrapMethod.getBootstrapMethodRef());
+                    final ConstantPoolEntryDescriptor[] descriptors = constantPool.getDescriptors(bootstrapMethod.getBootstrapArguments());
 
-                    if (bootstrapMethodArguments[0].getTag() != ConstantPoolEntryTag.METHOD_TYPE) {
+                    if (descriptors[0].getTag() != ConstantPoolEntryTag.METHOD_TYPE) {
                         throw new UnsupportedOperationException();
                     }
 
-                    if (bootstrapMethodArguments[1].getTag() != ConstantPoolEntryTag.METHOD_HANDLE) {
+                    if (descriptors[1].getTag() != ConstantPoolEntryTag.METHOD_HANDLE) {
                         throw new UnsupportedOperationException();
                     }
 
-                    if (bootstrapMethodArguments[2].getTag() != ConstantPoolEntryTag.METHOD_TYPE) {
+                    if (descriptors[2].getTag() != ConstantPoolEntryTag.METHOD_TYPE) {
                         throw new UnsupportedOperationException();
                     }
 
-                    final Signature functionalInterfaceMethodSignature = SignatureImpl.parse(constantPool.getString(bootstrapMethodArguments[0].as(MethodTypeEntry.class).getDescriptorIndex()));
-                    final MethodRefEntry backingMethodRefEntry = constantPool.getEntry(bootstrapMethodArguments[1].as(MethodHandleEntry.class).getReferenceIndex()).as(MethodRefEntry.class);
-                    final Type declaringType = resolveType(constantPool.getClassName(backingMethodRefEntry.getClassIndex()));
-                    final NameAndTypeEntry backingMethodNameAndType = constantPool.getEntry(backingMethodRefEntry.getNameAndTypeIndex()).as(NameAndTypeEntry.class);
-                    final String backingMethodName = constantPool.getString(backingMethodNameAndType.getNameIndex());
-                    final Signature backingMethodSignature = SignatureImpl.parse(constantPool.getString(backingMethodNameAndType.getDescriptorIndex()));
+                    final Signature functionalInterfaceMethodSignature = SignatureImpl.parse(descriptors[0].as(MethodTypeDescriptor.class).getDescriptor());
+                    final MethodHandleDescriptor backingMethodHandle = descriptors[1].as(MethodHandleDescriptor.class);
+                    final Type declaringType = resolveType(backingMethodHandle.getClassName());
+                    final String backingMethodName = backingMethodHandle.getMethodName();
+                    final Signature backingMethodSignature = SignatureImpl.parse(backingMethodHandle.getMethodDescriptor());
+
+
                     final Optional<Expression> self;
-                    final ReferenceKind referenceKind = ((MethodHandleEntry) bootstrapMethodArguments[1]).getReferenceKind();
+                    final ReferenceKind referenceKind = backingMethodHandle.getReferenceKind();
 
                     switch (referenceKind) {
                         case INVOKE_STATIC:
@@ -359,6 +377,12 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                             throw new UnsupportedOperationException("Reference kind not supported for dynamic invoke: " + referenceKind);
                     }
 
+                    final LocalVariableReference[] enclosedVariables = new LocalVariableReference[backingMethodSignature.getParameterTypes().size()];
+
+                    for (int i = enclosedVariables.length - 1; i >= 0; i--) {
+                        enclosedVariables[i] = (LocalVariableReference) context.pop();
+                    }
+
                     context.push(new LambdaImpl(
                             self,
                             referenceKind,
@@ -367,14 +391,24 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
                             functionalInterfaceMethodSignature,
                             declaringType,
                             backingMethodName,
-                            backingMethodSignature));
+                            backingMethodSignature,
+                            Arrays.asList(enclosedVariables)));
+
                     break;
                 }
 
                 // Invalid instructions
 
                 default:
-                    throw new IllegalArgumentException("Invalid byte code " + n + " (" + ByteCode.toString(byteCode) + ") in method " + method.getName());
+                    final DecompilerExtension coreExtension = coreConfiguration.getDecompilerExtension(context, byteCode);
+
+                    if (coreExtension != null) {
+                        if (coreExtension.decompile(context, codeStream, byteCode)) {
+                            break;
+                        }
+                    }
+
+                    throw new IllegalArgumentException("Invalid byte code " + byteCode + " (" + ByteCode.toString(byteCode) + ") in method " + method.getName());
             }
         }
 
@@ -383,10 +417,10 @@ public final class ByteCodeParserImpl implements ByteCodeParser {
         return context.getStatements().stream().toArray(Element[]::new);
     }
 
-    private void invokeMethod(DecompilationContext context, InputStream in, ConstantPool constantPool, boolean invokeStatic, boolean isInterface) throws IOException {
+    private void invokeMethod(DecompilationContext context, CodeStream stream, ConstantPool constantPool, boolean invokeStatic, boolean isInterface) throws IOException {
         final ClassEntry classEntry;
         final NameAndTypeEntry methodNameAndType;
-        final int methodRefIndex = (in.read() << 8) & 0xFF00 | in.read() & 0xFF;
+        final int methodRefIndex = stream.nextUnsignedShort();
 
         if (!isInterface) {
             final MethodRefEntry methodRef = (MethodRefEntry) constantPool.getEntry(methodRefIndex);

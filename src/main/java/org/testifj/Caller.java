@@ -1,6 +1,5 @@
 package org.testifj;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -24,6 +23,10 @@ public final class Caller {
 
     public StackTraceElement getCallerStackTraceElement() {
         return stackTraceElements.get(callerStackTraceIndex);
+    }
+
+    public int getCallerStackTraceIndex() {
+        return callerStackTraceIndex;
     }
 
     @Override

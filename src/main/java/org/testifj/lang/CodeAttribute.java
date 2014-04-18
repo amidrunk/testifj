@@ -17,6 +17,8 @@ public interface CodeAttribute extends Attribute {
 
     List<Attribute> getAttributes();
 
+    CodeAttribute withLocalVariableTable(LocalVariableTable localVariableTable);
+
     default String getName() {
         return ATTRIBUTE_NAME;
     }

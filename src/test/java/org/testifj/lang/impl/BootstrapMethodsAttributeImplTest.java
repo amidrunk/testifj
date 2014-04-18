@@ -1,7 +1,6 @@
 package org.testifj.lang.impl;
 
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.testifj.lang.BootstrapMethod;
 import org.testifj.lang.BootstrapMethodsAttribute;
 

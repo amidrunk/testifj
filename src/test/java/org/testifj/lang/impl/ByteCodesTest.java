@@ -1,7 +1,6 @@
 package org.testifj.lang.impl;
 
 import org.junit.Test;
-import org.testifj.lang.ClassFileFormatException;
 import org.testifj.lang.DecompilationContext;
 import org.testifj.lang.LocalVariable;
 import org.testifj.lang.Method;
@@ -16,10 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.testifj.Expect.expect;
+import static org.mockito.Mockito.*;
 
 public class ByteCodesTest {
 

@@ -57,6 +57,21 @@ public final class DefaultMethod implements Method {
     }
 
     @Override
+    public Method withLocalVariableTable(LocalVariableTable localVariableTable) {
+        assert localVariableTable != null : "Local variable table can't be null";
+
+        final Attribute[] newAttributes = Arrays.stream(attributes).map(a -> {
+            if (!CodeAttribute.ATTRIBUTE_NAME.equals(a.getName())) {
+                return a;
+            }
+
+            return ((CodeAttribute) a).withLocalVariableTable(localVariableTable);
+        }).toArray(Attribute[]::new);
+
+        return new DefaultMethod(classFile, accessFlags, name, signature, newAttributes);
+    }
+
+    @Override
     public List<Attribute> getAttributes() {
         return Arrays.asList(attributes);
     }

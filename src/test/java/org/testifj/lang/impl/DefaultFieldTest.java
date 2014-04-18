@@ -6,7 +6,6 @@ import org.testifj.lang.ClassFile;
 
 import java.util.function.Supplier;
 
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;

@@ -1,11 +1,9 @@
 package org.testifj.lang.impl;
 
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.testifj.lang.*;
 
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
 

@@ -4,7 +4,7 @@ import org.junit.Test;
 import org.testifj.lang.model.impl.ConstantExpressionImpl;
 
 import static org.testifj.Expect.expect;
-import static org.testifj.lang.model.AST.*;
+import static org.testifj.lang.model.AST.constant;
 
 public class ASTTest {
 

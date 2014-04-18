@@ -16,8 +16,20 @@ public interface ConstantPool {
 
     ConstantPoolEntry[] getEntries(int[] indices);
 
-    FieldDescriptor getFieldDescriptor(int index);
+    ConstantPoolEntryDescriptor[] getDescriptors(int[] indices);
 
     long getLong(int index);
+
+    FieldRefDescriptor getFieldRefDescriptor(int index);
+
+    NameAndTypeDescriptor getNameAndTypeDescriptor(int index);
+
+    InterfaceMethodRefDescriptor getInterfaceMethodRefDescriptor(int index);
+
+    InvokeDynamicDescriptor getInvokeDynamicDescriptor(int index);
+
+    MethodHandleDescriptor getMethodHandleDescriptor(int index);
+
+    MethodTypeDescriptor getMethodTypeDescriptor(int index);
 
 }

@@ -1,19 +1,67 @@
-package org.testifj.lang.imlp;
+package org.testifj.lang.impl;
 
+import com.sun.tools.classfile.Annotation;
 import org.junit.Test;
+import org.testifj.lang.Decompiler;
+import org.testifj.lang.Method;
+import org.testifj.lang.TypeResolver;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.MethodCall;
 import org.testifj.lang.model.Statement;
-import org.testifj.matchers.core.CollectionThatIs;
 
-import static org.mockito.Matchers.contains;
+import java.lang.reflect.Type;
+
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
+import static org.testifj.Given.given;
 import static org.testifj.matchers.core.CollectionThatIs.empty;
 
 public class DecompilationContextImplTest {
 
-    private final DecompilationContextImpl context = new DecompilationContextImpl();
+    private final ProgramCounter programCounter = new ProgramCounterImpl();
+
+    private final Decompiler decompiler = mock(Decompiler.class);
+
+    private final Method method = mock(Method.class);
+
+    private final TypeResolver typeResolver = mock(TypeResolver.class);
+
+    private final DecompilationContextImpl context = new DecompilationContextImpl(decompiler, method, programCounter, typeResolver);
+
+    @Test
+    public void constructorShouldNotAcceptInvalidParameters() {
+        expect(() -> new DecompilationContextImpl(null, method, programCounter, typeResolver)).toThrow(AssertionError.class);
+        expect(() -> new DecompilationContextImpl(decompiler, null, programCounter, typeResolver)).toThrow(AssertionError.class);
+        expect(() -> new DecompilationContextImpl(decompiler, method, null, typeResolver)).toThrow(AssertionError.class);
+        expect(() -> new DecompilationContextImpl(decompiler, method, programCounter, null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void constructorShouldRetainArguments() {
+        expect(context.getDecompiler()).toBe(decompiler);
+        expect(context.getMethod()).toBe(method);
+        expect(context.getProgramCounter()).toBe(programCounter);
+    }
+
+    @Test
+    public void resolveTypeShouldNotAcceptNullType() {
+        expect(() -> context.resolveType(null)).toThrow(AssertionError.class);
+        expect(() -> context.resolveType("")).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void resolveTypeShouldReturnTypeFromTypeResolver() {
+        when(typeResolver.resolveType(eq("java.lang.String"))).thenReturn(String.class);
+
+        given(context.resolveType("java/lang/String")).then(type -> {
+            expect(type).toBe(String.class);
+        });
+
+        verify(typeResolver).resolveType(eq("java.lang.String"));
+    }
 
     @Test
     public void enlistedStatementsShouldInitiallyBeEmpty() {
@@ -158,6 +206,36 @@ public class DecompilationContextImplTest {
         context.removeStatement(0);
 
         expect(context.getStatements()).toBe(empty());
+    }
+
+    @Test
+    public void reduceShouldRetainExecutionOrder() {
+        final MethodCall methodCall1 = mock(MethodCall.class, "s1");
+        final MethodCall methodCall2 = mock(MethodCall.class, "s2");
+
+        context.push(methodCall1);
+        context.push(methodCall2);
+
+        context.reduce();
+        context.reduceAll();
+
+        final Statement[] expectedOrder = {methodCall1, methodCall2};
+
+        expect(context.getStatements().toArray()).toBe(expectedOrder);
+    }
+
+    @Test
+    public void getStackedExpressionsShouldReturnEmptyCollectionIfNoExpressionsAreStacked() {
+        expect(context.getStackedExpressions()).toBe(empty());
+    }
+
+    @Test
+    public void getStackedExpressionsShouldReturnExpressionsOnStack() {
+        final Expression expression = mock(Expression.class);
+
+        context.push(expression);
+
+        expect(context.getStackedExpressions().toArray()).toBe(new Object[]{expression});
     }
 
 }

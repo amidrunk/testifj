@@ -1,7 +1,6 @@
 package org.testifj.matchers.core;
 
 import org.junit.Test;
-import org.testifj.Matcher;
 
 import static org.testifj.Expect.expect;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;

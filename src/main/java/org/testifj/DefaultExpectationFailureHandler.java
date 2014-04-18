@@ -1,11 +1,11 @@
 package org.testifj;
 
-import org.testifj.lang.ByteCodeParser;
 import org.testifj.lang.ClassFile;
 import org.testifj.lang.ClassFileReader;
+import org.testifj.lang.Decompiler;
 import org.testifj.lang.Method;
-import org.testifj.lang.impl.ByteCodeParserImpl;
 import org.testifj.lang.impl.ClassFileReaderImpl;
+import org.testifj.lang.impl.DecompilerImpl;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;
@@ -33,18 +33,18 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
 
     private final ClassFileReader classFileReader;
 
-    private final ByteCodeParser byteCodeParser;
+    private final Decompiler decompiler;
 
     private final Describer<CodePointer> syntaxElementDescriber;
 
     private final DescriptionFormat descriptionFormat;
 
     private DefaultExpectationFailureHandler(ClassFileReader classFileReader,
-                                             ByteCodeParser byteCodeParser,
+                                             Decompiler decompiler,
                                              Describer<CodePointer> syntaxElementDescriber,
                                              DescriptionFormat descriptionFormat) {
         this.classFileReader = classFileReader;
-        this.byteCodeParser = byteCodeParser;
+        this.decompiler = decompiler;
         this.syntaxElementDescriber = syntaxElementDescriber;
         this.descriptionFormat = descriptionFormat;
     }
@@ -67,10 +67,31 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
 
     private void handleExpectedExceptionNotThrownException(ExpectedExceptionNotThrown failure) {
         final Description description = forCaller(failure.getCaller(), (method, elements) -> {
-            final Description procedureDescription = syntaxElementDescriber.describe(new CodePointer(method, elements[0]));
+            Description procedureDescription = null;
+            boolean inverted = false;
+
+            if (elements[0].getElementType() == ElementType.METHOD_CALL) {
+                final MethodCall methodCall = (MethodCall) elements[0];
+
+                if (methodCall.getMethodName().equals("toThrow")) {
+                    MethodCall expectCall = (MethodCall) methodCall.getTargetInstance();
+
+                    if (expectCall.getMethodName().equals("not")) {
+                        expectCall = (MethodCall) expectCall.getTargetInstance();
+                        inverted = true;
+                    }
+
+                    procedureDescription = syntaxElementDescriber.describe(new CodePointer(method, expectCall.getParameters().get(0)));
+                }
+            }
+
+            if (procedureDescription == null) {
+                procedureDescription = syntaxElementDescriber.describe(new CodePointer(method, elements[0]));
+            }
+
             return BasicDescription.from("Expected [")
                     .appendDescription(procedureDescription)
-                    .appendText("] to trow " + failure.getExpectedException().getName());
+                    .appendText("] " + (inverted ? "not" : "") + " to throw " + failure.getExpectedException().getName());
         });
 
         throw new AssertionError(description.toString());
@@ -131,34 +152,57 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
     }
 
     private <T> T forCaller(Caller caller, BiFunction<Method, Element[], T> syntaxElementsHandler) {
+        final Method callerMethod = loadMethod(caller, true);
+        final Element[] elements = elementsForLine(caller, callerMethod);
+
+        return syntaxElementsHandler.apply(callerMethod, elements);
+    }
+
+    private Element[] elementsForLine(Caller caller, Method callerMethod) {
+        final Element[] elements;
+
+        try (InputStream codeForLineNumber = callerMethod.getCodeForLineNumber(caller.getCallerStackTraceElement().getLineNumber())) {
+            elements = decompiler.parse(callerMethod, codeForLineNumber);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return elements;
+    }
+
+    private Method loadMethod(Caller caller, boolean resolveLocalVariableTable) {
         final ClassFile classFile;
 
         try (InputStream in = getClass().getResourceAsStream("/" + caller.getCallerStackTraceElement().getClassName().replace('.', '/') + ".class")) {
+            if (in == null) {
+                return loadMethod(new Caller(caller.getCallStack(), caller.getCallerStackTraceIndex() + 1), true);
+            }
+
             classFile = classFileReader.read(in);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        final Method callerMethod = classFile.getMethods().stream()
+        Method method = classFile.getMethods().stream()
                 .filter(m -> m.getName().equals(caller.getCallerStackTraceElement().getMethodName()))
                 .findFirst().get();
 
-        final Element[] elements;
+        if (!method.getLocalVariableTable().isPresent()) {
+            if (resolveLocalVariableTable) {
+                final Caller rootCaller = new Caller(caller.getCallStack(), caller.getCallerStackTraceIndex() + 1);
+                final Method enclosure = loadMethod(rootCaller, false);
 
-        try (InputStream codeForLineNumber = callerMethod.getCodeForLineNumber(caller.getCallerStackTraceElement().getLineNumber())) {
-            elements = byteCodeParser.parse(callerMethod, codeForLineNumber);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+                int n = 100;
+            }
         }
 
-        return syntaxElementsHandler.apply(callerMethod, elements);
+        return method;
     }
 
     public static final class Builder {
 
         private ClassFileReader classFileReader = new ClassFileReaderImpl();
 
-        private ByteCodeParser byteCodeParser = new ByteCodeParserImpl();
+        private Decompiler decompiler = new DecompilerImpl();
 
         private Describer<CodePointer> syntaxElementDescriber = new CodeDescriber();
 
@@ -170,10 +214,10 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
             this.classFileReader = classFileReader;
         }
 
-        public void setByteCodeParser(ByteCodeParser byteCodeParser) {
-            assert byteCodeParser != null : "Byte code parser can't be null";
+        public void setDecompiler(Decompiler decompiler) {
+            assert decompiler != null : "Byte code parser can't be null";
 
-            this.byteCodeParser = byteCodeParser;
+            this.decompiler = decompiler;
         }
 
         public void setSyntaxElementDescriber(Describer<CodePointer> syntaxElementDescriber) {
@@ -188,7 +232,7 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
         }
 
         public DefaultExpectationFailureHandler build() {
-            return new DefaultExpectationFailureHandler(classFileReader, byteCodeParser, syntaxElementDescriber, descriptionFormat);
+            return new DefaultExpectationFailureHandler(classFileReader, decompiler, syntaxElementDescriber, descriptionFormat);
         }
     }
 }

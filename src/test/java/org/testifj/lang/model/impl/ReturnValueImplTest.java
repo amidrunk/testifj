@@ -6,7 +6,6 @@ import org.testifj.lang.model.Expression;
 
 import static org.mockito.Mockito.mock;
 import static org.testifj.Expect.expect;
-import static org.testifj.matchers.core.Equal.equal;
 
 public class ReturnValueImplTest {
 

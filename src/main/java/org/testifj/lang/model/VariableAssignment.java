@@ -1,7 +1,5 @@
 package org.testifj.lang.model;
 
-import org.testifj.lang.LocalVariable;
-
 import java.lang.reflect.Type;
 
 public interface VariableAssignment extends Statement, Expression {

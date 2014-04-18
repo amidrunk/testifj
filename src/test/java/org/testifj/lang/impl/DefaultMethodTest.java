@@ -3,7 +3,6 @@ package org.testifj.lang.impl;
 import org.junit.Test;
 import org.testifj.lang.*;
 import org.testifj.lang.model.Signature;
-import org.testifj.lang.model.impl.SignatureImpl;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -16,6 +15,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
+import static org.testifj.matchers.core.ObjectThatIs.sameAs;
 import static org.testifj.matchers.core.OptionalThatIs.present;
 
 @SuppressWarnings("unchecked")
@@ -153,12 +153,34 @@ public class DefaultMethodTest {
         expect(method.getLocalVariableTable().get()).toBe(localVariableTable);
     }
 
+    @Test
+    public void withLocalVariableTableShouldNotAcceptNullTable() {
+        expect(() -> methodWithCodeAttributes().withLocalVariableTable(null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void withLocalVariableTableShouldAddVariableTableIfNotExists() {
+        final LocalVariableTableImpl newTable = new LocalVariableTableImpl(new LocalVariable[0]);
+        final Method newMethod = methodWithCodeAttributes().withLocalVariableTable(newTable);
+
+        expect(newMethod.getLocalVariableTable()).toBe(present());
+        expect(newMethod.getLocalVariableTable().get()).toBe(sameAs(newTable));
+    }
+
+    @Test
+    public void withLocalVariableTableShouldReplaceExistingVariableTable() {
+        final LocalVariableTableImpl newTable = new LocalVariableTableImpl(new LocalVariable[0]);
+        final Method newMethod = methodWithCodeAttributes(new LocalVariableTableImpl(new LocalVariable[0])).withLocalVariableTable(newTable);
+
+        expect(newMethod.getLocalVariableTable()).toBe(present());
+        expect(newMethod.getLocalVariableTable().get()).toBe(sameAs(newTable));
+    }
+
     private DefaultMethod methodWithCodeAttributes(Attribute... attributes) {
         return new DefaultMethod(classFileSupplier, 0, "foo", exampleSignature, new Attribute[]{
                 new CodeAttributeImpl(
-                        mock(ByteBuffer.class),
                         0, 0,
-                        mock(ByteBuffer.class),
+                        ByteBuffer.wrap(new byte[0]),
                         Collections.emptyList(),
                         Arrays.asList(
                                 attributes

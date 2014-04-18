@@ -1,13 +1,13 @@
 package org.testifj;
 
-import com.sun.tools.internal.xjc.util.CodeModelClassFactory;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.testifj.lang.Method;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.impl.ReturnImpl;
 
-import java.util.Arrays;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static org.mockito.Mockito.mock;
 import static org.testifj.Expect.expect;
@@ -71,6 +71,16 @@ public class CodeDescriberTest {
         final Description description = describer.describe(ClassModelTestUtils.codeForLineOffset(-2)[0]);
 
         expect(description.toString()).toBe("callFunction(s -> s.length() + 1, \"foo\")");
+    }
+
+    @Test
+    @Ignore("Generics are hard")
+    public void lambdaWithGenericsTypeParametersCanBeDescribed() {
+        final Supplier<String> supplier = () -> "Hello World!";
+
+        final Description description = describer.describe(ClassModelTestUtils.codeForLineOffset(-2)[0]);
+
+        expect(description.toString()).toBe("Supplier<String> supplier = () -> \"Hello World!\"");
     }
 
     private CodePointer pointer(Element element) {

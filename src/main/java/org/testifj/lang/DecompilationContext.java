@@ -1,11 +1,23 @@
 package org.testifj.lang;
 
+import org.testifj.lang.impl.ProgramCounter;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.Statement;
 
+import java.lang.reflect.Type;
 import java.util.List;
 
 public interface DecompilationContext {
+
+    ProgramCounter getProgramCounter();
+
+    Decompiler getDecompiler();
+
+    Method getMethod();
+
+    Type resolveType(String internalName);
+
+    List<Expression> getStackedExpressions();
 
     /**
      * Reduces the stack, i.e. pops the stack and puts the stacked statement on in the

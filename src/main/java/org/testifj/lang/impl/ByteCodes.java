@@ -1,14 +1,14 @@
 package org.testifj.lang.impl;
 
-import org.testifj.lang.*;
+import org.testifj.lang.DecompilationContext;
+import org.testifj.lang.LocalVariable;
+import org.testifj.lang.Method;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.impl.FieldReferenceImpl;
 import org.testifj.lang.model.impl.LocalVariableReferenceImpl;
 import org.testifj.lang.model.impl.VariableAssignmentImpl;
 
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.List;
 
 public final class ByteCodes {
 

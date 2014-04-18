@@ -4,7 +4,6 @@ import org.junit.Test;
 import org.testifj.lang.model.ElementType;
 
 import static org.testifj.Expect.expect;
-import static org.testifj.matchers.core.Equal.equal;
 
 public class ReturnImplTest {
 

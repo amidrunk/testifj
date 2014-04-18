@@ -1,7 +1,6 @@
 package org.testifj.lang.impl;
 
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.testifj.lang.Procedure;
 
 import static org.mockito.Mockito.*;
@@ -11,19 +10,19 @@ public class ProgramCounterTest {
 
     @Test
     public void defaultConstructorShouldInitializePCToZero() {
-        expect(new ProgramCounter().get()).toBe(0);
+        expect(new ProgramCounterImpl().get()).toBe(0);
     }
 
     @Test
     public void programCounterShouldRetainPC() {
-        final ProgramCounter pc = new ProgramCounter(1234);
+        final ProgramCounter pc = new ProgramCounterImpl(1234);
 
         expect(pc.get()).toBe(1234);
     }
 
     @Test
     public void advanceShouldIncreaseProgramCounterValue() {
-        final ProgramCounter programCounter = new ProgramCounter();
+        final ProgramCounter programCounter = new ProgramCounterImpl();
 
         programCounter.advance();
 
@@ -37,7 +36,7 @@ public class ProgramCounterTest {
         final Procedure procedure3 = mock(Procedure.class);
         final Procedure procedure4 = mock(Procedure.class);
 
-        final ProgramCounter programCounter = new ProgramCounter();
+        final ProgramCounter programCounter = new ProgramCounterImpl();
 
         programCounter.lookAhead(1, procedure1);
         programCounter.lookAhead(1, procedure2);
@@ -68,7 +67,7 @@ public class ProgramCounterTest {
 
     @Test
     public void lookAheadShouldFailIfProvidedPCIsLessThanOrEqualToCurrentPC() {
-        final ProgramCounter pc = new ProgramCounter(1);
+        final ProgramCounter pc = new ProgramCounterImpl(1);
 
         expect(() -> pc.lookAhead(0, mock(Procedure.class))).toThrow(AssertionError.class);
         expect(() -> pc.lookAhead(1, mock(Procedure.class))).toThrow(AssertionError.class);
@@ -76,7 +75,7 @@ public class ProgramCounterTest {
 
     @Test
     public void lookAheadShouldNotAcceptNullProcedure() {
-        final ProgramCounter pc = new ProgramCounter();
+        final ProgramCounter pc = new ProgramCounterImpl();
 
         expect(() -> pc.lookAhead(1, null)).toThrow(AssertionError.class);
     }

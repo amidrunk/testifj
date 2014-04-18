@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import static org.testifj.Expect.expect;
-import static org.testifj.matchers.core.Equal.equal;
 
 public class ByteBufferInputStreamTest {
 

@@ -17,4 +17,6 @@ public interface Method extends Member {
 
     Signature getSignature();
 
+    Method withLocalVariableTable(LocalVariableTable localVariableTable);
+
 }

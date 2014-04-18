@@ -4,7 +4,6 @@ import org.junit.Ignore;
 
 import static org.mockito.Mockito.mock;
 import static org.testifj.Expect.expect;
-import static org.testifj.matchers.core.Equal.equal;
 
 @SuppressWarnings("unchecked")
 @Ignore

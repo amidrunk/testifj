@@ -3,9 +3,7 @@ package org.testifj;
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.Optional;
 
-import static org.junit.Assert.*;
 import static org.testifj.Expect.expect;
 import static org.testifj.matchers.core.OptionalThatIs.present;
 

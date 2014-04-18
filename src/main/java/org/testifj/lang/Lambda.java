@@ -1,9 +1,11 @@
 package org.testifj.lang;
 
 import org.testifj.lang.model.Expression;
+import org.testifj.lang.model.LocalVariableReference;
 import org.testifj.lang.model.Signature;
 
 import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Optional;
 
 public interface Lambda extends Expression {
@@ -23,5 +25,7 @@ public interface Lambda extends Expression {
     String getBackingMethodName();
 
     Signature getBackingMethodSignature();
+
+    List<LocalVariableReference> getEnclosedVariables();
 
 }

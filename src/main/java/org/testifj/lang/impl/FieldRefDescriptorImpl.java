@@ -1,8 +1,8 @@
 package org.testifj.lang.impl;
 
-import org.testifj.lang.FieldDescriptor;
+import org.testifj.lang.FieldRefDescriptor;
 
-public final class FieldDescriptorImpl implements FieldDescriptor {
+public final class FieldRefDescriptorImpl implements FieldRefDescriptor {
 
     private final String className;
 
@@ -10,7 +10,7 @@ public final class FieldDescriptorImpl implements FieldDescriptor {
 
     private final String name;
 
-    public FieldDescriptorImpl(String className, String descriptor, String name) {
+    public FieldRefDescriptorImpl(String className, String descriptor, String name) {
         assert className != null && !className.isEmpty() : "Class name can't be null or empty";
         assert descriptor != null && !descriptor.isEmpty() : "Descriptor can't be null or empty";
         assert name != null && !name.isEmpty() : "Name can't be null or empty";
@@ -40,7 +40,7 @@ public final class FieldDescriptorImpl implements FieldDescriptor {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        FieldDescriptorImpl that = (FieldDescriptorImpl) o;
+        FieldRefDescriptorImpl that = (FieldRefDescriptorImpl) o;
 
         if (!className.equals(that.className)) return false;
         if (!descriptor.equals(that.descriptor)) return false;
@@ -59,7 +59,7 @@ public final class FieldDescriptorImpl implements FieldDescriptor {
 
     @Override
     public String toString() {
-        return "FieldDescriptorImpl{" +
+        return "FieldRefDescriptorImpl{" +
                 "className='" + className + '\'' +
                 ", descriptor='" + descriptor + '\'' +
                 ", name='" + name + '\'' +

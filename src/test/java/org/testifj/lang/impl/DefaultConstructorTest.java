@@ -3,7 +3,6 @@ package org.testifj.lang.impl;
 import org.junit.Test;
 import org.testifj.lang.Attribute;
 import org.testifj.lang.ClassFile;
-import org.testifj.lang.model.Signature;
 import org.testifj.lang.model.impl.SignatureImpl;
 
 import java.util.Arrays;

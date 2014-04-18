@@ -1,24 +1,25 @@
 package org.testifj;
 
-import org.testifj.lang.ByteCodeParser;
+import org.testifj.lang.Decompiler;
 import org.testifj.lang.Method;
-import org.testifj.lang.impl.ByteCodeParserImpl;
-import org.testifj.lang.model.*;
+import org.testifj.lang.impl.DecompilerImpl;
+import org.testifj.lang.model.Element;
+import org.testifj.lang.model.ElementType;
 
 import java.io.IOException;
 
 public final class MethodBodyDescriber implements Describer<Method> {
 
-    private final ByteCodeParser byteCodeParser;
+    private final Decompiler decompiler;
 
     private final Describer<CodePointer> methodElementDescriber;
 
     public MethodBodyDescriber() {
-        this(new ByteCodeParserImpl(), new CodeDescriber());
+        this(new DecompilerImpl(), new CodeDescriber());
     }
 
-    public MethodBodyDescriber(ByteCodeParser byteCodeParser, Describer<CodePointer> methodElementDescriber) {
-        this.byteCodeParser = byteCodeParser;
+    public MethodBodyDescriber(Decompiler decompiler, Describer<CodePointer> methodElementDescriber) {
+        this.decompiler = decompiler;
         this.methodElementDescriber = methodElementDescriber;
     }
 
@@ -30,7 +31,7 @@ public final class MethodBodyDescriber implements Describer<Method> {
         final Element[] statements;
 
         try {
-            statements = byteCodeParser.parse(method, method.getCode().getCode());
+            statements = decompiler.parse(method, method.getCode().getCode());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

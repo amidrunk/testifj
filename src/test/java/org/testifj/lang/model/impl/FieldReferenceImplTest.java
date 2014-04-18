@@ -8,7 +8,6 @@ import org.testifj.lang.model.Expression;
 import java.math.BigDecimal;
 
 import static org.testifj.Expect.expect;
-import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 import static org.testifj.matchers.core.OptionalThatIs.present;
 
 public class FieldReferenceImplTest {

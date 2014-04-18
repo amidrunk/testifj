@@ -5,7 +5,6 @@ import org.junit.Test;
 import java.util.regex.Pattern;
 
 import static org.testifj.Expect.expect;
-import static org.testifj.matchers.core.Equal.equal;
 
 public class StringReaderTest {
 

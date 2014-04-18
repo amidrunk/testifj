@@ -1,6 +1,5 @@
 package org.testifj.lang.model.impl;
 
-import org.testifj.lang.Procedure;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.LocalVariableReference;
 

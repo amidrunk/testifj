@@ -4,9 +4,12 @@ import org.testifj.lang.Lambda;
 import org.testifj.lang.ReferenceKind;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;
+import org.testifj.lang.model.LocalVariableReference;
 import org.testifj.lang.model.Signature;
 
 import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 // TODO ReferenceKind is probably a discriminator... different sub classes
@@ -28,6 +31,8 @@ public class LambdaImpl implements Lambda {
 
     private final Signature backingMethodSignature;
 
+    private final List<LocalVariableReference> enclosedVariables;
+
     public LambdaImpl(Optional<Expression> self,
                       ReferenceKind referenceKind,
                       Type functionalInterface,
@@ -35,7 +40,8 @@ public class LambdaImpl implements Lambda {
                       Signature interfaceMethodSignature,
                       Type declaringClass,
                       String backingMethodName,
-                      Signature backingMethodSignature) {
+                      Signature backingMethodSignature,
+                      List<LocalVariableReference> enclosedVariables) {
         this.self = self;
         this.referenceKind = referenceKind;
         this.functionalInterface = functionalInterface;
@@ -44,6 +50,7 @@ public class LambdaImpl implements Lambda {
         this.declaringClass = declaringClass;
         this.backingMethodName = backingMethodName;
         this.backingMethodSignature = backingMethodSignature;
+        this.enclosedVariables = enclosedVariables;
     }
 
     @Override
@@ -83,6 +90,11 @@ public class LambdaImpl implements Lambda {
     @Override
     public Signature getBackingMethodSignature() {
         return backingMethodSignature;
+    }
+
+    @Override
+    public List<LocalVariableReference> getEnclosedVariables() {
+        return Collections.unmodifiableList(enclosedVariables);
     }
 
     @Override

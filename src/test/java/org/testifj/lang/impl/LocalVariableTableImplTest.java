@@ -1,13 +1,11 @@
 package org.testifj.lang.impl;
 
-import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.testifj.lang.LocalVariable;
 import org.testifj.lang.LocalVariableTable;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
 import static org.testifj.Expect.expect;
 

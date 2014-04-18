@@ -2,33 +2,55 @@ package org.testifj.lang.impl;
 
 import org.junit.Test;
 import org.testifj.ClassModelTestUtils;
-import org.testifj.CodeDescriber;
 import org.testifj.CodePointer;
-import org.testifj.Description;
-import org.testifj.lang.ByteCodeParser;
-import org.testifj.lang.ClassFile;
-import org.testifj.lang.Lambda;
-import org.testifj.lang.Method;
+import org.testifj.lang.*;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.OperatorType;
 import org.testifj.lang.model.VariableAssignment;
 import org.testifj.lang.model.impl.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.function.Supplier;
 
-import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Mockito.*;
 import static org.testifj.Expect.expect;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 import static org.testifj.matchers.core.ObjectThatIs.instanceOf;
+import static org.testifj.matchers.core.StringShould.containString;
 
-public class ByteCodeParserImplTest {
+public class DecompilerImplTest {
 
-    private final ByteCodeParser parser = new ByteCodeParserImpl();
+    @Test
+    public void constructorShouldNotAcceptNullDecompilerConfiguration() {
+        expect(() -> new DecompilerImpl(null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void compilerExtensionCanOverrideByteCodeHandling() throws IOException {
+        final DecompilerExtension extension = mock(DecompilerExtension.class);
+        final DecompilerConfiguration configuration = new DecompilerConfigurationImpl.Builder()
+                .extend(ByteCode.iconst_0, extension)
+                .build();
+        final DecompilerImpl decompiler = new DecompilerImpl(configuration);
+
+        final Method method = mock(Method.class);
+
+        when(method.getClassFile()).thenReturn(mock(ClassFile.class));
+        when(extension.decompile(any(DecompilationContext.class), any(CodeStream.class), anyInt()))
+                .thenReturn(true);
+
+        final Element[] elements = decompiler.parse(method, new ByteArrayInputStream(new byte[]{(byte) ByteCode.iconst_0}));
+
+        expect(elements.length).toBe(0);
+
+        verify(extension).decompile(any(DecompilationContext.class), any(CodeStream.class), anyInt());
+    }
 
     @Test
     public void emptyMethodCanBeParsed() {
@@ -219,8 +241,23 @@ public class ByteCodeParserImplTest {
         });
     }
 
+    @Test
+    public void lambdaWithMethodCallThatDiscardsResultCanBeParsed() {
+        final DefaultConstantPool constantPool = new DefaultConstantPool.Builder().create();
+
+        expect(() -> constantPool.getInterfaceMethodRefDescriptor(1)).toThrow(IndexOutOfBoundsException.class);
+
+        final CodePointer[] codePointers = ClassModelTestUtils.codeForLineOffset(-2);
+
+        expect(codePointers.length).toBe(1);
+        expect(ClassModelTestUtils.toCode(codePointers[0])).to(containString("expect(() -> constantPool.getInterfaceMethodRefDescriptor(1))"));
+    }
+
     private Element[] parseMethodBody(String methodName) {
         return ClassModelTestUtils.methodBodyOf(ExampleClass.class, methodName);
+    }
+
+    private static void accept(Procedure procedure) {
     }
 
     private static class ExampleClass {

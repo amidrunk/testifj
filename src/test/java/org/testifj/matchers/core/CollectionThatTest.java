@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.Collections;
 
 import static org.testifj.Expect.expect;
-import static org.testifj.matchers.core.Equal.equal;
 
 public class CollectionThatTest {
 

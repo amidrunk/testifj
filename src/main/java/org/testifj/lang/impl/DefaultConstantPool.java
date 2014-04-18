@@ -6,8 +6,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.testifj.lang.ConstantPoolEntry.FieldRefEntry;
-import static org.testifj.lang.ConstantPoolEntry.NameAndTypeEntry;
+import static org.testifj.lang.ConstantPoolEntry.*;
+import static org.testifj.lang.ConstantPoolEntryTag.METHOD_REF;
+import static org.testifj.lang.ConstantPoolEntryTag.UTF8;
 
 public final class DefaultConstantPool implements ConstantPool {
 
@@ -30,7 +31,7 @@ public final class DefaultConstantPool implements ConstantPool {
 
     @Override
     public String getString(int index) {
-        return ((ConstantPoolEntry.UTF8Entry) getEntry(index, ConstantPoolEntryTag.UTF8)).getValue();
+        return ((UTF8Entry) getEntry(index, UTF8)).getValue();
     }
 
     @Override
@@ -75,19 +76,105 @@ public final class DefaultConstantPool implements ConstantPool {
     }
 
     @Override
-    public FieldDescriptor getFieldDescriptor(int index) {
+    public ConstantPoolEntryDescriptor[] getDescriptors(int[] indices) {
+        assert indices != null : "Indices can't be null";
+
+        final ConstantPoolEntryDescriptor[] descriptors = new ConstantPoolEntryDescriptor[indices.length];
+
+        for (int i = 0; i < indices.length; i++) {
+            final int index = indices[i];
+            final ConstantPoolEntry entry = getEntry(index);
+            final ConstantPoolEntryDescriptor descriptor;
+
+            switch (entry.getTag()) {
+                case FIELD_REF:
+                    descriptor = getFieldRefDescriptor(index);
+                    break;
+                case INTERFACE_METHOD_REF:
+                    descriptor = getInterfaceMethodRefDescriptor(index);
+                    break;
+                case NAME_AND_TYPE:
+                    descriptor = getNameAndTypeDescriptor(index);
+                    break;
+                case METHOD_HANDLE:
+                    descriptor = getMethodHandleDescriptor(index);
+                    break;
+                case METHOD_TYPE:
+                    descriptor = getMethodTypeDescriptor(index);
+                    break;
+                case INVOKE_DYNAMIC:
+                    descriptor = getInvokeDynamicDescriptor(index);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Constant pool entry " + entry);
+            }
+
+            descriptors[i] = descriptor;
+        }
+
+        return descriptors;
+    }
+
+    @Override
+    public FieldRefDescriptor getFieldRefDescriptor(int index) {
         final FieldRefEntry fieldRefEntry = getEntry(index, FieldRefEntry.class);
         final NameAndTypeEntry nameAndType = getEntry(fieldRefEntry.getNameAndTypeIndex(), NameAndTypeEntry.class);
         final String className = getClassName(fieldRefEntry.getClassIndex());
         final String fieldDescriptor = getString(nameAndType.getDescriptorIndex());
-        final String fieldName= getString(nameAndType.getNameIndex());
+        final String fieldName = getString(nameAndType.getNameIndex());
 
-        return new FieldDescriptorImpl(className, fieldDescriptor, fieldName);
+        return new FieldRefDescriptorImpl(className, fieldDescriptor, fieldName);
     }
 
     @Override
     public long getLong(int index) {
         return getEntry(index, ConstantPoolEntry.LongEntry.class).getValue();
+    }
+
+    @Override
+    public NameAndTypeDescriptor getNameAndTypeDescriptor(int index) {
+        final NameAndTypeEntry nameAndTypeEntry = getEntry(index, NameAndTypeEntry.class);
+        final UTF8Entry nameEntry = (UTF8Entry) getEntry(nameAndTypeEntry.getNameIndex(), UTF8);
+        final UTF8Entry descriptorEntry = (UTF8Entry) getEntry(nameAndTypeEntry.getDescriptorIndex(), UTF8);
+
+        return new NameAndTypeDescriptorImpl(nameEntry.getValue(), descriptorEntry.getValue());
+    }
+
+    @Override
+    public InterfaceMethodRefDescriptor getInterfaceMethodRefDescriptor(int index) {
+        final InterfaceMethodRefEntry entry = getEntry(index, InterfaceMethodRefEntry.class);
+        final String className = getClassName(entry.getClassIndex());
+        final NameAndTypeDescriptor nameAndTypeDescriptor = getNameAndTypeDescriptor(entry.getNameAndTypeIndex());
+
+        return new InterfaceMethodRefDescriptorImpl(className, nameAndTypeDescriptor.getName(), nameAndTypeDescriptor.getDescriptor());
+    }
+
+    @Override
+    public InvokeDynamicDescriptor getInvokeDynamicDescriptor(int index) {
+        final InvokeDynamicEntry entry = getEntry(index, InvokeDynamicEntry.class);
+        final NameAndTypeDescriptor nameAndTypeDescriptor = getNameAndTypeDescriptor(entry.getNameAndTypeIndex());
+
+        return new InvokeDynamicDescriptorImpl(entry.getBootstrapMethodAttributeIndex(),
+                nameAndTypeDescriptor.getName(), nameAndTypeDescriptor.getDescriptor());
+    }
+
+    @Override
+    public MethodHandleDescriptor getMethodHandleDescriptor(int index) {
+        final MethodHandleEntry methodHandleEntry = getEntry(index, MethodHandleEntry.class);
+        final MethodRefEntry methodRefEntry = (MethodRefEntry) getEntry(methodHandleEntry.getReferenceIndex(), METHOD_REF);
+        final String className = getClassName(methodRefEntry.getClassIndex());
+        final NameAndTypeDescriptor nameAndType = getNameAndTypeDescriptor(methodRefEntry.getNameAndTypeIndex());
+
+        return new MethodHandleDescriptorImpl(methodHandleEntry.getReferenceKind(),
+                className, nameAndType.getName(), nameAndType.getDescriptor());
+    }
+
+    @Override
+    public MethodTypeDescriptor getMethodTypeDescriptor(int index) {
+        final MethodTypeEntry entry = getEntry(index, MethodTypeEntry.class);
+        final UTF8Entry descriptorEntry = (UTF8Entry) getEntry(entry.getDescriptorIndex(), UTF8);
+
+        return new MethodTypeDescriptorImpl(descriptorEntry.getValue());
     }
 
     private ConstantPoolEntry getEntry(int index, ConstantPoolEntryTag expectedTag) {

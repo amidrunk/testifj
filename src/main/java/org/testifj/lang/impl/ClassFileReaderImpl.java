@@ -1,6 +1,5 @@
 package org.testifj.lang.impl;
 
-import jdk.nashorn.internal.runtime.linker.Bootstrap;
 import org.testifj.lang.*;
 import org.testifj.lang.model.impl.SignatureImpl;
 
@@ -120,7 +119,7 @@ public final class ClassFileReaderImpl implements ClassFileReader {
                     final List<ExceptionTableEntry> exceptionTable = readExceptionTable(constantPool, codeStream);
                     final Attribute[] codeAttributes = readAttributes(codeStream, constantPool);
 
-                    attributes[i] = new CodeAttributeImpl(ByteBuffer.wrap(buffer), maxStack, maxLocals, ByteBuffer.wrap(buffer, 8, codeLength), exceptionTable, Arrays.asList(codeAttributes));
+                    attributes[i] = new CodeAttributeImpl(maxStack, maxLocals, ByteBuffer.wrap(buffer, 8, codeLength), exceptionTable, Arrays.asList(codeAttributes));
                     break;
                 }
                 case LocalVariableTable.ATTRIBUTE_NAME: {

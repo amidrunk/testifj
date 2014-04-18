@@ -5,7 +5,6 @@ import org.testifj.lang.ClassFileFormatException;
 
 import static org.testifj.Expect.expect;
 import static org.testifj.matchers.core.CollectionThatIs.empty;
-import static org.testifj.matchers.core.Equal.equal;
 
 @SuppressWarnings("unchecked")
 public class SignatureImplTest {

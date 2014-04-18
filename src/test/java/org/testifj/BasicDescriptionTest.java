@@ -7,9 +7,7 @@ import java.util.List;
 
 import static org.mockito.Mockito.mock;
 import static org.testifj.Expect.expect;
-import static org.testifj.matchers.core.ObjectThatIs.equalTo;
-import static org.testifj.matchers.core.ObjectThatIs.instanceOf;
-import static org.testifj.matchers.core.ObjectThatIs.sameAs;
+import static org.testifj.matchers.core.ObjectThatIs.*;
 
 public class BasicDescriptionTest {
 

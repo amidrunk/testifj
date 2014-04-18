@@ -1,11 +1,8 @@
 package org.testifj.lang.impl;
 
-import org.testifj.io.ByteBufferInputStream;
 import org.testifj.lang.LocalVariable;
 
-import java.io.InputStream;
 import java.lang.reflect.Type;
-import java.nio.ByteBuffer;
 
 public class LocalVariableImpl implements LocalVariable {
 

@@ -1,8 +1,5 @@
 package org.testifj.lang.model;
 
-import org.testifj.lang.Lambda;
-import org.testifj.lang.LocalVariable;
-import org.testifj.lang.impl.LocalVariableImpl;
 import org.testifj.lang.model.impl.*;
 
 import java.lang.reflect.Type;

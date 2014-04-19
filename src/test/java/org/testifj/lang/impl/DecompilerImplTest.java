@@ -5,8 +5,9 @@ import org.junit.Test;
 import org.testifj.ClassModelTestUtils;
 import org.testifj.CodePointer;
 import org.testifj.lang.*;
-import org.testifj.lang.model.*;
-import org.testifj.lang.model.impl.*;
+import org.testifj.lang.model.Element;
+import org.testifj.lang.model.VariableAssignment;
+import org.testifj.lang.model.impl.MethodSignature;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -16,10 +17,12 @@ import java.util.function.Supplier;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.*;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
 import static org.testifj.lang.model.AST.*;
+import static org.testifj.lang.model.AST.eq;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 import static org.testifj.matchers.core.ObjectThatIs.instanceOf;
 import static org.testifj.matchers.core.StringShould.containString;

@@ -1,10 +1,8 @@
 package org.testifj;
 
 import org.testifj.annotations.DSL;
-import org.testifj.lang.Decompiler;
-import org.testifj.lang.Lambda;
-import org.testifj.lang.LocalVariable;
-import org.testifj.lang.Method;
+import org.testifj.lang.*;
+import org.testifj.lang.impl.ClassFileReaderImpl;
 import org.testifj.lang.impl.DecompilerImpl;
 import org.testifj.lang.impl.LocalVariableImpl;
 import org.testifj.lang.impl.LocalVariableTableImpl;
@@ -14,10 +12,7 @@ import org.testifj.lang.model.impl.ConstantImpl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 // TODO This should use a visitor instead
 public final class CodeDescriber implements Describer<CodePointer> {
@@ -74,6 +69,9 @@ public final class CodeDescriber implements Describer<CodePointer> {
             case LAMBDA:
                 append(context, codePointer, (Lambda) element, buffer);
                 break;
+            case NEW:
+                append(context, codePointer, (NewInstance) element, buffer);
+                break;
             default:
                 throw new IllegalArgumentException("Unsupported element: " + element);
         }
@@ -97,6 +95,32 @@ public final class CodeDescriber implements Describer<CodePointer> {
     }
 
     private void append(CodeGenerationContext context, CodePointer codePointer, MethodCall methodCall, StringBuilder buffer) {
+        if (methodCall.getMethodName().startsWith("access$")) {
+            final Expression instance = methodCall.getParameters().get(0);
+            final ClassFile classFile;
+
+            try (InputStream in = getClass().getResourceAsStream('/' + instance.getType().getTypeName().replace('.', '/') + ".class")) {
+                classFile = new ClassFileReaderImpl().read(in);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            final Method accessMethod = classFile.getMethods().stream().filter(m -> m.getName().equals(methodCall.getMethodName())).findFirst().get();
+            try {
+                final Element[] elements = decompiler.parse(accessMethod, accessMethod.getCode().getCode());
+
+                final FieldReference fieldReference = (FieldReference) ((ReturnValue) elements[0]).getValue();
+
+                append(context, codePointer.forElement(instance), buffer);
+                buffer.append(".");
+                buffer.append(fieldReference.getFieldName());
+                return;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+
         final Expression targetInstance = methodCall.getTargetInstance();
         final List<Expression> parameters = methodCall.getParameters();
 
@@ -262,7 +286,14 @@ public final class CodeDescriber implements Describer<CodePointer> {
                 if (backingMethod.getSignature().getParameterTypes().isEmpty()) {
                     buffer.append("() -> ");
                 } else if (backingMethod.getSignature().getParameterTypes().size() == 1) {
-                    final LocalVariable parameter = backingMethod.getLocalVariableTable().get().getLocalVariables().get(0);
+                    final int parameterIndex;
+
+                    if (lambda.getReferenceKind() == ReferenceKind.INVOKE_SPECIAL) {
+                        parameterIndex = 1;
+                    } else {
+                        parameterIndex = 0;
+                    }
+                    final LocalVariable parameter = backingMethod.getLocalVariableTable().get().getLocalVariables().get(parameterIndex);
                     buffer.append(parameter.getName()).append(" -> ");
                 }
 
@@ -291,6 +322,20 @@ public final class CodeDescriber implements Describer<CodePointer> {
                 }
             }
         }
+    }
+
+    private void append(CodeGenerationContext context, CodePointer codePointer, NewInstance newInstance, StringBuilder buffer) {
+        buffer.append("new ").append(simpleTypeName(newInstance.getType())).append("(");
+
+        for (Iterator<Expression> i =newInstance.getParameters().iterator(); i.hasNext(); ) {
+            append(context, codePointer.forElement(i.next()), buffer);
+
+            if (i.hasNext()) {
+                buffer.append(", ");
+            }
+        }
+
+        buffer.append(")");
     }
 
     private boolean isDSLCall(MethodCall methodCall) {

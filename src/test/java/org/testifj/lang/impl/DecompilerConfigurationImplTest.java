@@ -1,9 +1,7 @@
 package org.testifj.lang.impl;
 
-import com.sun.tools.classfile.Annotation;
 import org.junit.Test;
 import org.testifj.lang.*;
-import sun.jvm.hotspot.interpreter.Bytecode;
 
 import java.io.IOException;
 import java.util.Arrays;

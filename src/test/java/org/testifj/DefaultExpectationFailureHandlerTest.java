@@ -80,6 +80,21 @@ public class DefaultExpectationFailureHandlerTest {
     }
 
     @Test
+    public void expectationWithLambdaCallingMethodCanBeDescribed() {
+        expect("foo").toBe(s -> isNonEmpty(s));
+
+        final Caller caller = caller(-2);
+
+        expect(() -> handler.handleExpectationFailure(failure(caller, "foo")))
+                .toThrow(AssertionError.class)
+                .where(messageIs(equalTo("Expected \"foo\" to be s -> isNonEmpty(s)")));
+    }
+
+    private boolean isNonEmpty(String s) {
+        return !s.isEmpty();
+    }
+
+    @Test
     @Ignore("Reintroduce and fix later")
     public void expectedExceptionFailureShouldDescribeProcedureAndExpectedExpression() {
         boolean failed = false;

@@ -3,11 +3,12 @@ package org.testifj;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.testifj.lang.Method;
+import org.testifj.lang.model.AST;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.ElementType;
+import org.testifj.lang.model.impl.AllocateInstanceImpl;
 import org.testifj.lang.model.impl.ReturnImpl;
 
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -96,7 +97,20 @@ public class CodeDescriberTest {
 
     @Test
     public void newInstanceCanBeDescribed() {
-        // describer.describe(new CodePointer(mock(Method.class), new AllocateInstanceImpl(String.class)))
+        final Description description = describer.describe(new CodePointer(mock(Method.class), AST.newInstance(String.class, AST.constant(1234), AST.constant("foo"))));
+
+        expect(description.toString()).toBe("new String(1234, \"foo\")");
+    }
+
+    @Test
+    public void memberAccessOfPrivateVariableInInnerClassCanBeDescribed() {
+        final ExampleInnerClass exampleInnerClass = new ExampleInnerClass();
+
+        expect(exampleInnerClass.exampleVariable).toBe(0);
+
+        final Description description = describer.describe(ClassModelTestUtils.codeForLineOffset(-2)[0]);
+
+        expect(description.toString()).toBe("expect(exampleInnerClass.exampleVariable).toBe(0)");
     }
 
     private CodePointer pointer(Element element) {
@@ -108,6 +122,12 @@ public class CodeDescriberTest {
 
     private <T, R> R callFunction(Function<T, R> function, T arg) {
         return function.apply(arg);
+    }
+
+    private class ExampleInnerClass {
+
+        private int exampleVariable;
+
     }
 
 }

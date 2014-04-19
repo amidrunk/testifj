@@ -4,7 +4,10 @@ import org.junit.Test;
 import org.testifj.ClassModelTestUtils;
 import org.testifj.CodePointer;
 import org.testifj.lang.*;
-import org.testifj.lang.model.*;
+import org.testifj.lang.model.Element;
+import org.testifj.lang.model.ElementType;
+import org.testifj.lang.model.NewInstance;
+import org.testifj.lang.model.VariableAssignment;
 import org.testifj.lang.model.impl.AllocateInstanceImpl;
 import org.testifj.lang.model.impl.ConstantImpl;
 

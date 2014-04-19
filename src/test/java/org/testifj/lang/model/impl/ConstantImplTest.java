@@ -5,22 +5,22 @@ import org.testifj.lang.model.ElementType;
 
 import static org.testifj.Expect.expect;
 
-public class ConstantExpressionImplTest {
+public class ConstantImplTest {
 
     @Test
     public void constructorShouldNotAcceptNullConstant() {
-        expect(() -> new ConstantExpressionImpl(null, int.class)).toThrow(AssertionError.class);
+        expect(() -> new ConstantImpl(null, int.class)).toThrow(AssertionError.class);
     }
 
     @Test
     public void constructorShouldNotAcceptNullType() {
-        expect(() -> new ConstantExpressionImpl(1234, null)).toThrow(AssertionError.class);
+        expect(() -> new ConstantImpl(1234, null)).toThrow(AssertionError.class);
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void constructorShouldCreateValidInstance() {
-        final ConstantExpressionImpl constant = new ConstantExpressionImpl("foobar", String.class);
+        final ConstantImpl constant = new ConstantImpl("foobar", String.class);
 
         expect(constant.getConstant()).toBe("foobar");
         expect(constant.getType()).toBe((Class) String.class);

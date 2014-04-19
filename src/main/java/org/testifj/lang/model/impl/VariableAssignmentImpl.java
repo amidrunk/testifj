@@ -1,6 +1,5 @@
 package org.testifj.lang.model.impl;
 
-import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.VariableAssignment;
 
@@ -42,11 +41,6 @@ public final class VariableAssignmentImpl implements VariableAssignment {
     @Override
     public Type getType() {
         return value.getType();
-    }
-
-    @Override
-    public ElementType getElementType() {
-        return ElementType.VARIABLE_ASSIGNMENT;
     }
 
     @Override

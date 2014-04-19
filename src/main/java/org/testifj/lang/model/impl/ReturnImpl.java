@@ -1,14 +1,8 @@
 package org.testifj.lang.model.impl;
 
-import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Return;
 
 public final class ReturnImpl implements Return {
-
-    @Override
-    public ElementType getElementType() {
-        return ElementType.RETURN;
-    }
 
     @Override
     public boolean equals(Object obj) {

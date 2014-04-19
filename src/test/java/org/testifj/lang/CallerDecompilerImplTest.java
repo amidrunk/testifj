@@ -6,8 +6,8 @@ import org.testifj.lang.model.Element;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.LocalVariableReference;
 import org.testifj.lang.model.VariableAssignment;
-import org.testifj.lang.model.impl.ConstantExpressionImpl;
-import org.testifj.lang.model.impl.SignatureImpl;
+import org.testifj.lang.model.impl.ConstantImpl;
+import org.testifj.lang.model.impl.MethodSignature;
 import org.testifj.lang.model.impl.VariableAssignmentImpl;
 
 import java.io.IOException;
@@ -35,7 +35,7 @@ public class CallerDecompilerImplTest {
         final Element[] elements = decompileCaller(ClassModelTestUtils.callerForOffset(-2));
 
         expect(elements).toBe(new Element[]{
-                new VariableAssignmentImpl(new ConstantExpressionImpl(100, int.class), "n", int.class)
+                new VariableAssignmentImpl(new ConstantImpl(100, int.class), "n", int.class)
         });
     }
 
@@ -46,7 +46,7 @@ public class CallerDecompilerImplTest {
         final Element[] elements = decompileCaller(ClassModelTestUtils.callerForOffset(-2));
         final Lambda lambda = assignedLambda("s", elements);
 
-        expect(lambda.getBackingMethodSignature()).toBe(SignatureImpl.parse("()Ljava/lang/String;"));
+        expect(lambda.getBackingMethodSignature()).toBe(MethodSignature.parse("()Ljava/lang/String;"));
         expect(lambda.getEnclosedVariables()).toBe(empty());
         expect(lambda.getReferenceKind()).toBe(ReferenceKind.INVOKE_STATIC);
     }
@@ -59,7 +59,7 @@ public class CallerDecompilerImplTest {
         final Element[] elements = decompileCaller(ClassModelTestUtils.callerForOffset(-2));
         final Lambda lambda = assignedLambda("s", elements);
 
-        expect(lambda.getBackingMethodSignature()).toBe(SignatureImpl.parse("(Ljava/lang/String;)Ljava/lang/String;"));
+        expect(lambda.getBackingMethodSignature()).toBe(MethodSignature.parse("(Ljava/lang/String;)Ljava/lang/String;"));
         expect(lambda.getEnclosedVariables().size()).toBe(1);
         expect(lambda.getEnclosedVariables().get(0)).toBe(localVariableReference("str", String.class));
         expect(lambda.getReferenceKind()).toBe(ReferenceKind.INVOKE_STATIC);
@@ -73,7 +73,7 @@ public class CallerDecompilerImplTest {
         final Element[] elements = decompileCaller(ClassModelTestUtils.callerForOffset(-2));
         final Lambda lambda = assignedLambda("a", elements);
 
-        expect(lambda.getBackingMethodSignature()).toBe(SignatureImpl.parse("(Ljava/util/List;Ljava/lang/String;)V"));
+        expect(lambda.getBackingMethodSignature()).toBe(MethodSignature.parse("(Ljava/util/List;Ljava/lang/String;)V"));
         expect(lambda.getEnclosedVariables().size()).toBe(1);
         expect(lambda.getEnclosedVariables().get(0).getName()).toBe("myList");
     }

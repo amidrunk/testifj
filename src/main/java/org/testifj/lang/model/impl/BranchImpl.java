@@ -1,7 +1,6 @@
 package org.testifj.lang.model.impl;
 
 import org.testifj.lang.model.Branch;
-import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.OperatorType;
 
@@ -45,11 +44,6 @@ public final class BranchImpl implements Branch {
     @Override
     public int getTargetPC() {
         return targetPc;
-    }
-
-    @Override
-    public ElementType getElementType() {
-        return ElementType.BRANCH;
     }
 
     @Override

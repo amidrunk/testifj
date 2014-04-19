@@ -4,10 +4,9 @@ import org.testifj.lang.*;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.LocalVariableReference;
 import org.testifj.lang.model.Signature;
-import org.testifj.lang.model.impl.SignatureImpl;
+import org.testifj.lang.model.impl.MethodSignature;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Optional;
 
 public final class InvokeDynamicExtensions {
@@ -25,8 +24,8 @@ public final class InvokeDynamicExtensions {
             final BootstrapMethod bootstrapMethod = getBootstrapMethod(classFile, invokeDynamicDescriptor.getBootstrapMethodAttributeIndex());
             final ConstantPoolEntryDescriptor[] descriptors = resolveValidBootstrapArguments(constantPool, bootstrapMethod);
             final MethodHandleDescriptor backingMethodHandle = descriptors[1].as(MethodHandleDescriptor.class);
-            final Signature functionalMethodSignature = SignatureImpl.parse(descriptors[0].as(MethodTypeDescriptor.class).getDescriptor());
-            final Signature parameterizedMethodSignature = SignatureImpl.parse(descriptors[2].as(MethodTypeDescriptor.class).getDescriptor());
+            final Signature functionalMethodSignature = MethodSignature.parse(descriptors[0].as(MethodTypeDescriptor.class).getDescriptor());
+            final Signature parameterizedMethodSignature = MethodSignature.parse(descriptors[2].as(MethodTypeDescriptor.class).getDescriptor());
 
             final Optional<Expression> self;
 
@@ -45,7 +44,7 @@ public final class InvokeDynamicExtensions {
 
 
             // ENCLOSED VARIABLES
-            final SignatureImpl backingMethodSignature = SignatureImpl.parse(backingMethodHandle.getMethodDescriptor());
+            final MethodSignature backingMethodSignature = MethodSignature.parse(backingMethodHandle.getMethodDescriptor());
             final LocalVariableReference[] enclosedVariables;
 
             if (!canHaveEnclosedVariables) {
@@ -63,7 +62,7 @@ public final class InvokeDynamicExtensions {
             context.push(new LambdaImpl(
                     self,
                     backingMethodHandle.getReferenceKind(),
-                    SignatureImpl.parse(invokeDynamicDescriptor.getMethodDescriptor()).getReturnType(),
+                    MethodSignature.parse(invokeDynamicDescriptor.getMethodDescriptor()).getReturnType(),
                     invokeDynamicDescriptor.getMethodName(),
                     functionalMethodSignature,
                     context.resolveType(backingMethodHandle.getClassName()),

@@ -4,4 +4,8 @@ public interface Jump extends Statement {
 
     int getTargetPC();
 
+    default ElementType getElementType() {
+        return ElementType.JUMP;
+    }
+
 }

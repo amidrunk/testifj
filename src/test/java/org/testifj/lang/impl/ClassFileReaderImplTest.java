@@ -168,7 +168,6 @@ public class ClassFileReaderImplTest {
         try {
             throw new RuntimeException();
         } catch (RuntimeException e) {
-            return;
         }
     }
 

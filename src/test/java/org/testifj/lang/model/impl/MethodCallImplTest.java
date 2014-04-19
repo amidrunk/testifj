@@ -23,11 +23,12 @@ public class MethodCallImplTest {
         expect(() -> new MethodCallImpl(exampleType, "", exampleSignature, exampleInstance, new Expression[0])).toThrow(AssertionError.class);
         expect(() -> new MethodCallImpl(exampleType, "foo", null, exampleInstance, new Expression[0])).toThrow(AssertionError.class);
         expect(() -> new MethodCallImpl(exampleType, "foo", exampleSignature, exampleInstance, null)).toThrow(AssertionError.class);
+        expect(() -> new MethodCallImpl(exampleType, "foo", exampleSignature, exampleInstance, new Expression[0], null)).toThrow(AssertionError.class);
     }
 
     @Test
     public void constructorShouldInitializeInstance() {
-        final SignatureImpl signature = SignatureImpl.parse("()Ljava/lang/String;");
+        final MethodSignature signature = MethodSignature.parse("()Ljava/lang/String;");
         final Expression parameter = mock(Expression.class);
         final MethodCallImpl methodCall = new MethodCallImpl(exampleType, "foo", signature, exampleInstance, new Expression[]{parameter});
 
@@ -40,4 +41,11 @@ public class MethodCallImplTest {
         expect(methodCall.getParameters().toArray()).toBe(new Object[]{parameter});
     }
 
+    @Test
+    public void typeOfExpressionCanBeSpecifiedExplicitly() {
+        final MethodCallImpl methodCall = new MethodCallImpl(String.class, "toString",
+                MethodSignature.parse("()V"), new ConstantImpl("foo", String.class), new Expression[0], int.class);
+
+        expect(methodCall.getType()).toBe(int.class);
+    }
 }

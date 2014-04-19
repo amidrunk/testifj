@@ -1,6 +1,5 @@
 package org.testifj.lang.model.impl;
 
-import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.MethodCall;
 import org.testifj.lang.model.Signature;
@@ -21,17 +20,25 @@ public final class MethodCallImpl implements MethodCall {
 
     private final Expression[] parameters;
 
+    private final Type expressionType;
+
     public MethodCallImpl(Type targetType, String methodName, Signature signature, Expression targetInstance, Expression[] parameters) {
+        this(targetType, methodName, signature, targetInstance, parameters, signature == null ? null : signature.getReturnType());
+    }
+
+    public MethodCallImpl(Type targetType, String methodName, Signature signature, Expression targetInstance, Expression[] parameters, Type expressionType) {
         assert targetType != null : "Target type can't be null";
         assert methodName != null && !methodName.isEmpty() : "Method name can't be null or empty";
         assert signature != null : "Signature can't be null";
         assert parameters != null : "Parameters can't be null";
+        assert expressionType != null : "Expression type can't be null";
 
         this.targetType = targetType;
         this.methodName = methodName;
         this.signature = signature;
         this.targetInstance = targetInstance;
         this.parameters = parameters;
+        this.expressionType = expressionType;
     }
 
     @Override
@@ -61,12 +68,7 @@ public final class MethodCallImpl implements MethodCall {
 
     @Override
     public Type getType() {
-        return getSignature().getReturnType();
-    }
-
-    @Override
-    public ElementType getElementType() {
-        return ElementType.METHOD_CALL;
+        return expressionType;
     }
 
     @Override

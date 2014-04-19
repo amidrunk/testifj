@@ -11,6 +11,8 @@ public enum ElementType {
     FIELD_REFERENCE,
     VARIABLE_ASSIGNMENT,
     LAMBDA,
-    JUMP, BRANCH
+    JUMP,
+    BRANCH,
+    NEW, ALLOCATE
 
 }

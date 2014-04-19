@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-public final class SignatureImpl implements Signature {
+public final class MethodSignature implements Signature {
 
     private final String specification;
 
@@ -19,7 +19,7 @@ public final class SignatureImpl implements Signature {
 
     private final Type returnType;
 
-    private SignatureImpl(String specification, Type[] parameterTypes, Type returnType) {
+    private MethodSignature(String specification, Type[] parameterTypes, Type returnType) {
         this.specification = specification;
         this.parameterTypes = parameterTypes;
         this.returnType = returnType;
@@ -35,7 +35,28 @@ public final class SignatureImpl implements Signature {
         return returnType;
     }
 
-    public static SignatureImpl parse(String spec) {
+    public static MethodSignature create(Type[] parameters, Type returnType) {
+        assert parameters != null : "Parameters can't be null";
+        assert returnType != null : "Return type can't be null";
+
+        final StringBuilder specification = new StringBuilder();
+
+        specification.append("(");
+
+        for (int i = 0; i < parameters.length; i++) {
+            final Type parameter = parameters[i];
+
+            assert parameter != null : "Parameter[" + i + "] is null";
+
+            specification.append(shortSignature(parameter));
+        }
+
+        specification.append(")").append(shortSignature(returnType));
+
+        return new MethodSignature(specification.toString(), parameters, returnType);
+    }
+
+    public static MethodSignature parse(String spec) {
         assert spec != null && !spec.isEmpty() : "Signature specification can't be null or empty";
 
         final StringReader reader = new StringReader(spec);
@@ -62,7 +83,7 @@ public final class SignatureImpl implements Signature {
 
         final Type returnType = readType(reader);
 
-        return new SignatureImpl(spec, parameterTypes.toArray(new Type[parameterTypes.size()]), returnType);
+        return new MethodSignature(spec, parameterTypes.toArray(new Type[parameterTypes.size()]), returnType);
     }
 
     @Override
@@ -70,7 +91,7 @@ public final class SignatureImpl implements Signature {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        SignatureImpl signature = (SignatureImpl) o;
+        MethodSignature signature = (MethodSignature) o;
 
         if (!Arrays.equals(parameterTypes, signature.parameterTypes)) return false;
         if (!returnType.equals(signature.returnType)) return false;
@@ -92,6 +113,54 @@ public final class SignatureImpl implements Signature {
 
     public static Type parseType(String string) {
         return readType(new StringReader(string));
+    }
+
+    private static String shortSignature(Type type) {
+        if (type.equals(int.class)) {
+            return "I";
+        }
+
+        if (type.equals(void.class)) {
+            return "V";
+        }
+
+        if (type.equals(boolean.class)) {
+            return "Z";
+        }
+
+        if (type.equals(long.class)) {
+            return "J";
+        }
+
+        if (type.equals(double.class)) {
+            return "D";
+        }
+
+        if (type.equals(byte.class)) {
+            return "B";
+        }
+
+        if (type.equals(char.class)) {
+            return "C";
+        }
+
+        if (type.equals(short.class)) {
+            return "S";
+        }
+
+        if (type.equals(float.class)) {
+            return "F";
+        }
+
+        if (type instanceof Class) {
+            final Class clazz = (Class) type;
+
+            if (clazz.isArray()) {
+                return "[" + shortSignature(clazz.getComponentType());
+            }
+        }
+
+        return "L" + type.getTypeName().replace('.', '/') + ";";
     }
 
     private static Type readType(StringReader reader) {
@@ -158,5 +227,6 @@ public final class SignatureImpl implements Signature {
                 throw new ClassFileFormatException("Invalid type in signature '" + (char) shortType + "'");
         }
     }
+
 
 }

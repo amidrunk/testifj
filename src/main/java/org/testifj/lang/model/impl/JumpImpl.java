@@ -1,6 +1,5 @@
 package org.testifj.lang.model.impl;
 
-import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Jump;
 
 public final class JumpImpl implements Jump {
@@ -15,11 +14,6 @@ public final class JumpImpl implements Jump {
     @Override
     public int getTargetPC() {
         return targetPC;
-    }
-
-    @Override
-    public ElementType getElementType() {
-        return ElementType.JUMP;
     }
 
     @Override

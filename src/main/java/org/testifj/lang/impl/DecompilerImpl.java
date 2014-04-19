@@ -8,9 +8,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import static org.testifj.lang.ConstantPoolEntry.*;
 
@@ -34,6 +32,7 @@ public final class DecompilerImpl implements Decompiler {
     private static DecompilerConfiguration createCoreConfiguration() {
         final DecompilerConfigurationImpl.Builder builder = new DecompilerConfigurationImpl.Builder();
 
+        NewExtensions.configure(builder);
         InvokeDynamicExtensions.configure(builder);
         MethodCallExtensions.configure(builder);
 
@@ -76,6 +75,11 @@ public final class DecompilerImpl implements Decompiler {
                 case ByteCode.pop:
                     context.reduce();
                     break;
+                case ByteCode.dup: {
+                    final List<Expression> stackedExpressions = context.getStackedExpressions();
+                    context.push(stackedExpressions.get(stackedExpressions.size() - 1));
+                    break;
+                }
 
                 // Load local variable
                 case ByteCode.aload:
@@ -164,7 +168,7 @@ public final class DecompilerImpl implements Decompiler {
                 // Push constants onto stack
 
                 case ByteCode.bipush:
-                    context.push(new ConstantExpressionImpl(codeStream.nextByte(), int.class));
+                    context.push(new ConstantImpl(codeStream.nextByte(), int.class));
                     break;
 
                 // Constants
@@ -175,10 +179,10 @@ public final class DecompilerImpl implements Decompiler {
 
                     switch (entry.getTag()) {
                         case LONG:
-                            context.push(new ConstantExpressionImpl(((LongEntry) entry).getValue(), long.class));
+                            context.push(new ConstantImpl(((LongEntry) entry).getValue(), long.class));
                             break;
                         case DOUBLE:
-                            context.push(new ConstantExpressionImpl(((DoubleEntry) entry).getValue(), double.class));
+                            context.push(new ConstantImpl(((DoubleEntry) entry).getValue(), double.class));
                             break;
                         default:
                             throw new ClassFileFormatException("Invalid constant pool entry at "
@@ -187,6 +191,12 @@ public final class DecompilerImpl implements Decompiler {
 
                     break;
                 }
+                case ByteCode.dconst_0:
+                    context.push(new ConstantImpl(0.0D, double.class));
+                    break;
+                case ByteCode.dconst_1:
+                    context.push(new ConstantImpl(1.0D, double.class));
+                    break;
                 case ByteCode.iconst_m1:
                 case ByteCode.iconst_0:
                 case ByteCode.iconst_1:
@@ -194,14 +204,14 @@ public final class DecompilerImpl implements Decompiler {
                 case ByteCode.iconst_3:
                 case ByteCode.iconst_4:
                 case ByteCode.iconst_5:
-                    context.push(new ConstantExpressionImpl(byteCode - ByteCode.iconst_0, int.class));
+                    context.push(new ConstantImpl(byteCode - ByteCode.iconst_0, int.class));
                     break;
                 case ByteCode.lconst_0:
                 case ByteCode.lconst_1:
-                    context.push(new ConstantExpressionImpl((long) (byteCode - ByteCode.lconst_0), long.class));
+                    context.push(new ConstantImpl((long) (byteCode - ByteCode.lconst_0), long.class));
                     break;
                 case ByteCode.sipush:
-                    context.push(new ConstantExpressionImpl(codeStream.nextUnsignedShort(), int.class));
+                    context.push(new ConstantImpl(codeStream.nextUnsignedShort(), int.class));
                     break;
 
                 case ByteCode.ldc1: {
@@ -209,17 +219,17 @@ public final class DecompilerImpl implements Decompiler {
 
                     switch (entry.getTag()) {
                         case INTEGER:
-                            context.push(new ConstantExpressionImpl(((IntegerEntry) entry).getValue(), int.class));
+                            context.push(new ConstantImpl(((IntegerEntry) entry).getValue(), int.class));
                             break;
                         case FLOAT:
-                            context.push(new ConstantExpressionImpl(((FloatEntry) entry).getValue(), float.class));
+                            context.push(new ConstantImpl(((FloatEntry) entry).getValue(), float.class));
                             break;
                         case STRING:
-                            context.push(new ConstantExpressionImpl(constantPool.getString(((StringEntry) entry).getStringIndex()), String.class));
+                            context.push(new ConstantImpl(constantPool.getString(((StringEntry) entry).getStringIndex()), String.class));
                             break;
                         case CLASS:
                             final Type type = resolveType(constantPool.getString(((ClassEntry) entry).getNameIndex()));
-                            context.push(new ConstantExpressionImpl(type, Class.class));
+                            context.push(new ConstantImpl(type, Class.class));
                             break;
                         default:
                             throw new ClassFileFormatException("Unsupported constant pool entry: " + entry);
@@ -249,7 +259,7 @@ public final class DecompilerImpl implements Decompiler {
                     ByteCodes.getField(
                             context,
                             resolveType(fieldRefDescriptor.getClassName()),
-                            SignatureImpl.parseType(fieldRefDescriptor.getDescriptor()),
+                            MethodSignature.parseType(fieldRefDescriptor.getDescriptor()),
                             fieldRefDescriptor.getName(),
                             byteCode == ByteCode.getstatic);
 
@@ -283,8 +293,8 @@ public final class DecompilerImpl implements Decompiler {
                             final Branch branchExpression = (Branch) lastStatement;
 
                             if (leftBranch.getElementType() == ElementType.CONSTANT && rightBranch.getElementType() == ElementType.CONSTANT) {
-                                final ConstantExpression trueValue = (ConstantExpression) leftBranch;
-                                final ConstantExpression falseValue = (ConstantExpression) rightBranch;
+                                final Constant trueValue = (Constant) leftBranch;
+                                final Constant falseValue = (Constant) rightBranch;
 
                                 // == comparison
                                 if (branchExpression.getOperatorType() == OperatorType.NE && trueValue.getConstant().equals(0) && falseValue.getConstant().equals(1)) {
@@ -320,84 +330,13 @@ public final class DecompilerImpl implements Decompiler {
                     invokeMethod(context, codeStream, constantPool, false, false);
                     break;
                 }
-                case ByteCode.invokespecial:
+                // case ByteCode.invokespecial:
+                case -3:
                     invokeMethod(context, codeStream, constantPool, false, false);
                     break;
                 case ByteCode.invokestatic:
                     invokeMethod(context, codeStream, constantPool, true, false);
                     break;
-
-                case -1: {
-                // case ByteCode.invokedynamic: {
-                    final int indexRef = codeStream.nextUnsignedShort();
-                    final InvokeDynamicDescriptor invokeDynamicDescriptor = constantPool.getInvokeDynamicDescriptor(indexRef);
-
-                    final Signature getFunctionalInterfaceSignature = SignatureImpl.parse(invokeDynamicDescriptor.getMethodDescriptor());
-                    final String functionalInterfaceMethodName = invokeDynamicDescriptor.getMethodName();
-
-                    final BootstrapMethod bootstrapMethod = classFile.getBootstrapMethodsAttribute()
-                            .orElseThrow(() -> new ClassFileFormatException("No bootstrap methods attribute is available in class " + classFile.getName()))
-                            .getBootstrapMethods()
-                            .get(invokeDynamicDescriptor.getBootstrapMethodAttributeIndex());
-
-                    final MethodHandleDescriptor methodHandle = constantPool.getMethodHandleDescriptor(bootstrapMethod.getBootstrapMethodRef());
-                    final ConstantPoolEntryDescriptor[] descriptors = constantPool.getDescriptors(bootstrapMethod.getBootstrapArguments());
-
-                    if (descriptors[0].getTag() != ConstantPoolEntryTag.METHOD_TYPE) {
-                        throw new UnsupportedOperationException();
-                    }
-
-                    if (descriptors[1].getTag() != ConstantPoolEntryTag.METHOD_HANDLE) {
-                        throw new UnsupportedOperationException();
-                    }
-
-                    if (descriptors[2].getTag() != ConstantPoolEntryTag.METHOD_TYPE) {
-                        throw new UnsupportedOperationException();
-                    }
-
-                    final Signature functionalInterfaceMethodSignature = SignatureImpl.parse(descriptors[0].as(MethodTypeDescriptor.class).getDescriptor());
-                    final MethodHandleDescriptor backingMethodHandle = descriptors[1].as(MethodHandleDescriptor.class);
-                    final Type declaringType = resolveType(backingMethodHandle.getClassName());
-                    final String backingMethodName = backingMethodHandle.getMethodName();
-                    final Signature backingMethodSignature = SignatureImpl.parse(backingMethodHandle.getMethodDescriptor());
-
-
-                    final Optional<Expression> self;
-                    final ReferenceKind referenceKind = backingMethodHandle.getReferenceKind();
-
-                    switch (referenceKind) {
-                        case INVOKE_STATIC:
-                            self = Optional.empty();
-                            break;
-                        case INVOKE_VIRTUAL:
-                            self = Optional.empty();
-                            break;
-                        case INVOKE_SPECIAL:
-                            self = Optional.of(context.pop());
-                            break;
-                        default:
-                            throw new UnsupportedOperationException("Reference kind not supported for dynamic invoke: " + referenceKind);
-                    }
-
-                    final LocalVariableReference[] enclosedVariables = new LocalVariableReference[backingMethodSignature.getParameterTypes().size()];
-
-                    for (int i = enclosedVariables.length - 1; i >= 0; i--) {
-                        enclosedVariables[i] = (LocalVariableReference) context.pop();
-                    }
-
-                    context.push(new LambdaImpl(
-                            self,
-                            referenceKind,
-                            getFunctionalInterfaceSignature.getReturnType(),
-                            functionalInterfaceMethodName,
-                            functionalInterfaceMethodSignature,
-                            declaringType,
-                            backingMethodName,
-                            backingMethodSignature,
-                            Arrays.asList(enclosedVariables)));
-
-                    break;
-                }
 
                 // Invalid instructions
 
@@ -411,6 +350,18 @@ public final class DecompilerImpl implements Decompiler {
                     }
 
                     throw new IllegalArgumentException("Invalid byte code " + byteCode + " (" + ByteCode.toString(byteCode) + ") in method " + method.getName());
+            }
+
+            final DecompilerEnhancement coreEnhancement = coreConfiguration.getDecompilerEnhancement(context, byteCode);
+
+            if (coreEnhancement != null) {
+                coreEnhancement.enhance(context, codeStream, byteCode);
+            }
+
+            final DecompilerEnhancement userEnhancement = configuration.getDecompilerEnhancement(context, byteCode);
+
+            if (userEnhancement != null) {
+                userEnhancement.enhance(context, codeStream, byteCode);
             }
         }
 
@@ -439,7 +390,7 @@ public final class DecompilerImpl implements Decompiler {
         final String targetClassName = constantPool.getString(classEntry.getNameIndex());
         final String methodDescriptor = constantPool.getString(methodNameAndType.getDescriptorIndex());
         final String methodName = constantPool.getString(methodNameAndType.getNameIndex());
-        final SignatureImpl signature = SignatureImpl.parse(methodDescriptor);
+        final MethodSignature signature = MethodSignature.parse(methodDescriptor);
         final Expression[] parameters = new Expression[signature.getParameterTypes().size()];
 
         for (int i = parameters.length - 1; i >= 0; i--) {

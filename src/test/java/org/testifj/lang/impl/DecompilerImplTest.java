@@ -1,13 +1,11 @@
 package org.testifj.lang.impl;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.testifj.ClassModelTestUtils;
 import org.testifj.CodePointer;
 import org.testifj.lang.*;
-import org.testifj.lang.model.Element;
-import org.testifj.lang.model.Expression;
-import org.testifj.lang.model.OperatorType;
-import org.testifj.lang.model.VariableAssignment;
+import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.*;
 
 import java.io.ByteArrayInputStream;
@@ -20,15 +18,41 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.*;
 import static org.testifj.Expect.expect;
+import static org.testifj.Given.given;
+import static org.testifj.lang.model.AST.*;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 import static org.testifj.matchers.core.ObjectThatIs.instanceOf;
 import static org.testifj.matchers.core.StringShould.containString;
 
 public class DecompilerImplTest {
 
+    private final Method exampleMethod = mock(Method.class);
+    private final ClassFile exampleClassFile = mock(ClassFile.class);
+
+    @Before
+    public void setup() {
+        when(exampleMethod.getClassFile()).thenReturn(exampleClassFile);
+    }
+
     @Test
     public void constructorShouldNotAcceptNullDecompilerConfiguration() {
         expect(() -> new DecompilerImpl(null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void configuredDecompilerEnhancementShouldBeCalledAfterInstruction() throws IOException {
+        final DecompilerEnhancement enhancement = mock(DecompilerEnhancement.class);
+        final DecompilerConfiguration configuration = new DecompilerConfigurationImpl.Builder()
+                .enhance(ByteCode.istore_1, enhancement)
+                .build();
+
+        final DecompilerImpl decompiler = new DecompilerImpl(configuration);
+
+        when(exampleMethod.getLocalVariableForIndex(eq(1))).thenReturn(new LocalVariableImpl(-1, -1, "test", String.class, 1));
+
+        decompiler.parse(exampleMethod, new ByteArrayInputStream(new byte[]{(byte) ByteCode.iconst_0, ByteCode.istore_1}));
+
+        verify(enhancement).enhance(any(DecompilationContext.class), any(CodeStream.class), eq(ByteCode.istore_1));
     }
 
     @Test
@@ -39,13 +63,9 @@ public class DecompilerImplTest {
                 .build();
         final DecompilerImpl decompiler = new DecompilerImpl(configuration);
 
-        final Method method = mock(Method.class);
+        when(extension.decompile(any(DecompilationContext.class), any(CodeStream.class), anyInt())).thenReturn(true);
 
-        when(method.getClassFile()).thenReturn(mock(ClassFile.class));
-        when(extension.decompile(any(DecompilationContext.class), any(CodeStream.class), anyInt()))
-                .thenReturn(true);
-
-        final Element[] elements = decompiler.parse(method, new ByteArrayInputStream(new byte[]{(byte) ByteCode.iconst_0}));
+        final Element[] elements = decompiler.parse(exampleMethod, new ByteArrayInputStream(new byte[]{(byte) ByteCode.iconst_0}));
 
         expect(elements.length).toBe(0);
 
@@ -54,7 +74,7 @@ public class DecompilerImplTest {
 
     @Test
     public void emptyMethodCanBeParsed() {
-        expect(parseMethodBody("emptyMethod")).toBe(new Element[]{new ReturnImpl()});
+        expect(parseMethodBody("emptyMethod")).toBe(new Element[]{$return()});
     }
 
     @Test
@@ -62,7 +82,7 @@ public class DecompilerImplTest {
         final Element[] elements = parseMethodBody("methodWithIntegerReturn");
 
         expect(elements).toBe(new Element[]{
-                new ReturnValueImpl(new ConstantExpressionImpl(1234, int.class))
+                $return(constant(1234))
         });
     }
 
@@ -71,17 +91,7 @@ public class DecompilerImplTest {
         final Element[] elements = parseMethodBody("exampleMethodWithReturnFromOtherMethod");
 
         expect(elements).toBe(new Element[]{
-                new ReturnValueImpl(new BinaryOperatorImpl(
-                        new ConstantExpressionImpl(1, int.class),
-                        OperatorType.PLUS,
-                        new MethodCallImpl(
-                                ExampleClass.class,
-                                "methodWithIntegerReturn",
-                                SignatureImpl.parse("()I"),
-                                new LocalVariableReferenceImpl("this", ExampleClass.class, 0),
-                                new Expression[0]),
-                        int.class
-                ))
+                $return(plus(constant(1), call(local("this", ExampleClass.class, 0), "methodWithIntegerReturn", int.class)))
         });
     }
 
@@ -90,14 +100,7 @@ public class DecompilerImplTest {
         final Element[] elements = parseMethodBody("exampleMethodWithMethodCallWithParameters");
 
         expect(elements).toBe(new Element[]{
-                new ReturnValueImpl(
-                        new MethodCallImpl(
-                                ExampleClass.class,
-                                "add",
-                                SignatureImpl.parse("(II)I"),
-                                new LocalVariableReferenceImpl("this", ExampleClass.class, 0),
-                                new Expression[]{new ConstantExpressionImpl(1, int.class), new ConstantExpressionImpl(2, int.class)})
-                )
+                $return(call(local("this", ExampleClass.class, 0), "add", int.class, constant(1), constant(2)))
         });
     }
 
@@ -106,8 +109,8 @@ public class DecompilerImplTest {
         final Element[] elements = parseMethodBody("returnLocal");
 
         final Element[] expectedElements = {
-                new VariableAssignmentImpl(new ConstantExpressionImpl(100, int.class), "n", int.class),
-                new ReturnValueImpl(new LocalVariableReferenceImpl("n", int.class, 1))
+                set("n", constant(100)),
+                $return(local("n", int.class, 1))
         };
 
         expect(elements).toBe(expectedElements);
@@ -123,11 +126,12 @@ public class DecompilerImplTest {
     public void methodWithReferencesToConstantsInConstantPoolCanBeParsed() {
         final Element[] elements = parseMethodBody("methodWithConstantPoolReferences");
 
-        expect(elements.length).toBe(4);
-        expect(elements[0]).toBe(new VariableAssignmentImpl(new ConstantExpressionImpl(123456789, int.class), "n", int.class));
-        expect(elements[1]).toBe(new VariableAssignmentImpl(new ConstantExpressionImpl(123456789f, float.class), "f", float.class));
-        expect(elements[2]).toBe(new VariableAssignmentImpl(new ConstantExpressionImpl("foobar", String.class), "str", String.class));
-        expect(elements[3]).toBe(new ReturnImpl());
+        expect(elements).toBe(new Element[]{
+                set("n", constant(123456789)),
+                set("f", constant(123456789f)),
+                set("str", constant("foobar")),
+                $return()
+        });
     }
 
     @Test
@@ -135,12 +139,8 @@ public class DecompilerImplTest {
         final Element[] elements = parseMethodBody("methodWithFieldAccess");
 
         final Element[] expectedElements = {
-                new MethodCallImpl(String.class, "toString", SignatureImpl.parse("()Ljava/lang/String;"),
-                        new FieldReferenceImpl(
-                                new LocalVariableReferenceImpl("this", ExampleClass.class, 1),
-                                ExampleClass.class, String.class, "string"), new Expression[0]
-                ),
-                new ReturnImpl()
+                call(field(local("this", ExampleClass.class, 1), String.class, "string"), "toString", String.class),
+                $return()
         };
 
         expect(elements).toBe(expectedElements);
@@ -152,37 +152,31 @@ public class DecompilerImplTest {
 
         expect(elements.length).toBe(3);
 
-        final VariableAssignment assignment = (VariableAssignment) elements[0];
-        expect(assignment.getVariableName()).toBe("s");
+        given((VariableAssignment) elements[0]).then(assignment -> {
+            expect(assignment.getVariableName()).toBe("s");
+            expect(assignment.getVariableType()).toBe(Supplier.class);
+            expect(assignment.getValue()).toBe(instanceOf(Lambda.class));
 
-        expect(assignment.getVariableType()).toBe(Supplier.class);
-        expect(assignment.getValue()).toBe(instanceOf(Lambda.class));
+            given((Lambda) assignment.getValue()).then(lambda -> {
+                expect(lambda.getFunctionalInterface()).toBe(Supplier.class);
+                expect(lambda.getFunctionalMethodName()).toBe("get");
+                expect(lambda.getInterfaceMethodSignature()).toBe(MethodSignature.parse("()Ljava/lang/Object;"));
+                expect(lambda.getBackingMethodSignature()).toBe(MethodSignature.parse("()Ljava/lang/String;"));
+                expect(lambda.getDeclaringClass()).toBe(ExampleClass.class);
+                expect(ExampleClass.class.getDeclaredMethod(lambda.getBackingMethodName())).not().toBe(equalTo(null));
+                expect(lambda.getType()).toBe(Supplier.class);
+            });
+        });
 
-        final Lambda lambda = (Lambda) assignment.getValue();
-
-        expect(lambda.getFunctionalInterface()).toBe(Supplier.class);
-        expect(lambda.getFunctionalMethodName()).toBe("get");
-        expect(lambda.getInterfaceMethodSignature()).toBe(SignatureImpl.parse("()Ljava/lang/Object;"));
-        expect(lambda.getBackingMethodSignature()).toBe(SignatureImpl.parse("()Ljava/lang/String;"));
-        expect(lambda.getDeclaringClass()).toBe(ExampleClass.class);
-        expect(ExampleClass.class.getDeclaredMethod(lambda.getBackingMethodName())).not().toBe(equalTo(null));
-        expect(lambda.getType()).toBe(Supplier.class);
-
-        expect(elements[1]).toBe(new MethodCallImpl(
-                Supplier.class,
-                "get",
-                SignatureImpl.parse("()Ljava/lang/Object;"),
-                new LocalVariableReferenceImpl("s", Supplier.class, 1),
-                new Expression[0]
-        ));
+        expect(elements[1]).toBe(call(local("s", Supplier.class, 1), "get", Object.class));
     }
 
     @Test
     public void methodWithStaticFieldReferenceCanBeParsed() {
         final Element[] actualElements = parseMethodBody("methodWithStaticFieldReference");
         final Element[] expectedElements = {
-                new VariableAssignmentImpl(new FieldReferenceImpl(null, BigDecimal.class, BigDecimal.class, "ZERO"), "b", BigDecimal.class),
-                new ReturnImpl()
+                set("b", field(BigDecimal.class, BigDecimal.class, "ZERO")),
+                $return()
         };
 
         expect(actualElements).toBe(expectedElements);
@@ -193,9 +187,9 @@ public class DecompilerImplTest {
         final Element[] elements = parseMethodBody("methodWithLongConstants");
 
         expect(elements).toBe(new Element[]{
-                new VariableAssignmentImpl(new ConstantExpressionImpl(0L, long.class), "l1", long.class),
-                new VariableAssignmentImpl(new ConstantExpressionImpl(1L, long.class), "l2", long.class),
-                new ReturnImpl()
+                set("l1", constant(0L)),
+                set("l2", constant(1L)),
+                $return()
         });
     }
 
@@ -204,10 +198,10 @@ public class DecompilerImplTest {
         final Element[] elements = parseMethodBody("methodWithByteConstants");
 
         expect(elements).toBe(new Element[]{
-                new VariableAssignmentImpl(new ConstantExpressionImpl(0, int.class), "b1", byte.class),
-                new VariableAssignmentImpl(new ConstantExpressionImpl(1, int.class), "b2", byte.class),
-                new VariableAssignmentImpl(new ConstantExpressionImpl(2, int.class), "b3", byte.class),
-                new ReturnImpl()
+                set("b1", byte.class, constant(0)),
+                set("b2", byte.class, constant(1)),
+                set("b3", byte.class, constant(2)),
+                $return()
         });
     }
 
@@ -216,11 +210,8 @@ public class DecompilerImplTest {
         final Element[] elements = parseMethodBody("methodWithEqComparison");
 
         expect(elements).toBe(new Element[]{
-                new VariableAssignmentImpl(
-                        new BinaryOperatorImpl(
-                                new MethodCallImpl(String.class, "length", SignatureImpl.parse("()I"),
-                                        new ConstantExpressionImpl("str", String.class), new Expression[0]), OperatorType.EQ, new ConstantExpressionImpl(3, int.class), boolean.class), "b1", boolean.class),
-                new ReturnImpl()
+                set("b1", eq(call(constant("str"), "length", int.class), constant(3))),
+                $return()
         });
     }
 
@@ -229,15 +220,15 @@ public class DecompilerImplTest {
         final Element[] elements = parseMethodBody("constantsOfAllTypes");
 
         expect(elements).toBe(new Element[]{
-                new VariableAssignmentImpl(new ConstantExpressionImpl(1, int.class), "z", boolean.class),
-                new VariableAssignmentImpl(new ConstantExpressionImpl(100, int.class), "b", byte.class),
-                new VariableAssignmentImpl(new ConstantExpressionImpl(200, int.class), "s", short.class),
-                new VariableAssignmentImpl(new ConstantExpressionImpl(300, int.class), "c", char.class),
-                new VariableAssignmentImpl(new ConstantExpressionImpl(400, int.class), "n", int.class),
-                new VariableAssignmentImpl(new ConstantExpressionImpl(500L, long.class), "l", long.class),
-                new VariableAssignmentImpl(new ConstantExpressionImpl(600.1234f, float.class), "f", float.class),
-                new VariableAssignmentImpl(new ConstantExpressionImpl(700.1234d, double.class), "d", double.class),
-                new ReturnImpl()
+                set("z", boolean.class, constant(1)),
+                set("b", byte.class, constant(100)),
+                set("s", short.class, constant(200)),
+                set("c", char.class, constant(300)),
+                set("n", int.class, constant(400)),
+                set("l", long.class, constant(500L)),
+                set("f", float.class, constant(600.1234f)),
+                set("d", double.class, constant(700.1234d)),
+                $return()
         });
     }
 
@@ -251,6 +242,24 @@ public class DecompilerImplTest {
 
         expect(codePointers.length).toBe(1);
         expect(ClassModelTestUtils.toCode(codePointers[0])).to(containString("expect(() -> constantPool.getInterfaceMethodRefDescriptor(1))"));
+    }
+
+    @Test
+    public void newStatementCanBeDecompiled() {
+        new String("Hello World!");
+
+        final Element[] elements = Arrays.stream(ClassModelTestUtils.codeForLineOffset(-2)).map(CodePointer::getElement).toArray(Element[]::new);
+
+        expect(elements).toBe(new Element[]{ newInstance(String.class, constant("Hello World!")) });
+    }
+
+    @Test
+    public void newStatementWithAssignmentCanBeDecompiled() {
+        final String str = new String("Hello World!");
+
+        final Element[] elements = Arrays.stream(ClassModelTestUtils.codeForLineOffset(-2)).map(CodePointer::getElement).toArray(Element[]::new);
+
+        expect(elements).toBe(new Element[]{ set("str", newInstance(String.class, constant("Hello World!"))) });
     }
 
     private Element[] parseMethodBody(String methodName) {

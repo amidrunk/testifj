@@ -1,6 +1,5 @@
 package org.testifj.lang.model.impl;
 
-import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.LocalVariableReference;
 
 import java.lang.reflect.Type;
@@ -31,11 +30,6 @@ public class LocalVariableReferenceImpl implements LocalVariableReference {
     @Override
     public Type getType() {
         return variableType;
-    }
-
-    @Override
-    public ElementType getElementType() {
-        return ElementType.VARIABLE_REFERENCE;
     }
 
     public int getIndex() {

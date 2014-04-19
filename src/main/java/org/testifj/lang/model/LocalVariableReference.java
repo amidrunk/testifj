@@ -6,4 +6,8 @@ public interface LocalVariableReference extends Expression {
 
     int getIndex();
 
+    default ElementType getElementType() {
+        return ElementType.VARIABLE_REFERENCE;
+    }
+
 }

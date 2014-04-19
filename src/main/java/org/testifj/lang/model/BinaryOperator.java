@@ -8,4 +8,8 @@ public interface BinaryOperator extends Expression {
 
     Expression getRightOperand();
 
+    default ElementType getElementType() {
+        return ElementType.BINARY_OPERATOR;
+    }
+
 }

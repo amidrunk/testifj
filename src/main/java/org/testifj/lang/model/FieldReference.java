@@ -13,4 +13,8 @@ public interface FieldReference extends Expression {
 
     String getFieldName();
 
+    default ElementType getElementType() {
+        return ElementType.FIELD_REFERENCE;
+    }
+
 }

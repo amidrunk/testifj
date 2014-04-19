@@ -112,6 +112,15 @@ public final class DecompilationContextImpl implements DecompilationContext {
     }
 
     @Override
+    public Expression peek() throws IllegalStateException {
+        if (stack.isEmpty()) {
+            throw new IllegalStateException("Stack is empty");
+        }
+
+        return stack.peek().expression();
+    }
+
+    @Override
     public List<Statement> getStatements() {
         final Statement[] statements = this.statements.stream()
                 .map(StatementWithPC::statement)

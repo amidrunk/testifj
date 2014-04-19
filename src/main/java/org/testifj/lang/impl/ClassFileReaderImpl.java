@@ -1,7 +1,7 @@
 package org.testifj.lang.impl;
 
 import org.testifj.lang.*;
-import org.testifj.lang.model.impl.SignatureImpl;
+import org.testifj.lang.model.impl.MethodSignature;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -73,9 +73,9 @@ public final class ClassFileReaderImpl implements ClassFileReader {
             final Attribute[] attributes = readAttributes(din, constantPool);
 
             if ("<init>".equals(name)) {
-                constructors.add(new DefaultConstructor(classFileSupplier, accessFlags, name, SignatureImpl.parse(signature), attributes));
+                constructors.add(new DefaultConstructor(classFileSupplier, accessFlags, name, MethodSignature.parse(signature), attributes));
             } else {
-                methods.add(new DefaultMethod(classFileSupplier, accessFlags, name, SignatureImpl.parse(signature), attributes));
+                methods.add(new DefaultMethod(classFileSupplier, accessFlags, name, MethodSignature.parse(signature), attributes));
             }
         }
     }
@@ -89,7 +89,7 @@ public final class ClassFileReaderImpl implements ClassFileReader {
             final String signature = constantPool.getString(din.readShort());
             final Attribute[] attributes = readAttributes(din, constantPool);
 
-            fields[i] = new DefaultField(classFileSupplier, accessFlags, name, SignatureImpl.parseType(signature), attributes);
+            fields[i] = new DefaultField(classFileSupplier, accessFlags, name, MethodSignature.parseType(signature), attributes);
         }
 
         return fields;
@@ -131,7 +131,7 @@ public final class ClassFileReaderImpl implements ClassFileReader {
                         final int startPC = attributeStream.readShort();
                         final int variableLength = attributeStream.readShort();
                         final String variableName = constantPool.getString(attributeStream.readShort());
-                        final Type type = SignatureImpl.parseType(constantPool.getString(attributeStream.readShort()));
+                        final Type type = MethodSignature.parseType(constantPool.getString(attributeStream.readShort()));
                         final int index = attributeStream.readShort();
 
                         localVariables[j] = new LocalVariableImpl(startPC, variableLength, variableName, type, index);

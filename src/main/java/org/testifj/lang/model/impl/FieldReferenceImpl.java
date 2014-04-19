@@ -1,6 +1,5 @@
 package org.testifj.lang.model.impl;
 
-import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.FieldReference;
 
@@ -51,11 +50,6 @@ public final class FieldReferenceImpl implements FieldReference {
     @Override
     public Type getType() {
         return fieldType;
-    }
-
-    @Override
-    public ElementType getElementType() {
-        return ElementType.FIELD_REFERENCE;
     }
 
     public boolean isStatic() {

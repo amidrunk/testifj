@@ -4,8 +4,10 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.testifj.lang.Method;
 import org.testifj.lang.model.Element;
+import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.impl.ReturnImpl;
 
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -74,6 +76,15 @@ public class CodeDescriberTest {
     }
 
     @Test
+    public void enumReferenceCanBeDescribed() {
+        final ElementType fieldReference = ElementType.FIELD_REFERENCE;
+
+        final Description description = describer.describe(ClassModelTestUtils.codeForLineOffset(-2)[0]);
+
+        expect(description.toString()).toBe("ElementType fieldReference = ElementType.FIELD_REFERENCE");
+    }
+
+    @Test
     @Ignore("Generics are hard")
     public void lambdaWithGenericsTypeParametersCanBeDescribed() {
         final Supplier<String> supplier = () -> "Hello World!";
@@ -81,6 +92,11 @@ public class CodeDescriberTest {
         final Description description = describer.describe(ClassModelTestUtils.codeForLineOffset(-2)[0]);
 
         expect(description.toString()).toBe("Supplier<String> supplier = () -> \"Hello World!\"");
+    }
+
+    @Test
+    public void newInstanceCanBeDescribed() {
+        // describer.describe(new CodePointer(mock(Method.class), new AllocateInstanceImpl(String.class)))
     }
 
     private CodePointer pointer(Element element) {

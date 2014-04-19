@@ -10,4 +10,8 @@ public interface VariableAssignment extends Statement, Expression {
 
     Type getVariableType();
 
+    default ElementType getElementType() {
+        return ElementType.VARIABLE_ASSIGNMENT;
+    }
+
 }

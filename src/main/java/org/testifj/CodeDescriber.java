@@ -9,7 +9,7 @@ import org.testifj.lang.impl.DecompilerImpl;
 import org.testifj.lang.impl.LocalVariableImpl;
 import org.testifj.lang.impl.LocalVariableTableImpl;
 import org.testifj.lang.model.*;
-import org.testifj.lang.model.impl.ConstantExpressionImpl;
+import org.testifj.lang.model.impl.ConstantImpl;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,7 +54,7 @@ public final class CodeDescriber implements Describer<CodePointer> {
                 append(context, codePointer, (ReturnValue) element, buffer);
                 break;
             case CONSTANT:
-                append(context, codePointer, (ConstantExpression) element, buffer);
+                append(context, codePointer, (Constant) element, buffer);
                 break;
             case METHOD_CALL:
                 append(context, codePointer, (MethodCall) element, buffer);
@@ -88,7 +88,7 @@ public final class CodeDescriber implements Describer<CodePointer> {
         append(context, codePointer.forElement(returnValue.getValue()), buffer);
     }
 
-    private void append(CodeGenerationContext context, CodePointer codePointer, ConstantExpression constant, StringBuilder buffer) {
+    private void append(CodeGenerationContext context, CodePointer codePointer, Constant constant, StringBuilder buffer) {
         if (constant.getType().equals(String.class)) {
             buffer.append("\"").append(constant.getConstant()).append("\"");
         } else {
@@ -170,20 +170,24 @@ public final class CodeDescriber implements Describer<CodePointer> {
     private void append(CodeGenerationContext context, CodePointer codePointer, FieldReference fieldReference, StringBuilder buffer) {
         boolean implicitTargetInstance = false;
 
-        if (fieldReference.getTargetInstance().get().getElementType() == ElementType.VARIABLE_REFERENCE) {
-            final LocalVariableReference variableReference = (LocalVariableReference) fieldReference.getTargetInstance().get();
+        if (!fieldReference.getTargetInstance().isPresent()) {
+            buffer.append(simpleTypeName(fieldReference.getDeclaringType())).append(".").append(fieldReference.getFieldName());
+        } else {
+            if (fieldReference.getTargetInstance().get().getElementType() == ElementType.VARIABLE_REFERENCE) {
+                final LocalVariableReference variableReference = (LocalVariableReference) fieldReference.getTargetInstance().get();
 
-            if (variableReference.getName().equals("this")) {
-                implicitTargetInstance = true;
+                if (variableReference.getName().equals("this")) {
+                    implicitTargetInstance = true;
+                }
             }
-        }
 
-        if (!implicitTargetInstance) {
-            append(context, codePointer.forElement(fieldReference.getTargetInstance().get()), buffer);
-            buffer.append(".");
-        }
+            if (!implicitTargetInstance) {
+                append(context, codePointer.forElement(fieldReference.getTargetInstance().get()), buffer);
+                buffer.append(".");
+            }
 
-        buffer.append(fieldReference.getFieldName());
+            buffer.append(fieldReference.getFieldName());
+        }
     }
 
     private void append(CodeGenerationContext context, CodePointer codePointer, VariableAssignment variableAssignment, StringBuilder buffer) {
@@ -324,9 +328,9 @@ public final class CodeDescriber implements Describer<CodePointer> {
         final List<Expression> parameters = methodCall.getParameters();
 
         if (targetType.equals(Boolean.class) && parameters.get(0).getType().equals(int.class) && parameters.get(0).getElementType() == ElementType.CONSTANT) {
-            final ConstantExpression constant = (ConstantExpression) parameters.get(0);
+            final Constant constant = (Constant) parameters.get(0);
 
-            return new ConstantExpressionImpl((Integer) constant.getConstant() == 1, boolean.class);
+            return new ConstantImpl((Integer) constant.getConstant() == 1, boolean.class);
         }
 
         if (methodCall.getMethodName().equals("valueOf")

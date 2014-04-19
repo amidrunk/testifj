@@ -1,7 +1,6 @@
 package org.testifj.lang.model.impl;
 
 import org.testifj.lang.model.BinaryOperator;
-import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.OperatorType;
 
@@ -47,11 +46,6 @@ public final class BinaryOperatorImpl implements BinaryOperator {
     @Override
     public Type getType() {
         return resultType;
-    }
-
-    @Override
-    public ElementType getElementType() {
-        return ElementType.BINARY_OPERATOR;
     }
 
     @Override

@@ -5,7 +5,7 @@ import org.testifj.lang.DecompilationContext;
 import org.testifj.lang.LocalVariable;
 import org.testifj.lang.Method;
 import org.testifj.lang.model.Expression;
-import org.testifj.lang.model.impl.ConstantExpressionImpl;
+import org.testifj.lang.model.impl.ConstantImpl;
 import org.testifj.lang.model.impl.FieldReferenceImpl;
 import org.testifj.lang.model.impl.LocalVariableReferenceImpl;
 import org.testifj.lang.model.impl.VariableAssignmentImpl;
@@ -38,7 +38,7 @@ public class ByteCodesTest {
 
     @Test
     public void storeVariableShouldPushAssignmentToStack() {
-        final ConstantExpressionImpl value = new ConstantExpressionImpl("aValue", String.class);
+        final ConstantImpl value = new ConstantImpl("aValue", String.class);
 
         expectLocalVariable(getLocalVariable("foo", String.class, 1));
         when(dc.pop()).thenReturn(value);
@@ -50,7 +50,7 @@ public class ByteCodesTest {
 
     @Test
     public void getFieldShouldPushFieldReferenceToStack() {
-        final ConstantExpressionImpl constant = new ConstantExpressionImpl("MyString", String.class);
+        final ConstantImpl constant = new ConstantImpl("MyString", String.class);
 
         when(dc.pop()).thenReturn(constant);
 

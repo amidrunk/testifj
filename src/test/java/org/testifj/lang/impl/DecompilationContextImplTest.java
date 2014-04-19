@@ -1,6 +1,5 @@
 package org.testifj.lang.impl;
 
-import com.sun.tools.classfile.Annotation;
 import org.junit.Test;
 import org.testifj.lang.Decompiler;
 import org.testifj.lang.Method;
@@ -9,12 +8,8 @@ import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.MethodCall;
 import org.testifj.lang.model.Statement;
 
-import java.lang.reflect.Type;
-
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
 import static org.testifj.matchers.core.CollectionThatIs.empty;
@@ -238,4 +233,18 @@ public class DecompilationContextImplTest {
         expect(context.getStackedExpressions().toArray()).toBe(new Object[]{expression});
     }
 
+    @Test
+    public void peekShouldFailIfStackIsEmpty() {
+        expect(context::peek).toThrow(IllegalStateException.class);
+    }
+
+    @Test
+    public void peekShouldReturnTopStackElementWithoutChangingTheStack() {
+        final Expression stackedExpression = mock(Expression.class);
+
+        context.push(stackedExpression);
+
+        expect(context.peek()).toBe(stackedExpression);
+        expect(context.getStackedExpressions().toArray()).toBe(new Object[]{stackedExpression});
+    }
 }

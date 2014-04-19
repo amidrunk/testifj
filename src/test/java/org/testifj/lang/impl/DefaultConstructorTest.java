@@ -3,7 +3,7 @@ package org.testifj.lang.impl;
 import org.junit.Test;
 import org.testifj.lang.Attribute;
 import org.testifj.lang.ClassFile;
-import org.testifj.lang.model.impl.SignatureImpl;
+import org.testifj.lang.model.impl.MethodSignature;
 
 import java.util.Arrays;
 import java.util.function.Supplier;
@@ -20,21 +20,21 @@ public class DefaultConstructorTest {
 
     private final Supplier<ClassFile> classFileSupplier = mock(Supplier.class);
 
-    private final DefaultConstructor constructor = new DefaultConstructor(classFileSupplier, 1234, "<init>", SignatureImpl.parse("()V"), new Attribute[]{});
+    private final DefaultConstructor constructor = new DefaultConstructor(classFileSupplier, 1234, "<init>", MethodSignature.parse("()V"), new Attribute[]{});
 
     @Test
     public void constructorShouldNotAcceptNullClassFileSupplier() {
-        expect(() -> new DefaultConstructor(null, 0, "foo", SignatureImpl.parse("()V"), new Attribute[]{})).toThrow(AssertionError.class);
+        expect(() -> new DefaultConstructor(null, 0, "foo", MethodSignature.parse("()V"), new Attribute[]{})).toThrow(AssertionError.class);
     }
 
     @Test
     public void constructorShouldNotAcceptNullName() {
-        expect(() -> new DefaultConstructor(classFileSupplier, 0, null, SignatureImpl.parse("()V"), new Attribute[]{})).toThrow(AssertionError.class);
+        expect(() -> new DefaultConstructor(classFileSupplier, 0, null, MethodSignature.parse("()V"), new Attribute[]{})).toThrow(AssertionError.class);
     }
 
     @Test
     public void nameMustBeConstructorName() {
-        expect(() -> new DefaultConstructor(classFileSupplier, 0, "foo", SignatureImpl.parse("()V"), new Attribute[]{}))
+        expect(() -> new DefaultConstructor(classFileSupplier, 0, "foo", MethodSignature.parse("()V"), new Attribute[]{}))
                 .toThrow(AssertionError.class)
                 .where((e) -> e.getMessage().contains("<init>"));
     }
@@ -47,7 +47,7 @@ public class DefaultConstructorTest {
         expect(constructor.getClassFile()).toBe(classFile);
         expect(constructor.getAccessFlags()).toBe(1234);
         expect(constructor.getName()).toBe("<init>");
-        expect(constructor.getSignature()).toBe(SignatureImpl.parse("()V"));
+        expect(constructor.getSignature()).toBe(MethodSignature.parse("()V"));
         expect(constructor.getAttributes()).toBe(Arrays.asList(new Attribute[]{}));
     }
 
@@ -58,7 +58,7 @@ public class DefaultConstructorTest {
 
     @Test
     public void attributesCannotBeNull() {
-        expect(() -> new DefaultConstructor(classFileSupplier, 0, "<init>", SignatureImpl.parse("()V"), null)).toThrow(AssertionError.class);
+        expect(() -> new DefaultConstructor(classFileSupplier, 0, "<init>", MethodSignature.parse("()V"), null)).toThrow(AssertionError.class);
     }
 
     @Test
@@ -74,7 +74,7 @@ public class DefaultConstructorTest {
 
     @Test
     public void equalConstructorsShouldBeEqual() {
-        final DefaultConstructor other = new DefaultConstructor(classFileSupplier, 1234, "<init>", SignatureImpl.parse("()V"), new Attribute[]{});
+        final DefaultConstructor other = new DefaultConstructor(classFileSupplier, 1234, "<init>", MethodSignature.parse("()V"), new Attribute[]{});
 
         expect(constructor).toBe(other);
         expect(constructor.hashCode()).toBe(other.hashCode());

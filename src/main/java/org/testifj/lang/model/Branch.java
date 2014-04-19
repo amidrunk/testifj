@@ -10,4 +10,8 @@ public interface Branch extends Statement {
 
     int getTargetPC();
 
+    default ElementType getElementType() {
+        return ElementType.BRANCH;
+    }
+
 }

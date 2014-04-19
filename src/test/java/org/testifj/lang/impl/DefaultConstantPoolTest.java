@@ -229,7 +229,7 @@ public class DefaultConstantPoolTest {
     public void getEntryWithTypeShouldFailForIncorrectType() {
         final DefaultConstantPool constantPool = createConstantPool(new UTF8Entry("foo"));
 
-        expect(() -> constantPool.<NameAndTypeEntry>getEntry(1, NameAndTypeEntry.class))
+        expect(() -> constantPool.getEntry(1, NameAndTypeEntry.class))
                 .toThrow(IllegalArgumentException.class);
     }
 
@@ -427,6 +427,31 @@ public class DefaultConstantPoolTest {
             final MethodTypeDescriptor methodType = (MethodTypeDescriptor) descriptors[0];
 
             expect(methodType.getDescriptor()).toBe("()V");
+        });
+    }
+
+    @Test
+    public void getMethodRefDescriptorShouldFailIfEntryIsOfIncorrectType() {
+        given(createConstantPool(new UTF8Entry("foo"))).then(it -> {
+            expect(() -> it.getMethodRefDescriptor(1)).toThrow(IllegalArgumentException.class);
+        });
+    }
+
+    @Test
+    public void getMethodRefDescriptorShouldReturnDescriptorForMethodRefEntry() {
+        final DefaultConstantPool constantPool = createConstantPool(
+                new MethodRefEntry(2, 3),
+                new ClassEntry(4),
+                new NameAndTypeEntry(5, 6),
+                new UTF8Entry("Foo"),
+                new UTF8Entry("bar"),
+                new UTF8Entry("()V")
+        );
+
+        given(constantPool.getMethodRefDescriptor(1)).then(it -> {
+            expect(it.getClassName()).toBe("Foo");
+            expect(it.getMethodName()).toBe("bar");
+            expect(it.getDescriptor()).toBe("()V");
         });
     }
 

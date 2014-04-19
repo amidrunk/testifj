@@ -1,6 +1,5 @@
 package org.testifj.lang.model.impl;
 
-import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.ReturnValue;
 
@@ -16,11 +15,6 @@ public final class ReturnValueImpl implements ReturnValue {
     @Override
     public Expression getValue() {
         return expression;
-    }
-
-    @Override
-    public ElementType getElementType() {
-        return ElementType.RETURN_VALUE;
     }
 
     @Override

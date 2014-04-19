@@ -24,6 +24,8 @@ public interface ConstantPool {
 
     NameAndTypeDescriptor getNameAndTypeDescriptor(int index);
 
+    MethodRefDescriptor getMethodRefDescriptor(int index);
+
     InterfaceMethodRefDescriptor getInterfaceMethodRefDescriptor(int index);
 
     InvokeDynamicDescriptor getInvokeDynamicDescriptor(int index);

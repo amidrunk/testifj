@@ -1,32 +1,46 @@
 package org.testifj.lang.impl;
 
-import org.testifj.lang.DecompilationContext;
-import org.testifj.lang.DecompilerConfiguration;
-import org.testifj.lang.DecompilerExtension;
-import org.testifj.lang.DecompilerExtensionList;
+import org.testifj.lang.*;
 
 public final class DecompilerConfigurationImpl implements DecompilerConfiguration {
 
     private final DecompilerExtension[] decompilerExtensions;
 
-    private DecompilerConfigurationImpl(DecompilerExtension[] decompilerExtensions) {
+    private final DecompilerEnhancement[] decompilerEnhancements;
+
+    private DecompilerConfigurationImpl(DecompilerExtension[] decompilerExtensions, DecompilerEnhancement[] decompilerEnhancements) {
         this.decompilerExtensions = decompilerExtensions;
+        this.decompilerEnhancements = decompilerEnhancements;
     }
 
     @Override
     public DecompilerExtension getDecompilerExtension(DecompilationContext context, int byteCode) {
         assert context != null : "Decompilation context can't be null";
-        assert (byteCode & ~0xFF) == 0 : "Byte code must be in range [0, 255]";
+        assert validByteCode(byteCode) : "Byte code must be in range [0, 255]";
 
         return decompilerExtensions[byteCode];
+    }
+
+    @Override
+    public DecompilerEnhancement getDecompilerEnhancement(DecompilationContext context, int byteCode) {
+        assert context != null : "Decompilation context can't be null";
+        assert validByteCode(byteCode) : "Byte code must be in range [0, 255]";
+
+        return decompilerEnhancements[byteCode];
+    }
+
+    private static boolean validByteCode(int byteCode) {
+        return (byteCode & ~0xFF) == 0;
     }
 
     public static class Builder implements DecompilerConfiguration.Builder {
 
         private final DecompilerExtension[] decompilerExtensions = new DecompilerExtension[256];
 
+        private final DecompilerEnhancement[] decompilerEnhancements = new DecompilerEnhancement[256];
+
         public DecompilerConfiguration build() {
-            return new DecompilerConfigurationImpl(decompilerExtensions);
+            return new DecompilerConfigurationImpl(decompilerExtensions, decompilerEnhancements);
         }
 
         public Builder extend(int startByteCode, int endByteCode, DecompilerExtension extension) {
@@ -40,7 +54,7 @@ public final class DecompilerConfigurationImpl implements DecompilerConfiguratio
         }
 
         public Builder extend(int byteCode, DecompilerExtension extension) {
-            assert (byteCode & ~0xFF) == 0 : "Byte code must be in range [0, 255]";
+            assert validByteCode(byteCode) : "Byte code must be in range [0, 255]";
             assert extension != null : "Extension can't be null";
 
             final DecompilerExtension existingExtension = decompilerExtensions[byteCode];
@@ -55,6 +69,22 @@ public final class DecompilerConfigurationImpl implements DecompilerConfiguratio
                 }
             } else {
                 decompilerExtensions[byteCode] = extension;
+            }
+
+            return this;
+        }
+
+        @Override
+        public DecompilerConfiguration.Builder enhance(int byteCode, DecompilerEnhancement enhancement) {
+            assert validByteCode(byteCode) : "Byte code must be in range [0, 255]";
+            assert enhancement != null : "Enhancement can't be null";
+
+            final DecompilerEnhancement existingEnhancement = decompilerEnhancements[byteCode];
+
+            if (existingEnhancement != null) {
+                decompilerEnhancements[byteCode] = new DecompilerEnhancementLink(existingEnhancement, enhancement);
+            } else {
+                decompilerEnhancements[byteCode] = enhancement;
             }
 
             return this;

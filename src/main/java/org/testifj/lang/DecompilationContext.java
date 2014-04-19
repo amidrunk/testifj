@@ -61,6 +61,8 @@ public interface DecompilationContext {
      */
     Expression pop() throws IllegalStateException;
 
+    Expression peek() throws IllegalStateException;
+
     /**
      * The statements that have been enlisted thus far in the context.
      *

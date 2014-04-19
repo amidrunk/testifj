@@ -4,10 +4,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.testifj.lang.*;
 import org.testifj.lang.model.Expression;
-import org.testifj.lang.model.impl.ConstantExpressionImpl;
+import org.testifj.lang.model.impl.ConstantImpl;
 import org.testifj.lang.model.impl.LocalVariableReferenceImpl;
 import org.testifj.lang.model.impl.MethodCallImpl;
-import org.testifj.lang.model.impl.SignatureImpl;
+import org.testifj.lang.model.impl.MethodSignature;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -15,9 +15,7 @@ import java.io.InputStream;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.testifj.Expect.expect;
 
 public class MethodCallExtensionsTest {
@@ -40,12 +38,13 @@ public class MethodCallExtensionsTest {
     }
 
     @Test
-    public void configureShouldConfigureSupportForInterfaceMethodCall() {
+    public void configureShouldConfigureSupportForMethodCalls() {
         final DecompilerConfiguration.Builder builder = mock(DecompilerConfiguration.Builder.class);
 
         MethodCallExtensions.configure(builder);
 
         verify(builder).extend(eq(ByteCode.invokeinterface), any());
+        verify(builder).extend(eq(ByteCode.invokespecial), any());
     }
 
     @Test
@@ -61,7 +60,7 @@ public class MethodCallExtensionsTest {
                 new MethodCallImpl(
                         String.class,
                         "myMethod",
-                        SignatureImpl.parse("()V"),
+                        MethodSignature.parse("()V"),
                         instance,
                         new Expression[0])
         });
@@ -71,7 +70,7 @@ public class MethodCallExtensionsTest {
     public void invokeInterfaceShouldFailIfSubsequentByteIsZero() {
         final ConstantPool constantPool = interfaceMethodRefPool("java/lang/String", "myMethod", "()V");
 
-        context.push(new ConstantExpressionImpl("foo", String.class));
+        context.push(new ConstantImpl("foo", String.class));
 
         expect(() -> {
             decompile(constantPool, in(ByteCode.invokeinterface, 0, 1, 0), MethodCallExtensions.invokeinterface());
@@ -83,7 +82,7 @@ public class MethodCallExtensionsTest {
         final ConstantPool constantPool = interfaceMethodRefPool("java/lang/String", "myMethod", "(Ljava/lang/String;)V");
 
         final LocalVariableReferenceImpl instance = new LocalVariableReferenceImpl("this", String.class, 0);
-        final ConstantExpressionImpl arg1 = new ConstantExpressionImpl(1234, int.class);
+        final ConstantImpl arg1 = new ConstantImpl(1234, int.class);
 
         context.push(instance);
         context.push(arg1);
@@ -94,7 +93,7 @@ public class MethodCallExtensionsTest {
                 new MethodCallImpl(
                         String.class,
                         "myMethod",
-                        SignatureImpl.parse("(Ljava/lang/String;)V"),
+                        MethodSignature.parse("(Ljava/lang/String;)V"),
                         instance,
                         new Expression[]{arg1})
         });

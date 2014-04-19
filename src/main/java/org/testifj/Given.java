@@ -11,7 +11,7 @@ public final class Given {
                 try {
                     action.execute(instance);
                 } catch (Exception e) {
-                    throw new AssertionError();
+                    throw new AssertionError(e);
                 }
             }
 

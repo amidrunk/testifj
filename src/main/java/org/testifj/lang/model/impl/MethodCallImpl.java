@@ -78,10 +78,12 @@ public final class MethodCallImpl implements MethodCall {
 
         MethodCallImpl that = (MethodCallImpl) o;
 
+        if (!expressionType.equals(that.expressionType)) return false;
         if (!methodName.equals(that.methodName)) return false;
         if (!Arrays.equals(parameters, that.parameters)) return false;
         if (!signature.equals(that.signature)) return false;
-        if (!targetInstance.equals(that.targetInstance)) return false;
+        if (targetInstance != null ? !targetInstance.equals(that.targetInstance) : that.targetInstance != null)
+            return false;
         if (!targetType.equals(that.targetType)) return false;
 
         return true;
@@ -92,8 +94,9 @@ public final class MethodCallImpl implements MethodCall {
         int result = targetType.hashCode();
         result = 31 * result + methodName.hashCode();
         result = 31 * result + signature.hashCode();
-        result = 31 * result + targetInstance.hashCode();
+        result = 31 * result + (targetInstance != null ? targetInstance.hashCode() : 0);
         result = 31 * result + Arrays.hashCode(parameters);
+        result = 31 * result + expressionType.hashCode();
         return result;
     }
 

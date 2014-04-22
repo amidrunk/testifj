@@ -67,6 +67,14 @@ public final class AST {
         return new BinaryOperatorImpl(leftOperand, OperatorType.EQ, rightOperand, boolean.class);
     }
 
+    public static MethodCall call(Type targetType, String methodName, Type returnType, Expression ... parameters) {
+        assert targetType != null : "Target type can't be null";
+        assert methodName != null : "Method name can't be null";
+        assert returnType != null : "Return type can't be null";
+
+        return new MethodCallImpl(targetType, methodName, MethodSignature.create(typesOf(parameters), returnType), null, parameters);
+    }
+
     public static MethodCall call(Expression instance, String methodName, Type returnType, Expression ... parameters) {
         assert instance != null : "Instance can't be null";
         assert methodName != null && !methodName.isEmpty() : "Method name can't be null or empty";
@@ -74,10 +82,7 @@ public final class AST {
         assert parameters != null : "Parameters can't be null";
 
         final Type targetType = instance.getType();
-        final Type[] parameterTypes = Arrays.stream(parameters).map(e -> {
-            assert e != null : "No parameter can be null";
-            return e.getType();
-        }).toArray(Type[]::new);
+        final Type[] parameterTypes = typesOf(parameters);
 
         final Signature signature = MethodSignature.create(parameterTypes, returnType);
 
@@ -108,6 +113,13 @@ public final class AST {
         assert leftOperand.getType().equals(rightOperand.getType()) : "Operands must be of the same type";
 
         return new BinaryOperatorImpl(leftOperand, OperatorType.PLUS, rightOperand, leftOperand.getType());
+    }
+
+    private static Type[] typesOf(Expression[] parameters) {
+        return Arrays.stream(parameters).map(e -> {
+            assert e != null : "No parameter can be null";
+            return e.getType();
+        }).toArray(Type[]::new);
     }
 
 }

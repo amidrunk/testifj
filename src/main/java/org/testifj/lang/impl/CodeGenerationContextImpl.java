@@ -3,6 +3,9 @@ package org.testifj.lang.impl;
 import org.testifj.lang.CodeGenerationContext;
 import org.testifj.lang.CodeGenerationDelegate;
 import org.testifj.lang.CodePointer;
+import org.testifj.lang.CodeStyle;
+
+import java.lang.reflect.Type;
 
 public final class CodeGenerationContextImpl implements CodeGenerationContext {
 
@@ -36,5 +39,15 @@ public final class CodeGenerationContextImpl implements CodeGenerationContext {
         assert codePointer != null : "Code pointer can't be null";
 
         codeGenerationDelegate.delegate(this, codePointer);
+    }
+
+    @Override
+    public CodeStyle getCodeStyle() {
+        return new CodeStyle() {
+            @Override
+            public String getTypeName(Type type) {
+                return ((Class) type).getSimpleName();
+            }
+        };
     }
 }

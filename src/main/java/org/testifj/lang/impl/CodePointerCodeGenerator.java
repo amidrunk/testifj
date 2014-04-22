@@ -56,20 +56,8 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
         final Element element = codePointer.getElement();
 
         switch (element.getElementType()) {
-            case RETURN:
-                append(context, codePointer, (Return) element, out);
-                break;
-            case RETURN_VALUE:
-                append(context, codePointer, (ReturnValue) element, out);
-                break;
-            case CONSTANT:
-                append(context, codePointer, (Constant) element, out);
-                break;
             case METHOD_CALL:
                 append(context, codePointer, (MethodCall) element, out);
-                break;
-            case VARIABLE_REFERENCE:
-                append(context, codePointer, (LocalVariableReference) element, out);
                 break;
             case BINARY_OPERATOR:
                 append(context, codePointer, (BinaryOperator) element, out);
@@ -88,23 +76,6 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported element: " + element);
-        }
-    }
-
-    private void append(CodeGenerationContext context, CodePointer codePointer, Return returnStatement, PrintWriter out) {
-        out.append("return");
-    }
-
-    private void append(CodeGenerationContext context, CodePointer codePointer, ReturnValue returnValue, PrintWriter out) {
-        out.append("return ");
-        append(context, codePointer.forElement(returnValue.getValue()), out);
-    }
-
-    private void append(CodeGenerationContext context, CodePointer codePointer, Constant constant, PrintWriter out) {
-        if (constant.getType().equals(String.class)) {
-            out.append("\"").append(String.valueOf(constant.getConstant())).append("\"");
-        } else {
-            out.append(String.valueOf(constant.getConstant()));
         }
     }
 
@@ -181,10 +152,6 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
         }
 
         return typeName;
-    }
-
-    private void append(CodeGenerationContext context, CodePointer codePointer, LocalVariableReference localVariableReference, PrintWriter out) {
-        out.append(localVariableReference.getName());
     }
 
     private void append(CodeGenerationContext context, CodePointer codePointer, BinaryOperator binaryOperator, PrintWriter out) {

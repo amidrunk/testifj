@@ -2,6 +2,7 @@ package org.testifj.lang.model;
 
 import org.junit.Test;
 import org.testifj.lang.model.impl.ConstantImpl;
+import org.testifj.lang.model.impl.MethodCallImpl;
 import org.testifj.lang.model.impl.MethodSignature;
 import org.testifj.lang.model.impl.NewInstanceImpl;
 
@@ -127,7 +128,7 @@ public class ASTTest {
 
     @Test
     public void callShouldNotAcceptInvalidParameters() {
-        expect(() -> call(null, "foo", String.class, constant(1))).toThrow(AssertionError.class);
+        expect(() -> call((Expression) null, "foo", String.class, constant(1))).toThrow(AssertionError.class);
         expect(() -> call(constant("str"), null, String.class, constant(1))).toThrow(AssertionError.class);
         expect(() -> call(constant("str"), "", String.class, constant(1))).toThrow(AssertionError.class);
         expect(() -> call(constant("str"), "foo", null, constant(1))).toThrow(AssertionError.class);
@@ -233,4 +234,22 @@ public class ASTTest {
         });
     }
 
+    @Test
+    public void staticMethodCallShouldNotAcceptInvalidParameters() {
+        expect(() -> AST.call((Type) null, "foo", String.class)).toThrow(AssertionError.class);
+        expect(() -> AST.call(String.class, null, String.class)).toThrow(AssertionError.class);
+        expect(() -> AST.call(String.class, "", String.class)).toThrow(AssertionError.class);
+        expect(() -> AST.call(String.class, "foo", null)).toThrow(AssertionError.class);
+        expect(() -> AST.call(String.class, "foo", String.class, (Expression) null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void staticMethodCallShouldCreateSyntaxTreeForCall() {
+        final MethodCall actualMethodCall = AST.call(String.class, "valueOf", String.class, constant(1));
+        final MethodCallImpl expectedMethodCall = new MethodCallImpl(String.class, "valueOf",
+                MethodSignature.parse("(I)Ljava/lang/String;"), null, new Expression[]{new ConstantImpl(1, int.class)});
+
+        expect(actualMethodCall).toBe(expectedMethodCall);
+    }
+    
 }

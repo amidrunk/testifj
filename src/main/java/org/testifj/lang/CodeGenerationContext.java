@@ -14,4 +14,6 @@ public interface CodeGenerationContext {
      */
     void delegate(CodePointer codePointer);
 
+    CodeStyle getCodeStyle();
+
 }

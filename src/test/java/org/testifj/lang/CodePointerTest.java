@@ -1,6 +1,8 @@
-package org.testifj;
+package org.testifj.lang;
 
 import org.junit.Test;
+import org.testifj.lang.CodePointer;
+import org.testifj.lang.CodePointerImpl;
 import org.testifj.lang.Method;
 import org.testifj.lang.model.Element;
 

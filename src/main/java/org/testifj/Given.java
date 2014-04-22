@@ -1,7 +1,5 @@
 package org.testifj;
 
-import org.testifj.lang.Procedure;
-
 public final class Given {
 
     public static <T> GivenContinuance<T> given(final T instance) {

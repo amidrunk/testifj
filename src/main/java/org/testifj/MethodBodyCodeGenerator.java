@@ -1,7 +1,6 @@
 package org.testifj;
 
-import org.testifj.lang.Decompiler;
-import org.testifj.lang.Method;
+import org.testifj.lang.*;
 import org.testifj.lang.impl.DecompilerImpl;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.ElementType;

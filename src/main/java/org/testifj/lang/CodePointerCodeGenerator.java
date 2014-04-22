@@ -1,7 +1,6 @@
-package org.testifj;
+package org.testifj.lang;
 
 import org.testifj.annotations.DSL;
-import org.testifj.lang.*;
 import org.testifj.lang.impl.ClassFileReaderImpl;
 import org.testifj.lang.impl.DecompilerImpl;
 import org.testifj.lang.impl.LocalVariableImpl;

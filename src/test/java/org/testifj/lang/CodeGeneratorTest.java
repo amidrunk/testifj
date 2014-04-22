@@ -1,6 +1,9 @@
-package org.testifj;
+package org.testifj.lang;
 
 import org.junit.Test;
+import org.testifj.BasicDescription;
+import org.testifj.Description;
+import org.testifj.lang.CodeGenerator;
 
 import static org.testifj.Expect.expect;
 

@@ -1,7 +1,7 @@
 package org.testifj.lang.impl;
 
 import org.testifj.lang.InvocationTargetRuntimeException;
-import org.testifj.lang.Procedure;
+import org.testifj.Procedure;
 
 import java.util.Iterator;
 import java.util.LinkedList;

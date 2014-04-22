@@ -2,7 +2,6 @@ package org.testifj;
 
 import org.testifj.annotations.DSL;
 import org.testifj.impl.ExpectedExceptionNotThrownImpl;
-import org.testifj.lang.Procedure;
 import org.testifj.matchers.core.Equal;
 
 import java.util.Arrays;

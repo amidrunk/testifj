@@ -1,8 +1,6 @@
 package org.testifj.lang;
 
 import org.testifj.Caller;
-import org.testifj.CodePointer;
-import org.testifj.CodePointerImpl;
 import org.testifj.lang.impl.ClassFileReaderImpl;
 import org.testifj.lang.impl.DecompilerImpl;
 

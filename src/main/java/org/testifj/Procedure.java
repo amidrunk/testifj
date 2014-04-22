@@ -1,4 +1,4 @@
-package org.testifj.lang;
+package org.testifj;
 
 @FunctionalInterface
 public interface Procedure {

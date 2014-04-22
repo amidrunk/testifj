@@ -1,10 +1,6 @@
 package org.testifj.lang;
 
 import org.junit.Test;
-import org.mockito.Mockito;
-import org.testifj.CodeGenerationContext;
-import org.testifj.CodePointer;
-import org.testifj.CodePointerImpl;
 import org.testifj.lang.model.AST;
 import org.testifj.lang.model.ElementType;
 

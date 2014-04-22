@@ -1,6 +1,5 @@
-package org.testifj;
+package org.testifj.lang;
 
-import org.testifj.lang.Method;
 import org.testifj.lang.model.Element;
 
 /**

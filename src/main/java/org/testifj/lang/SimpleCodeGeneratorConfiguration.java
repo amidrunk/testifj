@@ -1,7 +1,5 @@
 package org.testifj.lang;
 
-import org.testifj.CodeGenerationContext;
-import org.testifj.CodePointer;
 import org.testifj.lang.model.ElementType;
 
 public final class SimpleCodeGeneratorConfiguration implements CodeGeneratorConfiguration {

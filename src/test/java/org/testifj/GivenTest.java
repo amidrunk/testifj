@@ -3,7 +3,6 @@ package org.testifj;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
-import org.testifj.lang.Procedure;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;

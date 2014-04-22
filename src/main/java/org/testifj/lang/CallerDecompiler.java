@@ -1,7 +1,6 @@
 package org.testifj.lang;
 
 import org.testifj.Caller;
-import org.testifj.CodePointer;
 
 import java.io.IOException;
 

@@ -5,7 +5,6 @@ import org.junit.runner.Result;
 import org.junit.runner.Runner;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunNotifier;
-import org.testifj.lang.Procedure;
 
 public class SpecificationRunner extends Runner {
 

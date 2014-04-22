@@ -1,5 +1,7 @@
-package org.testifj;
+package org.testifj.lang;
 
+import org.testifj.BasicDescription;
+import org.testifj.Description;
 import org.testifj.lang.CodeGenerationException;
 
 import java.io.ByteArrayOutputStream;

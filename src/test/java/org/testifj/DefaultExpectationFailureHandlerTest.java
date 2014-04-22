@@ -2,6 +2,7 @@ package org.testifj;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.testifj.lang.ClassModelTestUtils;
 
 import java.util.Arrays;
 import java.util.Optional;

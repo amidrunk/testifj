@@ -1,9 +1,8 @@
 package org.testifj.lang.impl;
 
 import org.junit.Test;
-import org.testifj.ClassModelTestUtils;
-import org.testifj.CodePointer;
-import org.testifj.CodePointerImpl;
+import org.testifj.lang.ClassModelTestUtils;
+import org.testifj.lang.CodePointer;
 import org.testifj.lang.*;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.ElementType;

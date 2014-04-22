@@ -2,6 +2,7 @@ package org.testifj.lang;
 
 import org.testifj.Caller;
 import org.testifj.CodePointer;
+import org.testifj.CodePointerImpl;
 import org.testifj.lang.impl.ClassFileReaderImpl;
 import org.testifj.lang.impl.DecompilerImpl;
 
@@ -34,7 +35,7 @@ public final class CallerDecompilerImpl implements CallerDecompiler {
                 .findFirst().orElseThrow(() -> new IllegalStateException("Method not found"));
 
         try (InputStream in = method.getCodeForLineNumber(caller.getCallerStackTraceElement().getLineNumber())) {
-            return Arrays.stream(decompiler.parse(method, in)).map(e -> new CodePointer(method, e)).toArray(CodePointer[]::new);
+            return Arrays.stream(decompiler.parse(method, in)).map(e -> new CodePointerImpl(method, e)).toArray(CodePointer[]::new);
         }
     }
 

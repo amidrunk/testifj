@@ -35,17 +35,17 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
 
     private final Decompiler decompiler;
 
-    private final Describer<CodePointer> syntaxElementDescriber;
+    private final CodeGenerator<CodePointer> syntaxElementCodeGenerator;
 
     private final DescriptionFormat descriptionFormat;
 
     private DefaultExpectationFailureHandler(ClassFileReader classFileReader,
                                              Decompiler decompiler,
-                                             Describer<CodePointer> syntaxElementDescriber,
+                                             CodeGenerator<CodePointer> syntaxElementCodeGenerator,
                                              DescriptionFormat descriptionFormat) {
         this.classFileReader = classFileReader;
         this.decompiler = decompiler;
-        this.syntaxElementDescriber = syntaxElementDescriber;
+        this.syntaxElementCodeGenerator = syntaxElementCodeGenerator;
         this.descriptionFormat = descriptionFormat;
     }
 
@@ -60,7 +60,7 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
 
     private void handleValueMismatchFailure(ValueMismatchFailure failure) {
         final Description description = forCaller(failure.getCaller(), (method,elements)
-                -> describeValueMismatch(new CodePointer(method, elements[0]), failure.getValue(), failure.getExpectedValue()));
+                -> describeValueMismatch(new CodePointerImpl(method, elements[0]), failure.getValue(), failure.getExpectedValue()));
 
         throw new AssertionError(descriptionFormat.format(description));
     }
@@ -81,12 +81,12 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
                         inverted = true;
                     }
 
-                    procedureDescription = syntaxElementDescriber.describe(new CodePointer(method, expectCall.getParameters().get(0)));
+                    procedureDescription = syntaxElementCodeGenerator.describe(new CodePointerImpl(method, expectCall.getParameters().get(0)));
                 }
             }
 
             if (procedureDescription == null) {
-                procedureDescription = syntaxElementDescriber.describe(new CodePointer(method, elements[0]));
+                procedureDescription = syntaxElementCodeGenerator.describe(new CodePointerImpl(method, elements[0]));
             }
 
             return BasicDescription.from("Expected [")
@@ -127,11 +127,11 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
             }
         }
 
-        return syntaxElementDescriber.describe(codePointer);
+        return syntaxElementCodeGenerator.describe(codePointer);
     }
 
     private Description getValueDescription(CodePointer valueExpressionPointer, Optional<Object> optionalValue) {
-        final Description actualValueExpressionDescription = syntaxElementDescriber.describe(valueExpressionPointer);
+        final Description actualValueExpressionDescription = syntaxElementCodeGenerator.describe(valueExpressionPointer);
 
         if (optionalValue.isPresent()) {
             final Description actualValueDescription = new BasicDescription().appendValue(optionalValue.get());
@@ -204,7 +204,7 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
 
         private Decompiler decompiler = new DecompilerImpl();
 
-        private Describer<CodePointer> syntaxElementDescriber = new CodeDescriber();
+        private CodeGenerator<CodePointer> syntaxElementCodeGenerator = new CodePointerCodeGenerator();
 
         private DescriptionFormat descriptionFormat = new StandardDescriptionFormat();
 
@@ -220,10 +220,10 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
             this.decompiler = decompiler;
         }
 
-        public void setSyntaxElementDescriber(Describer<CodePointer> syntaxElementDescriber) {
-            assert syntaxElementDescriber != null : "Syntax element describer can't be null";
+        public void setSyntaxElementCodeGenerator(CodeGenerator<CodePointer> syntaxElementCodeGenerator) {
+            assert syntaxElementCodeGenerator != null : "Syntax element describer can't be null";
 
-            this.syntaxElementDescriber = syntaxElementDescriber;
+            this.syntaxElementCodeGenerator = syntaxElementCodeGenerator;
         }
 
         public void setDescriptionFormat(DescriptionFormat descriptionFormat) {
@@ -232,7 +232,7 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
         }
 
         public DefaultExpectationFailureHandler build() {
-            return new DefaultExpectationFailureHandler(classFileReader, decompiler, syntaxElementDescriber, descriptionFormat);
+            return new DefaultExpectationFailureHandler(classFileReader, decompiler, syntaxElementCodeGenerator, descriptionFormat);
         }
     }
 }

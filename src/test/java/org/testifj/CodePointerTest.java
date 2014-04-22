@@ -14,13 +14,13 @@ public class CodePointerTest {
 
     @Test
     public void constructorShouldValidateArguments() {
-        expect(() -> new CodePointer(null, element)).toThrow(AssertionError.class);
-        expect(() -> new CodePointer(method, null)).toThrow(AssertionError.class);
+        expect(() -> new CodePointerImpl(null, element)).toThrow(AssertionError.class);
+        expect(() -> new CodePointerImpl(method, null)).toThrow(AssertionError.class);
     }
 
     @Test
     public void constructorShouldRetainArguments() {
-        final CodePointer codePointer = new CodePointer(method, element);
+        final CodePointer codePointer = new CodePointerImpl(method, element);
 
         expect(codePointer.getMethod()).toBe(method);
         expect(codePointer.getElement()).toBe(element);
@@ -28,14 +28,14 @@ public class CodePointerTest {
 
     @Test
     public void forElementShouldNotAcceptNullElement() {
-        final CodePointer codePointer = new CodePointer(method, element);
+        final CodePointer codePointer = new CodePointerImpl(method, element);
 
         expect(() -> codePointer.forElement(null)).toThrow(AssertionError.class);
     }
 
     @Test
     public void forElementShouldReturnPointerToElementInOriginalContext() {
-        final CodePointer originalPointer = new CodePointer(method, element);
+        final CodePointer originalPointer = new CodePointerImpl(method, element);
         final Element newElement = mock(Element.class);
         final CodePointer newCodePointer = originalPointer.forElement(newElement);
 

@@ -7,9 +7,9 @@ import java.util.function.Supplier;
 
 import static org.testifj.Expect.expect;
 
-public class MethodBodyDescriberTest {
+public class MethodBodyCodeGeneratorTest {
 
-    private final MethodBodyDescriber describer = new MethodBodyDescriber();
+    private final MethodBodyCodeGenerator describer = new MethodBodyCodeGenerator();
 
     @Test
     public void describeShouldNotAcceptNullMethod() {

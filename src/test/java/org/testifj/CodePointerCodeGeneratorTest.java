@@ -6,7 +6,6 @@ import org.testifj.lang.Method;
 import org.testifj.lang.model.AST;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.ElementType;
-import org.testifj.lang.model.impl.AllocateInstanceImpl;
 import org.testifj.lang.model.impl.ReturnImpl;
 
 import java.util.function.Function;
@@ -15,14 +14,14 @@ import java.util.function.Supplier;
 import static org.mockito.Mockito.mock;
 import static org.testifj.Expect.expect;
 
-public class CodeDescriberTest {
+public class CodePointerCodeGeneratorTest {
 
-    private final CodeDescriber describer = new CodeDescriber();
+    private final CodePointerCodeGenerator describer = new CodePointerCodeGenerator();
     private final Method method = mock(Method.class);
 
     @Test
     public void constructorShouldNotAcceptNullCodeDescriber() {
-        expect(() -> new CodeDescriber(null)).toThrow(AssertionError.class);
+        expect(() -> new CodePointerCodeGenerator(null)).toThrow(AssertionError.class);
     }
 
     @Test
@@ -97,7 +96,7 @@ public class CodeDescriberTest {
 
     @Test
     public void newInstanceCanBeDescribed() {
-        final Description description = describer.describe(new CodePointer(mock(Method.class), AST.newInstance(String.class, AST.constant(1234), AST.constant("foo"))));
+        final Description description = describer.describe(new CodePointerImpl(mock(Method.class), AST.newInstance(String.class, AST.constant(1234), AST.constant("foo"))));
 
         expect(description.toString()).toBe("new String(1234, \"foo\")");
     }
@@ -114,7 +113,7 @@ public class CodeDescriberTest {
     }
 
     private CodePointer pointer(Element element) {
-        return new CodePointer(method, element);
+        return new CodePointerImpl(method, element);
     }
 
     private void lambdaTargetTest() {

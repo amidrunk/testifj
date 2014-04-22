@@ -8,12 +8,12 @@ public class CodeGenerationContextTest {
 
     @Test
     public void indentationLevelShouldInitiallyBeZero() {
-        expect(new CodeGenerationContext().getIndentationLevel()).toBe(0);
+        expect(new CodeGenerationContextImpl().getIndentationLevel()).toBe(0);
     }
 
     @Test
     public void subSectionShouldIncreaseIndentationLevel() {
-        final CodeGenerationContext root = new CodeGenerationContext();
+        final CodeGenerationContext root = new CodeGenerationContextImpl();
         final CodeGenerationContext subSection = root.subSection();
 
         expect(subSection.getIndentationLevel()).toBe(1);

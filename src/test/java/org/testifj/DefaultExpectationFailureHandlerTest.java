@@ -23,7 +23,7 @@ public class DefaultExpectationFailureHandlerTest {
         expect(() -> builder.setDecompiler(null)).toThrow(AssertionError.class);
         expect(() -> builder.setClassFileReader(null)).toThrow(AssertionError.class);
         expect(() -> builder.setDescriptionFormat(null)).toThrow(AssertionError.class);
-        expect(() -> builder.setSyntaxElementDescriber(null)).toThrow(AssertionError.class);
+        expect(() -> builder.setSyntaxElementCodeGenerator(null)).toThrow(AssertionError.class);
     }
 
     @Test
@@ -32,7 +32,7 @@ public class DefaultExpectationFailureHandlerTest {
 
         expect(() -> builder.setDecompiler(null)).toThrow(AssertionError.class);
         expect(() -> builder.setClassFileReader(null)).toThrow(AssertionError.class);
-        expect(() -> builder.setSyntaxElementDescriber(null)).toThrow(AssertionError.class);
+        expect(() -> builder.setSyntaxElementCodeGenerator(null)).toThrow(AssertionError.class);
     }
 
     @Test

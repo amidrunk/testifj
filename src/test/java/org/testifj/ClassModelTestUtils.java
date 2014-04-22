@@ -50,7 +50,7 @@ public class ClassModelTestUtils {
     }
 
     public static Description descriptionOf(Method method) {
-        return new MethodBodyDescriber().describe(method);
+        return new MethodBodyCodeGenerator().describe(method);
     }
 
     public static StackTraceElement offset(StackTraceElement element, int offset) {
@@ -77,7 +77,7 @@ public class ClassModelTestUtils {
     public static String lineToString(int delta) {
         final CodePointer[] codePointers = codeForLineOffset(3, delta);
         expect(codePointers.length).toBe(1);
-        return new CodeDescriber().describe(codePointers[0]).toString();
+        return new CodePointerCodeGenerator().describe(codePointers[0]).toString();
     }
 
     public static CodePointer[] codeForLineOffset(int delta) {
@@ -98,8 +98,8 @@ public class ClassModelTestUtils {
 
         try (InputStream in = method.getCodeForLineNumber(callerStackTraceElement.getLineNumber() + delta)) {
             return Arrays.stream(new DecompilerImpl().parse(method, in))
-                    .map(e -> new CodePointer(method, e))
-                    .toArray(CodePointer[]::new);
+                    .map(e -> new CodePointerImpl(method, e))
+                    .toArray(CodePointerImpl[]::new);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -114,7 +114,7 @@ public class ClassModelTestUtils {
     }
 
     public static String toCode(CodePointer codePointer) {
-        return new CodeDescriber().describe(codePointer).toString();
+        return new CodePointerCodeGenerator().describe(codePointer).toString();
     }
 
 }

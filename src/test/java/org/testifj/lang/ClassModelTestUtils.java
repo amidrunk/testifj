@@ -3,8 +3,9 @@ package org.testifj.lang;
 import org.testifj.Caller;
 import org.testifj.Description;
 import org.testifj.MethodBodyCodeGenerator;
-import org.testifj.lang.*;
 import org.testifj.lang.impl.ClassFileReaderImpl;
+import org.testifj.lang.impl.CodePointerCodeGenerator;
+import org.testifj.lang.impl.CodePointerImpl;
 import org.testifj.lang.impl.DecompilerImpl;
 import org.testifj.lang.model.Element;
 

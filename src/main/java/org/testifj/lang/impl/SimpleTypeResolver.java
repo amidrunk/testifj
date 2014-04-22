@@ -1,4 +1,7 @@
-package org.testifj.lang;
+package org.testifj.lang.impl;
+
+import org.testifj.lang.TypeResolver;
+import org.testifj.lang.UnresolvedType;
 
 import java.lang.reflect.Type;
 

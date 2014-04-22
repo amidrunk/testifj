@@ -1,6 +1,7 @@
 package org.testifj.lang;
 
 import org.junit.Test;
+import org.testifj.lang.impl.SimpleTypeResolver;
 
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;

@@ -1,6 +1,10 @@
-package org.testifj.lang;
+package org.testifj.lang.impl;
 
 import org.junit.Test;
+import org.testifj.lang.CodeStream;
+import org.testifj.lang.DecompilationContext;
+import org.testifj.lang.DecompilerExtension;
+import org.testifj.lang.impl.DecompilerExtensionList;
 import org.testifj.matchers.core.CollectionThatIs;
 
 import java.io.IOException;

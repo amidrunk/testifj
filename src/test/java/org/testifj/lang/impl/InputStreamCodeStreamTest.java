@@ -1,6 +1,8 @@
-package org.testifj.lang;
+package org.testifj.lang.impl;
 
 import org.junit.Test;
+import org.testifj.lang.CodeStream;
+import org.testifj.lang.impl.InputStreamCodeStream;
 import org.testifj.lang.impl.ProgramCounter;
 import org.testifj.lang.impl.ProgramCounterImpl;
 

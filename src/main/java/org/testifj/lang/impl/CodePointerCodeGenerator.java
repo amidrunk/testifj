@@ -1,10 +1,7 @@
-package org.testifj.lang;
+package org.testifj.lang.impl;
 
 import org.testifj.annotations.DSL;
-import org.testifj.lang.impl.ClassFileReaderImpl;
-import org.testifj.lang.impl.DecompilerImpl;
-import org.testifj.lang.impl.LocalVariableImpl;
-import org.testifj.lang.impl.LocalVariableTableImpl;
+import org.testifj.lang.*;
 import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.ConstantImpl;
 

@@ -1,6 +1,10 @@
-package org.testifj.lang;
+package org.testifj.lang.impl;
 
 import org.junit.Test;
+import org.testifj.lang.CodeGenerationContext;
+import org.testifj.lang.CodeGeneratorExtension;
+import org.testifj.lang.CodeGeneratorExtensionList;
+import org.testifj.lang.CodePointer;
 
 import java.io.PrintWriter;
 

@@ -1,4 +1,8 @@
-package org.testifj.lang;
+package org.testifj.lang.impl;
+
+import org.testifj.lang.CodeStream;
+import org.testifj.lang.DecompilationContext;
+import org.testifj.lang.DecompilerEnhancement;
 
 import java.io.IOException;
 

@@ -1,4 +1,6 @@
-package org.testifj.lang;
+package org.testifj.lang.impl;
+
+import org.testifj.lang.CodeGenerationContext;
 
 public final class CodeGenerationContextImpl implements CodeGenerationContext {
 

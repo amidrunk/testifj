@@ -1,5 +1,6 @@
-package org.testifj.lang;
+package org.testifj.lang.impl;
 
+import org.testifj.lang.CodeStream;
 import org.testifj.lang.impl.ProgramCounter;
 
 import java.io.BufferedInputStream;

@@ -1,8 +1,7 @@
-package org.testifj.lang;
+package org.testifj.lang.impl;
 
 import org.testifj.Caller;
-import org.testifj.lang.impl.ClassFileReaderImpl;
-import org.testifj.lang.impl.DecompilerImpl;
+import org.testifj.lang.*;
 
 import java.io.IOException;
 import java.io.InputStream;

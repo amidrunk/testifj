@@ -1,8 +1,8 @@
-package org.testifj.lang;
+package org.testifj.lang.impl;
 
 import org.junit.Test;
 import org.testifj.lang.CodeGenerationContext;
-import org.testifj.lang.CodeGenerationContextImpl;
+import org.testifj.lang.impl.CodeGenerationContextImpl;
 
 import static org.testifj.Expect.expect;
 

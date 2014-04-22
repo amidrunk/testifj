@@ -1,5 +1,6 @@
-package org.testifj.lang;
+package org.testifj.lang.impl;
 
+import org.testifj.lang.*;
 import org.testifj.lang.model.ElementType;
 
 public final class SimpleCodeGeneratorConfiguration implements CodeGeneratorConfiguration {

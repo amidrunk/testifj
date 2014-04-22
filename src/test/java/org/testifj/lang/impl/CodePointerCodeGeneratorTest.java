@@ -1,9 +1,14 @@
-package org.testifj.lang;
+package org.testifj.lang.impl;
 
 import org.junit.Ignore;
 import org.junit.Test;
 import org.testifj.BasicDescription;
 import org.testifj.Description;
+import org.testifj.lang.ClassModelTestUtils;
+import org.testifj.lang.CodePointer;
+import org.testifj.lang.Method;
+import org.testifj.lang.impl.CodePointerCodeGenerator;
+import org.testifj.lang.impl.CodePointerImpl;
 import org.testifj.lang.model.AST;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.ElementType;

@@ -1,9 +1,9 @@
-package org.testifj.lang;
+package org.testifj.lang.impl;
 
 import org.junit.Test;
 import org.testifj.lang.CodePointer;
-import org.testifj.lang.CodePointerImpl;
 import org.testifj.lang.Method;
+import org.testifj.lang.impl.CodePointerImpl;
 import org.testifj.lang.model.Element;
 
 import static org.mockito.Mockito.mock;

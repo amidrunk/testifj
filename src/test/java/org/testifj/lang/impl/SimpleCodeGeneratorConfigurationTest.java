@@ -1,6 +1,12 @@
-package org.testifj.lang;
+package org.testifj.lang.impl;
 
 import org.junit.Test;
+import org.testifj.lang.CodeGenerationContext;
+import org.testifj.lang.CodeGeneratorConfiguration;
+import org.testifj.lang.CodeGeneratorExtension;
+import org.testifj.lang.Method;
+import org.testifj.lang.impl.CodePointerImpl;
+import org.testifj.lang.impl.SimpleCodeGeneratorConfiguration;
 import org.testifj.lang.model.AST;
 import org.testifj.lang.model.ElementType;
 

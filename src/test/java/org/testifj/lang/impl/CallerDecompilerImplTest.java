@@ -1,7 +1,11 @@
-package org.testifj.lang;
+package org.testifj.lang.impl;
 
 import org.junit.Test;
-import org.testifj.*;
+import org.testifj.Action;
+import org.testifj.Caller;
+import org.testifj.Matcher;
+import org.testifj.lang.*;
+import org.testifj.lang.impl.CallerDecompilerImpl;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.LocalVariableReference;

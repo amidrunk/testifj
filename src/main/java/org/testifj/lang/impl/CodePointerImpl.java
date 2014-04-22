@@ -1,5 +1,7 @@
-package org.testifj.lang;
+package org.testifj.lang.impl;
 
+import org.testifj.lang.CodePointer;
+import org.testifj.lang.Method;
 import org.testifj.lang.model.Element;
 
 /**

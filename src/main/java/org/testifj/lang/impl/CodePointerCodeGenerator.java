@@ -18,6 +18,8 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
 
     private final Decompiler decompiler;
 
+    private final CodeGeneratorConfiguration coreConfiguration = coreConfiguration();
+
     public CodePointerCodeGenerator() {
         this(new DecompilerImpl());
     }
@@ -27,12 +29,30 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
         this.decompiler = decompiler;
     }
 
+    private static CodeGeneratorConfiguration coreConfiguration() {
+        final CodeGeneratorConfiguration.Builder configurationBuilder = new SimpleCodeGeneratorConfiguration.Builder();
+
+        CoreCodeGenerationExtensions.configure(configurationBuilder);
+
+        return configurationBuilder.build();
+    }
+
     @Override
     public void generateCode(CodePointer instance, PrintWriter out) {
-        append(new CodeGenerationContextImpl(), instance, out);
+        final CodeGenerationDelegate delegate = (context, codePointer) -> append(context, codePointer, out);
+
+        append(new CodeGenerationContextImpl(delegate), instance, out);
     }
 
     private void append(CodeGenerationContext context, CodePointer codePointer, PrintWriter out) {
+        final CodeGeneratorExtension extension = coreConfiguration.getExtension(context, codePointer);
+
+        if (extension != null) {
+            if (extension.generateCode(context, codePointer, out)) {
+                return;
+            }
+        }
+
         final Element element = codePointer.getElement();
 
         switch (element.getElementType()) {

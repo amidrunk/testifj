@@ -9,18 +9,21 @@ import java.lang.reflect.Type;
 
 public final class CodeGenerationContextImpl implements CodeGenerationContext {
 
-    private final int indentationLevel;
-
     private final CodeGenerationDelegate codeGenerationDelegate;
 
-    public CodeGenerationContextImpl(CodeGenerationDelegate codeGenerationDelegate) {
-        this(codeGenerationDelegate, 0);
+    private final CodeStyle codeStyle;
+
+    private final int indentationLevel;
+
+    public CodeGenerationContextImpl(CodeGenerationDelegate codeGenerationDelegate, CodeStyle codeStyle) {
+        this(codeGenerationDelegate, codeStyle, 0);
     }
 
-    private CodeGenerationContextImpl(CodeGenerationDelegate codeGenerationDelegate, int indentationLevel) {
+    private CodeGenerationContextImpl(CodeGenerationDelegate codeGenerationDelegate, CodeStyle codeStyle, int indentationLevel) {
         assert codeGenerationDelegate != null : "Code generation delegate can't be null";
 
         this.indentationLevel = indentationLevel;
+        this.codeStyle = codeStyle;
         this.codeGenerationDelegate = codeGenerationDelegate;
     }
 
@@ -31,7 +34,7 @@ public final class CodeGenerationContextImpl implements CodeGenerationContext {
 
     @Override
     public CodeGenerationContext subSection() {
-        return new CodeGenerationContextImpl(codeGenerationDelegate, indentationLevel + 1);
+        return new CodeGenerationContextImpl(codeGenerationDelegate, codeStyle, indentationLevel + 1);
     }
 
     @Override
@@ -43,11 +46,6 @@ public final class CodeGenerationContextImpl implements CodeGenerationContext {
 
     @Override
     public CodeStyle getCodeStyle() {
-        return new CodeStyle() {
-            @Override
-            public String getTypeName(Type type) {
-                return ((Class) type).getSimpleName();
-            }
-        };
+        return codeStyle;
     }
 }

@@ -4,6 +4,7 @@ import org.testifj.lang.model.impl.*;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Objects;
 
 public final class AST {
 
@@ -68,11 +69,21 @@ public final class AST {
     }
 
     public static MethodCall call(Type targetType, String methodName, Type returnType, Expression ... parameters) {
-        assert targetType != null : "Target type can't be null";
-        assert methodName != null : "Method name can't be null";
         assert returnType != null : "Return type can't be null";
 
-        return new MethodCallImpl(targetType, methodName, MethodSignature.create(typesOf(parameters), returnType), null, parameters);
+        return call(targetType, methodName, MethodSignature.create(typesOf(parameters), returnType), parameters);
+    }
+
+    public static MethodCall call(Type targetType, String methodName, Signature signature, Expression ... parameters) {
+        assert targetType != null : "Target type can't be null";
+        assert methodName != null : "Method name can't be null";
+        assert signature != null : "Signature can't be null";
+
+        for (Expression parameter : parameters) {
+            assert parameter != null : "No parameter can be null";
+        }
+
+        return new MethodCallImpl(targetType, methodName, signature, null, parameters);
     }
 
     public static MethodCall call(Expression instance, String methodName, Type returnType, Expression ... parameters) {

@@ -239,7 +239,7 @@ public class ASTTest {
         expect(() -> AST.call((Type) null, "foo", String.class)).toThrow(AssertionError.class);
         expect(() -> AST.call(String.class, null, String.class)).toThrow(AssertionError.class);
         expect(() -> AST.call(String.class, "", String.class)).toThrow(AssertionError.class);
-        expect(() -> AST.call(String.class, "foo", null)).toThrow(AssertionError.class);
+        expect(() -> AST.call(String.class, "foo", (Type) null)).toThrow(AssertionError.class);
         expect(() -> AST.call(String.class, "foo", String.class, (Expression) null)).toThrow(AssertionError.class);
     }
 
@@ -251,5 +251,24 @@ public class ASTTest {
 
         expect(actualMethodCall).toBe(expectedMethodCall);
     }
-    
+
+    @Test
+    public void callStaticWithSignatureShouldNotAcceptInvalidParameters() {
+        final Signature signature = MethodSignature.parse("(I)I");
+
+        expect(() -> AST.call((Type) null, "foo", signature)).toThrow(AssertionError.class);
+        expect(() -> AST.call(String.class, "", signature)).toThrow(AssertionError.class);
+        expect(() -> AST.call(String.class, null, signature)).toThrow(AssertionError.class);
+        expect(() -> AST.call(String.class, "foo", (Signature) null)).toThrow(AssertionError.class);
+        expect(() -> AST.call(String.class, "foo", signature, (Expression) null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void callStaticWithSignatureShouldCreateMethodCall() {
+        final MethodSignature signature = MethodSignature.parse("(Z)Ljava/lang/Boolean;");
+        final MethodCall methodCall = AST.call(Boolean.class, "valueOf", signature, constant(1));
+
+        expect(methodCall).toBe(new MethodCallImpl(Boolean.class, "valueOf", signature, null, new Expression[]{constant(1)}));
+    }
+
 }

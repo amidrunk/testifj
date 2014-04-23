@@ -5,6 +5,7 @@ import org.mockito.Mockito;
 import org.testifj.lang.CodeGenerationContext;
 import org.testifj.lang.CodeGenerationDelegate;
 import org.testifj.lang.CodePointer;
+import org.testifj.lang.CodeStyle;
 
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -15,11 +16,19 @@ public class CodeGenerationContextImplTest {
 
     private final CodeGenerationDelegate codeGenerationDelegate = mock(CodeGenerationDelegate.class);
 
-    private final CodeGenerationContextImpl context = new CodeGenerationContextImpl(codeGenerationDelegate);
+    private final CodeStyle codeStyle = mock(CodeStyle.class);
+
+    private final CodeGenerationContextImpl context = new CodeGenerationContextImpl(codeGenerationDelegate, codeStyle);
 
     @Test
     public void constructorShouldNotAcceptInvalidArguments() {
-        expect(() -> new CodeGenerationContextImpl(null)).toThrow(AssertionError.class);
+        expect(() -> new CodeGenerationContextImpl(null, codeStyle)).toThrow(AssertionError.class);
+        expect(() -> new CodeGenerationContextImpl(codeGenerationDelegate, null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void constructorShouldRetainCodeStyle() {
+        expect(context.getCodeStyle()).toBe(codeStyle);
     }
 
     @Test

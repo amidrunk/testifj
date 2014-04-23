@@ -8,13 +8,13 @@ import org.testifj.lang.model.Element;
  * A <code>CodePointer</code> references a particular element in a method. It can be an node in the
  * syntax tree.
  */
-public final class CodePointerImpl implements CodePointer {
+public final class CodePointerImpl<E extends Element> implements CodePointer<E> {
 
     private final Method method;
 
-    private final Element element;
+    private final E element;
 
-    public CodePointerImpl(Method method, Element element) {
+    public CodePointerImpl(Method method, E element) {
         assert method != null : "Method can't be null";
         assert element != null : "Element can't be null";
 
@@ -28,13 +28,13 @@ public final class CodePointerImpl implements CodePointer {
     }
 
     @Override
-    public Element getElement() {
+    public E getElement() {
         return element;
     }
 
     @Override
-    public CodePointer forElement(Element element) {
-        return new CodePointerImpl(method, element);
+    public <C extends Element> CodePointer<C> forElement(C element) {
+        return new CodePointerImpl<C>(method, element);
     }
 
     @Override

@@ -41,16 +41,17 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
     public void generateCode(CodePointer instance, PrintWriter out) {
         final CodeGenerationDelegate delegate = (context, codePointer) -> append(context, codePointer, out);
 
-        append(new CodeGenerationContextImpl(delegate), instance, out);
+        // TODO code style should be provided
+        append(new CodeGenerationContextImpl(delegate, new ConfigurableCodeStyle.Builder().build()), instance, out);
     }
 
+    @SuppressWarnings("unchecked")
     private void append(CodeGenerationContext context, CodePointer codePointer, PrintWriter out) {
         final CodeGeneratorExtension extension = coreConfiguration.getExtension(context, codePointer);
 
         if (extension != null) {
-            if (extension.generateCode(context, codePointer, out)) {
-                return;
-            }
+            extension.call(context, codePointer, out);
+            return;
         }
 
         final Element element = codePointer.getElement();

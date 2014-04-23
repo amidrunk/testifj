@@ -13,6 +13,7 @@ public enum ElementType {
     LAMBDA,
     JUMP,
     BRANCH,
-    NEW, ALLOCATE
+    NEW,
+    ALLOCATE
 
 }

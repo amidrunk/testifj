@@ -1,16 +1,17 @@
 package org.testifj.lang;
 
-import org.testifj.lang.model.ElementType;
+import org.testifj.lang.model.Element;
 
 public interface CodeGeneratorConfiguration {
 
-    CodeGeneratorExtension getExtension(CodeGenerationContext context, CodePointer codePointer);
+    CodeGeneratorExtension<? extends Element> getExtension(CodeGenerationContext context, CodePointer<? extends Element> codePointer);
 
     public interface Builder {
 
-        Builder extend(ElementType elementType, CodeGeneratorExtension extension);
+        <E extends Element> Builder extend(ElementSelector<E> elementSelector, CodeGeneratorExtension<E> extension);
 
         CodeGeneratorConfiguration build();
 
     }
+
 }

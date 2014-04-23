@@ -7,12 +7,12 @@ import org.testifj.lang.model.Element;
  *
  * TOGO Add line number.
  */
-public interface CodePointer {
+public interface CodePointer<E extends Element> {
 
     Method getMethod();
 
-    Element getElement();
+    E getElement();
 
-    CodePointer forElement(Element element);
+    <C extends Element> CodePointer<C> forElement(C element);
 
 }

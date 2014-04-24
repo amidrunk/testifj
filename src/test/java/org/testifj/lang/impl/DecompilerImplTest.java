@@ -6,9 +6,10 @@ import org.testifj.lang.ClassModelTestUtils;
 import org.testifj.Procedure;
 import org.testifj.lang.CodePointer;
 import org.testifj.lang.*;
+import org.testifj.lang.model.AST;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.VariableAssignment;
-import org.testifj.lang.model.impl.MethodSignature;
+import org.testifj.lang.model.impl.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -264,6 +265,33 @@ public class DecompilerImplTest {
         final Element[] elements = Arrays.stream(ClassModelTestUtils.codeForLineOffset(-2)).map(CodePointer::getElement).toArray(Element[]::new);
 
         expect(elements).toBe(new Element[]{ set("str", newInstance(String.class, constant("Hello World!"))) });
+    }
+
+    @Test
+    public void newArrayWithAssignmentCanBeDecompiled() {
+        final String[] array = {"Hello!"};
+
+        final Element[] elements = Arrays.stream(ClassModelTestUtils.codeForLineOffset(-2)).map(CodePointer::getElement).toArray(Element[]::new);
+
+        expect(elements).toBe(new Element[]{
+                new VariableAssignmentImpl(
+                        new NewArrayImpl(String[].class, String.class, constant(1),
+                                Arrays.asList(new ArrayInitializerImpl(0, constant("Hello!")))),
+                        "array", String[].class)
+        });
+    }
+
+    @Test
+    public void arrayStoreCanBeDecompiled() {
+        final String[] array = new String[1];
+
+        array[0] = "Hello World!";
+
+        final Element[] elements = Arrays.stream(ClassModelTestUtils.codeForLineOffset(-2)).map(CodePointer::getElement).toArray(Element[]::new);
+
+        expect(elements).toBe(new Element[]{
+                new ArrayStoreImpl(local("array", String[].class, 1), constant(0), constant("Hello World!"))
+        });
     }
 
     private Element[] parseMethodBody(String methodName) {

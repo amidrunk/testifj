@@ -6,9 +6,7 @@ import org.testifj.lang.model.Signature;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Supplier;
 
 public final class DefaultMethod implements Method {
@@ -86,6 +84,26 @@ public final class DefaultMethod implements Method {
                 .orElseThrow(() -> new IllegalStateException("Code attribute is not present for method '" + getName() + "'"));
     }
 
+    private LineNumberTableEntry[] collectEntriesForLineNumber(LineNumberTable lineNumberTable, List<Integer> lineNumbers) {
+        final LineNumberTableEntry[] entriesForLineNumber = lineNumberTable.getEntries().stream()
+                .filter(e -> lineNumbers.contains(e.getLineNumber()))
+                .toArray(LineNumberTableEntry[]::new);
+
+        final LineNumberTableEntry[] allEntries = lineNumberTable.getEntries().stream()
+                .filter(e -> e.getStartPC() >= entriesForLineNumber[0].getStartPC() && e.getStartPC() <= entriesForLineNumber[entriesForLineNumber.length - 1].getStartPC())
+                .toArray(LineNumberTableEntry[]::new);
+
+        if (allEntries.length > entriesForLineNumber.length) {
+            final Integer[] newLineNumbers = Arrays.stream(allEntries).map(LineNumberTableEntry::getLineNumber)
+                    .distinct()
+                    .toArray(Integer[]::new);
+
+            return collectEntriesForLineNumber(lineNumberTable, Arrays.asList(newLineNumbers));
+        }
+
+        return allEntries;
+    }
+
     @Override
     public InputStream getCodeForLineNumber(int lineNumber) {
         final LineNumberTable lineNumberTable = (LineNumberTable) getCode().getAttributes().stream()
@@ -93,14 +111,12 @@ public final class DefaultMethod implements Method {
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("Line numbers are not present for method '" + getName() + "'"));
 
-        final LineNumberTableEntry startEntry = lineNumberTable.getEntries().stream()
-                .filter(e -> e.getLineNumber() == lineNumber)
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("Code is not available for line number '" + lineNumber + "'"));
+        final LineNumberTableEntry[] entriesForLineNumber = collectEntriesForLineNumber(lineNumberTable, Arrays.asList(lineNumber));
+
+        final LineNumberTableEntry startEntry = entriesForLineNumber[0];
 
         final Optional<LineNumberTableEntry> endEntry = lineNumberTable.getEntries().stream()
-                .filter(e -> e.getStartPC() > startEntry.getStartPC())
-                .sorted((e1, e2) -> e1.getStartPC() - e2.getStartPC())
+                .filter(e -> e.getStartPC() > entriesForLineNumber[entriesForLineNumber.length - 1].getStartPC())
                 .findFirst();
 
         try (InputStream inputStream = getCode().getCode()) {

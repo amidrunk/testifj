@@ -1,28 +1,28 @@
 package org.testifj.lang.impl;
 
-import com.sun.jmx.snmp.SnmpUnknownAccContrModelException;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.testifj.Expect;
 import org.testifj.ExpectValueContinuation;
 import org.testifj.lang.*;
-import org.testifj.lang.model.AST;
-import org.testifj.lang.model.Element;
-import org.testifj.lang.model.ElementType;
-import org.testifj.lang.model.MethodCall;
+import org.testifj.lang.model.*;
+import org.testifj.lang.model.impl.ArrayInitializerImpl;
 import org.testifj.lang.model.impl.MethodSignature;
+import org.testifj.lang.model.impl.NewArrayImpl;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.function.Predicate;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
+import static org.testifj.Given.given;
 import static org.testifj.lang.model.AST.constant;
 import static org.testifj.lang.model.AST.local;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
@@ -173,9 +173,104 @@ public class CoreCodeGenerationExtensionsTest {
     }
 
     @Test
-    public void primitiveBoxCallsShouldBeHandledAndImplied() {
-        expect(codeFor(new CodePointerImpl(method, AST.call(Integer.class, "valueOf", Integer.class, constant(1))))).toBe("1");
-        expect(codeFor(new CodePointerImpl(method, AST.call(Long.class, "valueOf", Long.class, constant(1L))))).toBe("1");
+    public void selectUninitializedNewArrayShouldSelectNewArrayWithoutInitializers() {
+        final CodePointer<NewArray> codePointer = codePointer(new NewArrayImpl(String[].class, String.class,
+                constant(1), Collections.emptyList()));
+
+        given(codePointer).then(it -> {
+            expect(CoreCodeGenerationExtensions.selectUninitializedNewArray().matches(codePointer)).toBe(true);
+        });
+    }
+
+    @Test
+    public void selectUninitializedNewArrayShouldNotSElectNewArrayWithInitializers(){
+        final CodePointer<NewArray> codePointer = codePointer(new NewArrayImpl(String[].class, String.class,
+                constant(1), Arrays.asList(new ArrayInitializerImpl(0, constant("foo")))));
+
+        given(codePointer).then(it -> {
+            expect(CoreCodeGenerationExtensions.selectUninitializedNewArray().matches(codePointer)).toBe(false);
+        });
+    }
+
+    @Test
+    public void selectInitializedNewArrayShouldSelectNewArrayWithInitializers() {
+        final CodePointer<NewArray> codePointer = codePointer(new NewArrayImpl(String[].class, String.class,
+                constant(1), Arrays.asList(new ArrayInitializerImpl(0, constant("foo")))));
+
+        given(codePointer).then(it -> {
+            expect(CoreCodeGenerationExtensions.selectInitializedNewArray().matches(codePointer)).toBe(true);
+        });
+    }
+
+    @Test
+    public void selectInitializedNewArrayShouldNotSelectNewArrayWithoutInitializers() {
+        final CodePointer<NewArray> codePointer = codePointer(new NewArrayImpl(String[].class, String.class,
+                constant(1), Collections.emptyList()));
+
+        given(codePointer).then(it -> {
+            expect(CoreCodeGenerationExtensions.selectInitializedNewArray().matches(codePointer)).toBe(false);
+        });
+    }
+
+    @Test
+    public void primitiveBoxCallsShouldBeHandledAndGeneratedAsImplicit() {
+        expect(codeFor(new CodePointerImpl(method, AST.call(Byte.class, "valueOf",
+                MethodSignature.parse("(B)Ljava/lang/Byte;"), constant(1))))).toBe("1");
+        expect(codeFor(new CodePointerImpl(method, AST.call(Short.class, "valueOf",
+                MethodSignature.parse("(S)Ljava/lang/Short;"), constant(1))))).toBe("1");
+        expect(codeFor(new CodePointerImpl(method, AST.call(Character.class, "valueOf",
+                MethodSignature.parse("(C)Ljava/lang/Character;"), constant(1))))).toBe("1");
+        expect(codeFor(new CodePointerImpl(method, AST.call(Integer.class, "valueOf",
+                MethodSignature.parse("(I)Ljava/lang/Integer;"), constant(1))))).toBe("1");
+        expect(codeFor(new CodePointerImpl(method, AST.call(Long.class, "valueOf",
+                MethodSignature.parse("(J)Ljava/lang/Long;"), constant(1L))))).toBe("1L");
+        expect(codeFor(new CodePointerImpl(method, AST.call(Float.class, "valueOf",
+                MethodSignature.parse("(F)Ljava/lang/Float;"), constant(1F))))).toBe("1.0f");
+        expect(codeFor(new CodePointerImpl(method, AST.call(Double.class, "valueOf",
+                MethodSignature.parse("(D)Ljava/lang/Double;"), constant(1D))))).toBe("1.0");
+    }
+
+    @Test
+    public void isPrimitiveBoxCallShouldReturnTrueForBoxMethods() {
+        final Predicate<CodePointer<MethodCall>> primitiveBoxCall = CoreCodeGenerationExtensions.isPrimitiveBoxCall();
+
+        expect(primitiveBoxCall.test(codePointer(AST.call(Byte.class, "valueOf",
+                MethodSignature.parse("(B)Ljava/lang/Byte;"), constant(1))))).toBe(true);
+        expect(primitiveBoxCall.test(codePointer(AST.call(Short.class, "valueOf",
+                MethodSignature.parse("(S)Ljava/lang/Short;"), constant(1))))).toBe(true);
+        expect(primitiveBoxCall.test(codePointer(AST.call(Character.class, "valueOf",
+                MethodSignature.parse("(C)Ljava/lang/Character;"), constant(1))))).toBe(true);
+        expect(primitiveBoxCall.test(codePointer(AST.call(Integer.class, "valueOf",
+                MethodSignature.parse("(I)Ljava/lang/Integer;"), constant(1))))).toBe(true);
+        expect(primitiveBoxCall.test(codePointer(AST.call(Long.class, "valueOf",
+                MethodSignature.parse("(J)Ljava/lang/Long;"), constant(1L))))).toBe(true);
+        expect(primitiveBoxCall.test(codePointer(AST.call(Float.class, "valueOf",
+                MethodSignature.parse("(F)Ljava/lang/Float;"), constant(1F))))).toBe(true);
+        expect(primitiveBoxCall.test(codePointer(AST.call(Double.class, "valueOf",
+                MethodSignature.parse("(D)Ljava/lang/Double;"), constant(1D))))).toBe(true);
+    }
+
+    @Test
+    public void isPrimitiveBoxCallShouldReturnFalseForInstanceMethod() {
+        final Predicate<CodePointer<MethodCall>> primitiveBoxCall = CoreCodeGenerationExtensions.isPrimitiveBoxCall();
+
+        expect(primitiveBoxCall.test(codePointer(AST.call(constant(1), "valueOf", Integer.class, constant(1))))).toBe(false);
+    }
+
+    @Test
+    public void isPrimitiveBoxCallShouldReturnFalseForNonMatchingStaticMethod() {
+        final Predicate<CodePointer<MethodCall>> primitiveBoxCall = CoreCodeGenerationExtensions.isPrimitiveBoxCall();
+
+        expect(primitiveBoxCall.test(codePointer(AST.call(Integer.class, "valueOf", Integer.class, constant(1), constant(10))))).toBe(false);
+    }
+
+    private <T extends Element> CodePointer<T> codePointer(T element) {
+        final CodePointer codePointer = mock(CodePointer.class);
+
+        when(codePointer.getElement()).thenReturn(element);
+        when(codePointer.getMethod()).thenThrow(new UnsupportedOperationException());
+
+        return codePointer;
     }
 
     private String codeFor(Element element) {

@@ -14,6 +14,7 @@ public enum ElementType {
     JUMP,
     BRANCH,
     NEW,
-    ALLOCATE
+    NEW_ARRAY,
+    ARRAY_STORE, ALLOCATE
 
 }

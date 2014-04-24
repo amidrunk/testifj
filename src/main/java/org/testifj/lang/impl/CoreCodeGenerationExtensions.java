@@ -3,11 +3,11 @@ package org.testifj.lang.impl;
 import org.testifj.annotations.DSL;
 import org.testifj.lang.*;
 import org.testifj.lang.model.*;
-import org.testifj.lang.model.impl.LocalVariableReferenceImpl;
+import org.testifj.lang.model.impl.MethodSignature;
 
 import java.io.PrintWriter;
 import java.lang.reflect.Type;
-import java.util.Iterator;
+import java.util.*;
 import java.util.function.Predicate;
 
 public final class CoreCodeGenerationExtensions {
@@ -21,9 +21,88 @@ public final class CoreCodeGenerationExtensions {
         configurationBuilder.extend(ElementSelector.forType(ElementType.CONSTANT), constant());
         configurationBuilder.extend(ElementSelector.forType(ElementType.VARIABLE_REFERENCE), variableReference());
         configurationBuilder.extend(selectBooleanBoxCall(), boxBooleanExtension());
+        configurationBuilder.extend(selectPrimitiveBoxCall(), primitiveBoxCallExtension());
         configurationBuilder.extend(selectDSLMethodCall(), dslMethodCallExtension());
         configurationBuilder.extend(selectInstanceMethodCall(), instanceMethodCallExtension());
         configurationBuilder.extend(selectStaticMethodCall(), staticMethodCallExtension());
+        configurationBuilder.extend(ElementSelector.<ArrayStore>forType(ElementType.ARRAY_STORE), arrayStoreExtension());
+        configurationBuilder.extend(selectUninitializedNewArray(), newUninitializedArrayExtension());
+        configurationBuilder.extend(selectInitializedNewArray(), newInitializedArrayExtension());
+    }
+
+
+    /**
+     * Selects a {@link org.testifj.lang.model.NewArray} with no initializers specified. Will create
+     * a new array with default values.
+     *
+     * @return A selector that selects {@link org.testifj.lang.model.NewArray} elements without
+     * and initializers.
+     */
+    public static ElementSelector<NewArray> selectUninitializedNewArray() {
+        return ElementSelector.<NewArray>forType(ElementType.NEW_ARRAY)
+                .where(cp -> cp.getElement().getInitializers().isEmpty());
+    }
+
+    /**
+     * Selects {@link org.testifj.lang.model.NewArray} elements with initializers specified.
+     *
+     * @return A selector that selects initialized new arrays.
+     */
+    public static ElementSelector<NewArray> selectInitializedNewArray() {
+        return ElementSelector.<NewArray>forType(ElementType.NEW_ARRAY)
+                .where(cp -> !cp.getElement().getInitializers().isEmpty());
+    }
+
+    /**
+     * Code generator extension for uninitialized new arrays. Will generate code on the form
+     * <code>new T:ClassName[n:Expression]</code>.
+     *
+     * @return A code generator extension that handles {@link org.testifj.lang.model.NewArray}-elements
+     * that has no initializers.
+     */
+    public static CodeGeneratorExtension<NewArray> newUninitializedArrayExtension() {
+        return (context, codePointer, out) -> {
+            final NewArray newArray = codePointer.getElement();
+
+            out.append("new ").append(context.getCodeStyle().getTypeName(newArray.getComponentType())).append("[");
+            context.delegate(codePointer.forElement(newArray.getLength()));
+            out.append("]");
+        };
+    }
+
+    public static CodeGeneratorExtension<NewArray> newInitializedArrayExtension() {
+        return (context, codePointer, out) -> {
+            final NewArray newArray = codePointer.getElement();
+
+            out.append("new ").append(context.getCodeStyle().getTypeName(newArray.getComponentType())).append("[] { ");
+
+            for (Iterator<ArrayInitializer> i = newArray.getInitializers().iterator(); i.hasNext(); ) {
+                context.delegate(codePointer.forElement(i.next().getValue()));
+
+                if (i.hasNext()) {
+                    out.append(", ");
+                }
+            }
+
+            out.append(" }");
+        };
+    }
+
+    /**
+     * Extension for assignment to array element.
+     *
+     * @return A code generator extension that handles {@link org.testifj.lang.model.ArrayStore}-elements.
+     */
+    public static CodeGeneratorExtension<ArrayStore> arrayStoreExtension() {
+        return (context, codePointer, out) -> {
+            final ArrayStore arrayStore = codePointer.getElement();
+
+            context.delegate(codePointer.forElement(arrayStore.getArray()));
+            out.append("[");
+            context.delegate(codePointer.forElement(arrayStore.getIndex()));
+            out.append("] = ");
+            context.delegate(codePointer.forElement(arrayStore.getValue()));
+        };
     }
 
     public static CodeGeneratorExtension<Constant> constant() {
@@ -194,7 +273,7 @@ public final class CoreCodeGenerationExtensions {
     /**
      * Creates an element selector that matches method calls that are (1) static and (2) called on
      * a type that has the @DSL annotation. See {@link CoreCodeGenerationExtensions#isDSLMethodCall()}.
-     * 
+     *
      * @return A selector that selects DSL method calls.
      */
     public static ElementSelector<MethodCall> selectDSLMethodCall() {
@@ -211,13 +290,44 @@ public final class CoreCodeGenerationExtensions {
         return CoreCodeGenerationExtensions::appendMethodCall;
     }
 
+    private static final Set<MethodReference> PRIMITIVE_BOX_METHODS = new HashSet<>(Arrays.<MethodReference>asList(
+            new MethodReferenceImpl(Byte.class, "valueOf", MethodSignature.parse("(B)Ljava/lang/Byte;")),
+            new MethodReferenceImpl(Short.class, "valueOf", MethodSignature.parse("(S)Ljava/lang/Short;")),
+            new MethodReferenceImpl(Character.class, "valueOf", MethodSignature.parse("(C)Ljava/lang/Character;")),
+            new MethodReferenceImpl(Integer.class, "valueOf", MethodSignature.parse("(I)Ljava/lang/Integer;")),
+            new MethodReferenceImpl(Long.class, "valueOf", MethodSignature.parse("(J)Ljava/lang/Long;")),
+            new MethodReferenceImpl(Float.class, "valueOf", MethodSignature.parse("(F)Ljava/lang/Float;")),
+            new MethodReferenceImpl(Double.class, "valueOf", MethodSignature.parse("(D)Ljava/lang/Double;"))
+    ));
+
+    public static Predicate<CodePointer<MethodCall>> isPrimitiveBoxCall() {
+        return isStaticMethodCall().and(cp -> {
+            final MethodCall methodCall = cp.getElement();
+
+            return PRIMITIVE_BOX_METHODS.contains(new MethodReferenceImpl(
+                    methodCall.getTargetType(),
+                    methodCall.getMethodName(),
+                    methodCall.getSignature()));
+        });
+    }
+
+    public static ElementSelector<MethodCall> selectPrimitiveBoxCall() {
+        return ElementSelector.<MethodCall>forType(ElementType.METHOD_CALL).where(isPrimitiveBoxCall());
+    }
+
+    public static CodeGeneratorExtension<MethodCall> primitiveBoxCallExtension() {
+        return (context, codePointer, out) -> {
+            context.delegate(codePointer.forElement(codePointer.getElement().getParameters().get(0)));
+        };
+    }
+
     /**
      * Appends a method call to the provided print writer. The target of the method call is assumed to have been
      * appended; this method will append the method name and the parameter list.
      *
-     * @param context The context in which the method call code is generated.
+     * @param context     The context in which the method call code is generated.
      * @param codePointer The code pointer referencing the method call.
-     * @param out The print writer to which the generated code is written.
+     * @param out         The print writer to which the generated code is written.
      */
     private static void appendMethodCall(CodeGenerationContext context, CodePointer<MethodCall> codePointer, PrintWriter out) {
         final MethodCall methodCall = codePointer.getElement();

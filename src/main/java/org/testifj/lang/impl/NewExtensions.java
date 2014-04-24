@@ -6,9 +6,13 @@ import org.testifj.lang.DecompilerConfiguration;
 import org.testifj.lang.DecompilerExtension;
 import org.testifj.lang.model.AllocateInstance;
 import org.testifj.lang.model.ElementType;
+import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.MethodCall;
 import org.testifj.lang.model.impl.AllocateInstanceImpl;
+import org.testifj.lang.model.impl.NewArrayImpl;
 import org.testifj.lang.model.impl.NewInstanceImpl;
+
+import java.lang.reflect.Type;
 
 public final class NewExtensions {
 

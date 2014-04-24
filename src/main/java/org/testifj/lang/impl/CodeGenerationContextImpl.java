@@ -21,6 +21,7 @@ public final class CodeGenerationContextImpl implements CodeGenerationContext {
 
     private CodeGenerationContextImpl(CodeGenerationDelegate codeGenerationDelegate, CodeStyle codeStyle, int indentationLevel) {
         assert codeGenerationDelegate != null : "Code generation delegate can't be null";
+        assert codeStyle != null : "Code style can't be null";
 
         this.indentationLevel = indentationLevel;
         this.codeStyle = codeStyle;

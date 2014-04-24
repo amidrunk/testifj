@@ -32,6 +32,7 @@ public final class DecompilerImpl implements Decompiler {
     private static DecompilerConfiguration createCoreConfiguration() {
         final DecompilerConfigurationImpl.Builder builder = new DecompilerConfigurationImpl.Builder();
 
+        ArrayDecompilerExtensions.configure(builder);
         NewExtensions.configure(builder);
         InvokeDynamicExtensions.configure(builder);
         MethodCallExtensions.configure(builder);
@@ -209,6 +210,11 @@ public final class DecompilerImpl implements Decompiler {
                 case ByteCode.lconst_0:
                 case ByteCode.lconst_1:
                     context.push(new ConstantImpl((long) (byteCode - ByteCode.lconst_0), long.class));
+                    break;
+                case ByteCode.fconst_0:
+                case ByteCode.fconst_1:
+                case ByteCode.fconst_2:
+                    context.push(new ConstantImpl((float) (byteCode - ByteCode.fconst_0), float.class));
                     break;
                 case ByteCode.sipush:
                     context.push(new ConstantImpl(codeStream.nextUnsignedShort(), int.class));

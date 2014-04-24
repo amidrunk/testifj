@@ -10,15 +10,20 @@ import org.testifj.lang.Method;
 import org.testifj.lang.impl.CodePointerCodeGenerator;
 import org.testifj.lang.impl.CodePointerImpl;
 import org.testifj.lang.model.AST;
+import org.testifj.lang.model.ArrayInitializer;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.ElementType;
-import org.testifj.lang.model.impl.ReturnImpl;
+import org.testifj.lang.model.impl.*;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static org.mockito.Mockito.mock;
 import static org.testifj.Expect.expect;
+import static org.testifj.lang.model.AST.constant;
+import static org.testifj.lang.model.AST.local;
 
 public class CodePointerCodeGeneratorTest {
 
@@ -102,7 +107,7 @@ public class CodePointerCodeGeneratorTest {
 
     @Test
     public void newInstanceCanBeDescribed() {
-        final Description description = describer.describe(new CodePointerImpl(mock(Method.class), AST.newInstance(String.class, AST.constant(1234), AST.constant("foo"))));
+        final Description description = describer.describe(new CodePointerImpl(mock(Method.class), AST.newInstance(String.class, constant(1234), constant("foo"))));
 
         expect(description.toString()).toBe("new String(1234, \"foo\")");
     }
@@ -117,6 +122,34 @@ public class CodePointerCodeGeneratorTest {
 
         expect(description.toString()).toBe("expect(exampleInnerClass.exampleVariable).toBe(0)");
     }
+
+    @Test
+    public void arrayStoreCanBeDescribed(){
+        final String code = toString(new ArrayStoreImpl(local("foo", String[].class, 1), constant(1234), constant("Hello World!")));
+
+        expect(code).toBe("foo[1234] = \"Hello World!\"");
+    }
+
+    @Test
+    public void newArrayWithoutInitializationCanBeDescribed() {
+        final String code = toString(new NewArrayImpl(String[].class, String.class, constant(1), Collections.<ArrayInitializer>emptyList()));
+
+        expect(code).toBe("new String[1]");
+    }
+
+    @Test
+    public void newArrayWithInitializationCanBeDescribed() {
+        final String code = toString(new NewArrayImpl(String[].class, String.class, constant(2), Arrays.asList(
+                new ArrayInitializerImpl(0, constant("foo")),
+                new ArrayInitializerImpl(1, constant("bar")))));
+
+        expect(code).toBe("new String[] { \"foo\", \"bar\" }");
+    }
+
+    private String toString(Element element) {
+        return describer.describe(new CodePointerImpl<>(method, element)).toString();
+    }
+
 
     private CodePointer pointer(Element element) {
         return new CodePointerImpl(method, element);

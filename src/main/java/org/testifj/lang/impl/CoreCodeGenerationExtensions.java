@@ -108,8 +108,8 @@ public final class CoreCodeGenerationExtensions {
     }
 
     public static CodeGeneratorExtension<MethodCall> innerClassFieldAccessExtension() {
-        return (context, code, out) -> {
-            final MethodCall methodCall = code.getElement();
+        return (context, codePointer, out) -> {
+            final MethodCall methodCall = codePointer.getElement();
             final ClassFile innerClassClassFile = context.getClassFileResolver().resolveClassFile(methodCall.getTargetType());
             final Method method = innerClassClassFile.getMethods().stream()
                     .filter(m -> m.getName().equals(methodCall.getMethodName()))
@@ -126,8 +126,15 @@ public final class CoreCodeGenerationExtensions {
                         + "' in class '" + innerClassClassFile.getName() + "'", e);
             }
 
-            context.delegate(code.forElement(methodCall.getParameters().get(0)));
-            out.append(".").append(((FieldReference) ((ReturnValue) methodElements[0]).getValue()).getFieldName());
+            context.delegate(codePointer.forElement(methodCall.getParameters().get(0)));
+            out.append(".");
+
+            if (methodCall.getParameters().size() == 1) {
+                out.append(((FieldReference) ((ReturnValue) methodElements[0]).getValue()).getFieldName());
+            } else {
+                out.append(((FieldAssignment) methodElements[0]).getFieldReference().getFieldName()).append(" = ");
+                context.delegate(codePointer.forElement(methodCall.getParameters().get(1)));
+            }
         };
     }
 

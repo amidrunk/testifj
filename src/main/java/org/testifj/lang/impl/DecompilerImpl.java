@@ -36,6 +36,7 @@ public final class DecompilerImpl implements Decompiler {
         NewExtensions.configure(builder);
         InvokeDynamicExtensions.configure(builder);
         MethodCallExtensions.configure(builder);
+        FieldDecompilationExtensions.configure(builder);
 
         return builder.build();
     }

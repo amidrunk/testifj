@@ -28,6 +28,7 @@ import static org.testifj.lang.model.AST.local;
 public class CodePointerCodeGeneratorTest {
 
     private final CodePointerCodeGenerator describer = new CodePointerCodeGenerator();
+
     private final Method method = mock(Method.class);
 
     @Test

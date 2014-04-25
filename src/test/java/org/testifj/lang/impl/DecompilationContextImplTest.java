@@ -157,19 +157,6 @@ public class DecompilationContextImplTest {
     }
 
     @Test
-    public void enlistShouldReduceTheStackCompletely() {
-        final MethodCall methodCall1 = mock(MethodCall.class);
-        final MethodCall methodCall2 = mock(MethodCall.class);
-
-        context.push(methodCall1);
-        context.enlist(methodCall2);
-
-        expect(context.getStatements().toArray()).toBe(new Object[]{
-                methodCall1, methodCall2
-        });
-    }
-
-    @Test
     public void hasStackedExpressionsShouldReturnTrueIfStackContainsExpressions() {
         context.push(mock(Expression.class));
         expect(context.hasStackedExpressions()).toBe(true);

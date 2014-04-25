@@ -93,8 +93,6 @@ public final class DecompilationContextImpl implements DecompilationContext {
     public void enlist(Statement statement) {
         assert statement != null : "Statement can't be null";
 
-        reduceAll();
-
         statements.add(new StatementWithPC(statement, getProgramCounter().get(), contextVersion.incrementAndGet()));
     }
 

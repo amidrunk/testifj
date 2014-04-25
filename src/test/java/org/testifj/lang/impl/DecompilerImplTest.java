@@ -14,6 +14,7 @@ import org.testifj.lang.model.impl.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.function.Supplier;
@@ -310,6 +311,32 @@ public class DecompilerImplTest {
         });
     }
 
+    @Test
+    public void staticFieldReferenceCanBeDecompiled() {
+        final PrintStream out = System.out;
+
+        final Element[] elements = Arrays.stream(ClassModelTestUtils.codeForLineOffset(-2)).map(CodePointer::getElement).toArray(Element[]::new);
+
+        expect(elements).toBe(new Element[]{
+                new VariableAssignmentImpl(
+                        new FieldReferenceImpl(null, System.class, PrintStream.class, "out"),
+                        "out", PrintStream.class)
+        });
+    }
+
+    @Test
+    public void staticFieldAssignmentCanBeDecompiled() {
+        ExampleClass.STATIC_STRING = "bar";
+
+        final Element[] elements = Arrays.stream(ClassModelTestUtils.codeForLineOffset(-2)).map(CodePointer::getElement).toArray(Element[]::new);
+
+        expect(elements).toBe(new Element[]{
+                new FieldAssignmentImpl(
+                        new FieldReferenceImpl(null, ExampleClass.class, String.class, "STATIC_STRING"),
+                        constant("bar"))
+        });
+    }
+
     private Element[] parseMethodBody(String methodName) {
         return ClassModelTestUtils.methodBodyOf(ExampleClass.class, methodName);
     }
@@ -318,6 +345,8 @@ public class DecompilerImplTest {
     }
 
     private static class ExampleClass {
+
+        public static String STATIC_STRING = "foo";
 
         private String string = new String("Hello World!");
 

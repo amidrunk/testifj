@@ -96,6 +96,13 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
         throw new AssertionError(description.toString());
     }
 
+    public static final Object NULL = new Object() {
+        @Override
+        public String toString() {
+            return "null";
+        }
+    };
+
     private Description describeValueMismatch(CodePointer codePointer, Object actualValue, Optional<Object> expectedValue) {
         final Element element = codePointer.getElement();
 
@@ -116,7 +123,7 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
 
                 final Expression actualValueExpression = expectCall.getParameters().get(0);
 
-                final Description actualValueDescription = getValueDescription(codePointer.forElement(actualValueExpression), Optional.ofNullable(actualValue));
+                final Description actualValueDescription = getValueDescription(codePointer.forElement(actualValueExpression), Optional.of(actualValue == null ? NULL : actualValue));
                 final Description expectedValueDescription = getValueDescription(codePointer.forElement(expectedValueExpression), expectedValue);
 
                 return BasicDescription.from("Expected ")

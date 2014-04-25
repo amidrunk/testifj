@@ -2,33 +2,47 @@ package org.testifj.lang.impl;
 
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.testifj.lang.CodeGenerationContext;
-import org.testifj.lang.CodeGenerationDelegate;
-import org.testifj.lang.CodePointer;
-import org.testifj.lang.CodeStyle;
+import org.testifj.lang.*;
 
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
 
 public class CodeGenerationContextImplTest {
 
     private final CodeGenerationDelegate codeGenerationDelegate = mock(CodeGenerationDelegate.class);
 
+    private final TypeResolver typeResolver = mock(TypeResolver.class);
+
+    private final ClassFileResolver classFileResolver = mock(ClassFileResolver.class);
+
     private final CodeStyle codeStyle = mock(CodeStyle.class);
 
-    private final CodeGenerationContextImpl context = new CodeGenerationContextImpl(codeGenerationDelegate, codeStyle);
+    private final Decompiler decompiler = mock(Decompiler.class);
+    private final CodeGenerationContextImpl context = new CodeGenerationContextImpl(
+            codeGenerationDelegate,
+            typeResolver,
+            classFileResolver,
+            decompiler,
+            codeStyle);
 
     @Test
     public void constructorShouldNotAcceptInvalidArguments() {
-        expect(() -> new CodeGenerationContextImpl(null, codeStyle)).toThrow(AssertionError.class);
-        expect(() -> new CodeGenerationContextImpl(codeGenerationDelegate, null)).toThrow(AssertionError.class);
+        expect(() -> new CodeGenerationContextImpl(null, typeResolver, classFileResolver, decompiler, codeStyle)).toThrow(AssertionError.class);
+        expect(() -> new CodeGenerationContextImpl(codeGenerationDelegate, null, classFileResolver, decompiler, codeStyle)).toThrow(AssertionError.class);
+        expect(() -> new CodeGenerationContextImpl(codeGenerationDelegate, typeResolver, null, decompiler, codeStyle)).toThrow(AssertionError.class);
+        expect(() -> new CodeGenerationContextImpl(codeGenerationDelegate, typeResolver, classFileResolver, null, codeStyle)).toThrow(AssertionError.class);
+        expect(() -> new CodeGenerationContextImpl(codeGenerationDelegate, typeResolver, classFileResolver, decompiler, null)).toThrow(AssertionError.class);
     }
 
     @Test
-    public void constructorShouldRetainCodeStyle() {
+    public void constructorShouldRetainCodeStyleAndDependencies() {
         expect(context.getCodeStyle()).toBe(codeStyle);
+        expect(context.getClassFileResolver()).toBe(classFileResolver);
+        expect(context.getTypeResolver()).toBe(typeResolver);
+        expect(context.getDecompiler()).toBe(decompiler);
     }
 
     @Test

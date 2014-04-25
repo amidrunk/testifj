@@ -41,8 +41,16 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
     public void generateCode(CodePointer instance, PrintWriter out) {
         final CodeGenerationDelegate delegate = (context, codePointer) -> append(context, codePointer, out);
 
+        // TODO type resolver should be provided
+        // TODO class file resolver should be provided
         // TODO code style should be provided
-        append(new CodeGenerationContextImpl(delegate, new ConfigurableCodeStyle.Builder().build()), instance, out);
+        append(new CodeGenerationContextImpl(
+                delegate,
+                new SimpleTypeResolver(),
+                new ClassPathClassFileResolver(new ClassFileReaderImpl()),
+                new DecompilerImpl(),
+                new ConfigurableCodeStyle.Builder().build()
+        ), instance, out);
     }
 
     @SuppressWarnings("unchecked")

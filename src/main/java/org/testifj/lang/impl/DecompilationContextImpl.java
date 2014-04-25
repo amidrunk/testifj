@@ -106,6 +106,11 @@ public final class DecompilationContextImpl implements DecompilationContext {
     }
 
     @Override
+    public void insert(int offset, Expression expression) {
+        stack.insertElementAt(new ExpressionWithPC(expression, programCounter.get(), contextVersion.incrementAndGet()), stack.size() + offset);
+    }
+
+    @Override
     public Expression pop() {
         checkStackNotEmpty();
         return stack.pop().expression();

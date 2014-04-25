@@ -81,7 +81,10 @@ public final class DecompilerImpl implements Decompiler {
                     context.push(stackedExpressions.get(stackedExpressions.size() - 1));
                     break;
                 }
-
+                case ByteCode.dup_x1: {
+                    context.insert(-2, context.peek());
+                    break;
+                }
                 // Load local variable
                 case ByteCode.aload:
                     ByteCodes.loadVariable(context, method, codeStream.nextByte());
@@ -192,6 +195,9 @@ public final class DecompilerImpl implements Decompiler {
 
                     break;
                 }
+                case ByteCode.aconst_null:
+                    context.push(new ConstantImpl(null, Object.class));
+                    break;
                 case ByteCode.dconst_0:
                     context.push(new ConstantImpl(0.0D, double.class));
                     break;

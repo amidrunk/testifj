@@ -8,6 +8,7 @@ import org.testifj.lang.CodePointer;
 import org.testifj.lang.*;
 import org.testifj.lang.model.AST;
 import org.testifj.lang.model.Element;
+import org.testifj.lang.model.FieldReference;
 import org.testifj.lang.model.VariableAssignment;
 import org.testifj.lang.model.impl.*;
 
@@ -291,6 +292,21 @@ public class DecompilerImplTest {
 
         expect(elements).toBe(new Element[]{
                 new ArrayStoreImpl(local("array", String[].class, 1), constant(0), constant("Hello World!"))
+        });
+    }
+
+    private String str = "astring";
+
+    @Test
+    public void fieldAssignmentCanBeDecompiled() {
+        this.str = "newvalue";
+
+        final Element[] elements = Arrays.stream(ClassModelTestUtils.codeForLineOffset(-2)).map(CodePointer::getElement).toArray(Element[]::new);
+
+        expect(elements).toBe(new Element[]{
+                new FieldAssignmentImpl(
+                        new FieldReferenceImpl(local("this", getClass(), 0), getClass(), String.class, "str"),
+                        constant("newvalue"))
         });
     }
 

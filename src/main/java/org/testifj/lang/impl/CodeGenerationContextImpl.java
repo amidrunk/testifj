@@ -1,9 +1,6 @@
 package org.testifj.lang.impl;
 
-import org.testifj.lang.CodeGenerationContext;
-import org.testifj.lang.CodeGenerationDelegate;
-import org.testifj.lang.CodePointer;
-import org.testifj.lang.CodeStyle;
+import org.testifj.lang.*;
 
 import java.lang.reflect.Type;
 
@@ -13,17 +10,38 @@ public final class CodeGenerationContextImpl implements CodeGenerationContext {
 
     private final CodeStyle codeStyle;
 
+    private final TypeResolver typeResolver;
+
+    private final ClassFileResolver classFileResolver;
+
+    private final Decompiler decompiler;
+
     private final int indentationLevel;
 
-    public CodeGenerationContextImpl(CodeGenerationDelegate codeGenerationDelegate, CodeStyle codeStyle) {
-        this(codeGenerationDelegate, codeStyle, 0);
+    public CodeGenerationContextImpl(CodeGenerationDelegate codeGenerationDelegate,
+                                     TypeResolver typeResolver,
+                                     ClassFileResolver classFileResolver,
+                                     Decompiler decompiler,
+                                     CodeStyle codeStyle) {
+        this(codeGenerationDelegate, typeResolver, classFileResolver, decompiler, codeStyle, 0);
     }
 
-    private CodeGenerationContextImpl(CodeGenerationDelegate codeGenerationDelegate, CodeStyle codeStyle, int indentationLevel) {
+    private CodeGenerationContextImpl(CodeGenerationDelegate codeGenerationDelegate,
+                                      TypeResolver typeResolver,
+                                      ClassFileResolver classFileResolver,
+                                      Decompiler decompiler,
+                                      CodeStyle codeStyle,
+                                      int indentationLevel) {
         assert codeGenerationDelegate != null : "Code generation delegate can't be null";
+        assert typeResolver != null : "Type resolver can't be null";
+        assert decompiler != null : "Decompiler can't be null";
+        assert classFileResolver != null : "Class file resolver can't be null";
         assert codeStyle != null : "Code style can't be null";
 
         this.indentationLevel = indentationLevel;
+        this.typeResolver = typeResolver;
+        this.classFileResolver = classFileResolver;
+        this.decompiler = decompiler;
         this.codeStyle = codeStyle;
         this.codeGenerationDelegate = codeGenerationDelegate;
     }
@@ -35,7 +53,13 @@ public final class CodeGenerationContextImpl implements CodeGenerationContext {
 
     @Override
     public CodeGenerationContext subSection() {
-        return new CodeGenerationContextImpl(codeGenerationDelegate, codeStyle, indentationLevel + 1);
+        return new CodeGenerationContextImpl(
+                codeGenerationDelegate,
+                typeResolver,
+                classFileResolver,
+                decompiler,
+                codeStyle,
+                indentationLevel + 1);
     }
 
     @Override
@@ -45,8 +69,21 @@ public final class CodeGenerationContextImpl implements CodeGenerationContext {
         codeGenerationDelegate.delegate(this, codePointer);
     }
 
+    public TypeResolver getTypeResolver() {
+        return typeResolver;
+    }
+
+    public ClassFileResolver getClassFileResolver() {
+        return classFileResolver;
+    }
+
     @Override
     public CodeStyle getCodeStyle() {
         return codeStyle;
+    }
+
+    @Override
+    public Decompiler getDecompiler() {
+        return decompiler;
     }
 }

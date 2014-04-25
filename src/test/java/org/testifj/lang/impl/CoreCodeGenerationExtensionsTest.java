@@ -23,6 +23,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
+import static org.testifj.lang.impl.CoreCodeGenerationExtensions.selectInnerClassFieldAccess;
+import static org.testifj.lang.model.AST.call;
 import static org.testifj.lang.model.AST.constant;
 import static org.testifj.lang.model.AST.local;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
@@ -40,7 +42,12 @@ public class CoreCodeGenerationExtensionsTest {
 
     private final CodeStyle codeStyle = mock(CodeStyle.class);
 
-    private final CodeGenerationContextImpl context = new CodeGenerationContextImpl(codeGenerationDelegate, codeStyle);
+    private final CodeGenerationContextImpl context = new CodeGenerationContextImpl(
+            codeGenerationDelegate,
+            new SimpleTypeResolver(),
+            new ClassPathClassFileResolver(new ClassFileReaderImpl()),
+            new DecompilerImpl(),
+            codeStyle);
 
     private final Method method = mock(Method.class);
 
@@ -264,6 +271,66 @@ public class CoreCodeGenerationExtensionsTest {
         expect(primitiveBoxCall.test(codePointer(AST.call(Integer.class, "valueOf", Integer.class, constant(1), constant(10))))).toBe(false);
     }
 
+    @Test
+    public void selectInnerClassFieldAccessShouldNotSelectNonMethodCall() {
+        expect(((ElementSelector) selectInnerClassFieldAccess()).matches(codePointer(AST.constant(1)))).toBe(false);
+    }
+
+    @Test
+    public void selectInnerClassFieldAccessShouldNotSelectNonStaticMethodCall() {
+        final boolean matchesInstanceMethod = selectInnerClassFieldAccess()
+                .matches(codePointer(call(AST.constant("foo"), "toString", String.class)));
+
+        expect(matchesInstanceMethod).toBe(false);
+    }
+
+    @Test
+    public void innerClassFieldSelectorShouldNotSelectStaticMethodWithInvalidArguments() {
+        expect(selectInnerClassFieldAccess().matches(codePointer(AST.call(String.class, "access$100", String.class, constant("foo"), constant("bar"), constant("baz"))))).toBe(false);
+        expect(selectInnerClassFieldAccess().matches(codePointer(AST.call(String.class, "valueOf", String.class, constant("foo"))))).toBe(false);
+        expect(selectInnerClassFieldAccess().matches(codePointer(AST.call(String.class, "access$100", String.class)))).toBe(false);
+    }
+
+    @Test
+    public void innerClassFieldSelectorShouldNotSelectNonInnerClassMethodCall() {
+        expect(selectInnerClassFieldAccess().matches(codePointer(AST.call(String.class, "access$100", String.class, constant(1234))))).toBe(false);
+    }
+
+    @Test
+    public void innerClassFieldSelectorShouldSelectInnerClassFieldReference() {
+        final boolean innerClassFieldReferenceSelected = selectInnerClassFieldAccess()
+                .matches(codePointer(AST.call(Inner.class, "access$100", String.class, local("myInner", Inner.class, 1))));
+
+        expect(innerClassFieldReferenceSelected).toBe(true);
+    }
+
+    @Test
+    public void innerClassFieldAccessShouldGeneratePlainFieldReference() {
+        final Inner inner = new Inner();
+        final String str = inner.str;
+
+        final MethodCall innerClassFieldAccessor = AST.call(Inner.class, "access$100", String.class, local("myInner", Inner.class, 1));
+
+        expect(codeFor(innerClassFieldAccessor)).toBe("myInner.str");
+    }
+
+    @Test
+    public void innerClassFieldAssignmentShouldGeneratePlainFieldAssignment() {
+        final Inner inner = new Inner();
+
+        inner.str = "foo";
+
+        final MethodCall innerClassFieldAssignment = AST.call(Inner.class, "access$102", String.class, local("myInner", Inner.class, 1), constant("foo"));
+
+        expect(codeFor(innerClassFieldAssignment)).toBe("myInner.str = \"foo\"");
+    }
+
+    private static class Inner {
+
+        private String str;
+
+    }
+
     private <T extends Element> CodePointer<T> codePointer(T element) {
         final CodePointer codePointer = mock(CodePointer.class);
 
@@ -292,7 +359,6 @@ public class CoreCodeGenerationExtensionsTest {
     private CodeGeneratorConfiguration coreConfiguration() {
         final SimpleCodeGeneratorConfiguration.Builder builder = new SimpleCodeGeneratorConfiguration.Builder();
         CoreCodeGenerationExtensions.configure(builder);
-
         return builder.build();
     }
 

@@ -15,6 +15,6 @@ public enum ElementType {
     BRANCH,
     NEW,
     NEW_ARRAY,
-    ARRAY_STORE, ALLOCATE
+    ARRAY_STORE, FIELD_ASSIGNMENT, ALLOCATE
 
 }

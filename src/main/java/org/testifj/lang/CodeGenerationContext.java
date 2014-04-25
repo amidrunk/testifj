@@ -1,5 +1,7 @@
 package org.testifj.lang;
 
+import java.lang.reflect.Type;
+
 public interface CodeGenerationContext {
 
     int getIndentationLevel();
@@ -14,6 +16,12 @@ public interface CodeGenerationContext {
      */
     void delegate(CodePointer codePointer);
 
+    TypeResolver getTypeResolver();
+
+    ClassFileResolver getClassFileResolver();
+
     CodeStyle getCodeStyle();
+
+    Decompiler getDecompiler();
 
 }

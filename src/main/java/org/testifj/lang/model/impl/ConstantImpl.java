@@ -11,8 +11,8 @@ public final class ConstantImpl implements Constant {
     private final Class type;
 
     public ConstantImpl(Object constant, Class type) {
-        assert constant != null : "Constant can't be null";
         assert type != null : "Type can't be null";
+        assert !type.isPrimitive() || constant != null : "Constant can't be null";
 
         this.constant = constant;
         this.type = type;

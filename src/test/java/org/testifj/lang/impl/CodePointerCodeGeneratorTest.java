@@ -146,6 +146,17 @@ public class CodePointerCodeGeneratorTest {
         expect(code).toBe("new String[] { \"foo\", \"bar\" }");
     }
 
+    @Test
+    public void innerClassFieldAssignmentCanBeDescribed() {
+        final ExampleInnerClass exampleInnerClass = new ExampleInnerClass();
+
+        exampleInnerClass.exampleVariable = 1234;
+
+        final Description description = describer.describe(ClassModelTestUtils.codeForLineOffset(-2)[0]);
+
+        expect(description.toString()).toBe("exampleInnerClass.exampleVariable = 1234");
+    }
+
     private String toString(Element element) {
         return describer.describe(new CodePointerImpl<>(method, element)).toString();
     }

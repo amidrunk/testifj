@@ -53,6 +53,15 @@ public interface DecompilationContext {
     void push(Expression expression);
 
     /**
+     * Inserts a value into the stack. Used by e.g. dup_x1 that inserts a value beneath the top of
+     * the stack.
+     *
+     * @param offset The offset from the top (0=top, -1=beneath top etc).
+     * @param expression The expression that should be inserted.
+     */
+    void insert(int offset, Expression expression);
+
+    /**
      * Pops an expression from the stack. If there's no expression available no the stack,
      * an <code>IllegalStateException</code> will be thrown.
      *
@@ -75,5 +84,4 @@ public interface DecompilationContext {
     void replaceStatement(int index, Statement newStatement);
 
     void removeStatement(int index);
-
 }

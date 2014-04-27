@@ -2,11 +2,10 @@ package org.testifj.lang.impl;
 
 import org.junit.Test;
 import org.testifj.lang.Decompiler;
+import org.testifj.lang.LineNumberCounter;
 import org.testifj.lang.Method;
 import org.testifj.lang.TypeResolver;
-import org.testifj.lang.model.Expression;
-import org.testifj.lang.model.MethodCall;
-import org.testifj.lang.model.Statement;
+import org.testifj.lang.model.*;
 
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
@@ -24,14 +23,17 @@ public class DecompilationContextImplTest {
 
     private final TypeResolver typeResolver = mock(TypeResolver.class);
 
-    private final DecompilationContextImpl context = new DecompilationContextImpl(decompiler, method, programCounter, typeResolver);
+    private final LineNumberCounter lineNumberCounter = mock(LineNumberCounter.class);
+
+    private final DecompilationContextImpl context = new DecompilationContextImpl(decompiler, method, programCounter, lineNumberCounter, typeResolver);
 
     @Test
     public void constructorShouldNotAcceptInvalidParameters() {
-        expect(() -> new DecompilationContextImpl(null, method, programCounter, typeResolver)).toThrow(AssertionError.class);
-        expect(() -> new DecompilationContextImpl(decompiler, null, programCounter, typeResolver)).toThrow(AssertionError.class);
-        expect(() -> new DecompilationContextImpl(decompiler, method, null, typeResolver)).toThrow(AssertionError.class);
-        expect(() -> new DecompilationContextImpl(decompiler, method, programCounter, null)).toThrow(AssertionError.class);
+        expect(() -> new DecompilationContextImpl(null, method, programCounter, lineNumberCounter, typeResolver)).toThrow(AssertionError.class);
+        expect(() -> new DecompilationContextImpl(decompiler, null, programCounter, lineNumberCounter, typeResolver)).toThrow(AssertionError.class);
+        expect(() -> new DecompilationContextImpl(decompiler, method, programCounter, null, typeResolver)).toThrow(AssertionError.class);
+        expect(() -> new DecompilationContextImpl(decompiler, method, null, lineNumberCounter, typeResolver)).toThrow(AssertionError.class);
+        expect(() -> new DecompilationContextImpl(decompiler, method, programCounter, lineNumberCounter, null)).toThrow(AssertionError.class);
     }
 
     @Test
@@ -39,6 +41,7 @@ public class DecompilationContextImplTest {
         expect(context.getDecompiler()).toBe(decompiler);
         expect(context.getMethod()).toBe(method);
         expect(context.getProgramCounter()).toBe(programCounter);
+        expect(context.getLineNumberCounter()).toBe(lineNumberCounter);
     }
 
     @Test
@@ -233,5 +236,52 @@ public class DecompilationContextImplTest {
 
         expect(context.peek()).toBe(stackedExpression);
         expect(context.getStackedExpressions().toArray()).toBe(new Object[]{stackedExpression});
+    }
+
+    @Test
+    public void pushShouldSetLineNumberAttributeOnElement() {
+        final Constant element = AST.constant(100);
+
+        when(lineNumberCounter.get()).thenReturn(1234);
+
+        context.push(element);
+
+        expect(element.getMetaData().getAttribute("LineNumber")).toBe(1234);
+    }
+
+    @Test
+    public void enlistShouldSetLineNumberAttributeOnStatement() {
+        final Statement statement = AST.$return();
+
+        when(lineNumberCounter.get()).thenReturn(2345);
+
+        context.enlist(statement);
+
+        expect(statement.getMetaData().getAttribute(ElementMetaData.LINE_NUMBER)).toBe(2345);
+    }
+
+    @Test
+    public void insertShouldSetLineNumberAttributeOnStatement() {
+        final Expression expression = AST.constant("foo");
+
+        when(lineNumberCounter.get()).thenReturn(23456);
+
+        context.insert(0, expression);
+
+        expect(expression.getMetaData().getAttribute(ElementMetaData.LINE_NUMBER)).toBe(23456);
+    }
+
+    @Test
+    public void replaceStatementShouldSetLineNumberOnNewStatement() {
+        final Statement oldStatement = AST.$return();
+        final Statement newStatement = AST.$return();
+
+        context.enlist(oldStatement);
+
+        when(lineNumberCounter.get()).thenReturn(1234);
+
+        context.replaceStatement(0, newStatement);
+
+        expect(newStatement.getMetaData().getAttribute(ElementMetaData.LINE_NUMBER)).toBe(1234);
     }
 }

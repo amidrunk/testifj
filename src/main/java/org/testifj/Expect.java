@@ -93,7 +93,7 @@ public final class Expect {
     @FunctionalInterface
     public interface ExpectProcedureContinuation {
 
-        void to(Expectation<Outcome> expectation);
+        void to(OutcomeExpectation<Outcome> expectation);
 
         default ExpectProcedureContinuation not() {
             return expectation -> ExpectProcedureContinuation.this.to(outcome -> {
@@ -117,7 +117,7 @@ public final class Expect {
         }
 
         default <E extends Throwable> ToThrowContinuance<E> toThrow(Class<E> exceptionType) {
-            final Expectation<Outcome> expectation = outcome -> {
+            final OutcomeExpectation<Outcome> expectation = outcome -> {
                 if (!outcome.isExceptional()) {
                     Configuration.get().getExpectationFailureHandler().handleExpectationFailure(
                             new ExpectedExceptionNotThrownImpl(outcome.getCaller(), exceptionType));

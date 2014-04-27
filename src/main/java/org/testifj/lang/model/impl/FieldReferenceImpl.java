@@ -6,7 +6,7 @@ import org.testifj.lang.model.FieldReference;
 import java.lang.reflect.Type;
 import java.util.Optional;
 
-public final class FieldReferenceImpl implements FieldReference {
+public final class FieldReferenceImpl extends AbstractElement implements FieldReference {
 
     private final Expression targetInstance;
 

@@ -1,9 +1,8 @@
 package org.testifj.lang.impl;
 
-import org.testifj.lang.DecompilationContext;
-import org.testifj.lang.Decompiler;
-import org.testifj.lang.Method;
-import org.testifj.lang.TypeResolver;
+import org.testifj.lang.*;
+import org.testifj.lang.model.Element;
+import org.testifj.lang.model.ElementMetaData;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.Statement;
 
@@ -19,6 +18,8 @@ public final class DecompilationContextImpl implements DecompilationContext {
 
     private final ProgramCounter programCounter;
 
+    private final LineNumberCounter lineNumberCounter;
+
     private final Stack<ExpressionWithPC> stack = new Stack<>();
 
     private final Set<StatementWithPC> statements = new TreeSet<>();
@@ -27,15 +28,21 @@ public final class DecompilationContextImpl implements DecompilationContext {
 
     private final AtomicInteger contextVersion = new AtomicInteger();
 
-    public DecompilationContextImpl(Decompiler decompiler, Method method, ProgramCounter programCounter, TypeResolver typeResolver) {
+    public DecompilationContextImpl(Decompiler decompiler,
+                                    Method method,
+                                    ProgramCounter programCounter,
+                                    LineNumberCounter lineNumberCounter,
+                                    TypeResolver typeResolver) {
         assert decompiler != null : "Decompiler can't be null";
         assert method != null : "Method can't be null";
         assert programCounter != null : "Program counter can't be null";
+        assert lineNumberCounter != null : "Line number counter can't be null";
         assert typeResolver != null : "Type resolver can't be null";
 
         this.decompiler = decompiler;
         this.method = method;
         this.programCounter = programCounter;
+        this.lineNumberCounter = lineNumberCounter;
         this.typeResolver = typeResolver;
     }
 
@@ -94,6 +101,8 @@ public final class DecompilationContextImpl implements DecompilationContext {
         assert statement != null : "Statement can't be null";
 
         statements.add(new StatementWithPC(statement, getProgramCounter().get(), contextVersion.incrementAndGet()));
+
+        configureContextMetaData(statement);
     }
 
     @Override
@@ -101,11 +110,14 @@ public final class DecompilationContextImpl implements DecompilationContext {
         assert expression != null : "Expression can't be null";
 
         stack.push(new ExpressionWithPC(expression, getProgramCounter().get(), contextVersion.incrementAndGet()));
+
+        configureContextMetaData(expression);
     }
 
     @Override
     public void insert(int offset, Expression expression) {
         stack.insertElementAt(new ExpressionWithPC(expression, programCounter.get(), contextVersion.incrementAndGet()), stack.size() + offset);
+        configureContextMetaData(expression);
     }
 
     @Override
@@ -147,6 +159,8 @@ public final class DecompilationContextImpl implements DecompilationContext {
 
         statements.clear();
         statements.addAll(statementListCopy);
+
+        configureContextMetaData(newStatement);
     }
 
     @Override
@@ -164,6 +178,10 @@ public final class DecompilationContextImpl implements DecompilationContext {
         return programCounter;
     }
 
+    public LineNumberCounter getLineNumberCounter() {
+        return lineNumberCounter;
+    }
+
     private void checkStackNotEmpty() {
         if (stack.isEmpty()) {
             throw new IllegalStateException("No syntax element is available on the stack");
@@ -173,6 +191,16 @@ public final class DecompilationContextImpl implements DecompilationContext {
     private void checkReducable(ExpressionWithPC stackedExpression) {
         if (!(stackedExpression.expression() instanceof Statement)) {
             throw new IllegalStateException("Stacked expression is not a statement: " + stackedExpression.expression());
+        }
+    }
+
+    private void configureContextMetaData(Element element) {
+        final ElementMetaData metaData = element.getMetaData();
+
+        if (metaData != null) {
+            final int lineNumber = lineNumberCounter.get();
+
+            metaData.setAttribute(ElementMetaData.LINE_NUMBER, lineNumber);
         }
     }
 

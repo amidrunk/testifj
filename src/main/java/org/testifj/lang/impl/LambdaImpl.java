@@ -6,6 +6,7 @@ import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.LocalVariableReference;
 import org.testifj.lang.model.Signature;
+import org.testifj.lang.model.impl.AbstractElement;
 
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -13,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 // TODO ReferenceKind is probably a discriminator... different sub classes
-public class LambdaImpl implements Lambda {
+public class LambdaImpl extends AbstractElement implements Lambda {
 
     private final Optional<Expression> self;
 

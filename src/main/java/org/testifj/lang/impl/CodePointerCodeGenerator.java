@@ -9,10 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer> {
 
@@ -49,7 +46,7 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
                 new SimpleTypeResolver(),
                 new ClassPathClassFileResolver(new ClassFileReaderImpl()),
                 new DecompilerImpl(),
-                new ConfigurableCodeStyle.Builder().build()
+                new ConfigurableCodeStyle.Builder().setUseSimpleClassNames(true).setShouldOmitThis(true).build()
         ), instance, out);
     }
 
@@ -242,20 +239,30 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
                 .filter(m -> m.getName().equals(lambda.getBackingMethodName()))
                 .findFirst().get();
 
-        if (!backingMethod.getLocalVariableTable().isPresent()) {
-            final List<LocalVariableReference> enclosedVariables = lambda.getEnclosedVariables();
-            final LocalVariable[] lambdaLocals = new LocalVariable[enclosedVariables.size()];
+        final List<LocalVariableReference> enclosedVariables = lambda.getEnclosedVariables();
+
+        if (!enclosedVariables.isEmpty()) {
+            final Optional<LocalVariableTable> localVariableTable = backingMethod.getLocalVariableTable();
+            final List<LocalVariable> lambdaLocals;
+
+            if (!localVariableTable.isPresent()) {
+                lambdaLocals = new ArrayList<>(lambda.getEnclosedVariables().size());
+            } else {
+                lambdaLocals = new LinkedList<>(localVariableTable.get().getLocalVariables());
+            }
 
             int index = 0;
 
             for (LocalVariableReference localVariableReference : enclosedVariables) {
-                lambdaLocals[index] = (new LocalVariableImpl(-1, -1, localVariableReference.getName(),
+                lambdaLocals.add(new LocalVariableImpl(-1, -1, localVariableReference.getName(),
                         localVariableReference.getType(), index));
 
                 index++;
             }
 
-            backingMethod = backingMethod.withLocalVariableTable(new LocalVariableTableImpl(lambdaLocals));
+            Collections.sort(lambdaLocals, (v1, v2) -> v1.getIndex() - v2.getIndex());
+
+            backingMethod = backingMethod.withLocalVariableTable(new LocalVariableTableImpl(lambdaLocals.stream().toArray(LocalVariable[]::new)));
         }
 
         final Decompiler parser = new DecompilerImpl();

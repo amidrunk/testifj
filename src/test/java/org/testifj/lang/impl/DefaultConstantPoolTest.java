@@ -455,6 +455,39 @@ public class DefaultConstantPoolTest {
         });
     }
 
+    @Test
+    public void getDescriptorShouldNotAcceptInvalidArguments() {
+        final DefaultConstantPool cp = createConstantPool(new UTF8Entry("foo"));
+
+        expect(() -> cp.getDescriptor(0, MethodRefDescriptor.class)).toThrow(AssertionError.class);
+        expect(() -> cp.getDescriptor(1, null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void getDescriptorShouldFailIfEntryTypeIsNotCorrect() {
+        final DefaultConstantPool constantPool = createConstantPool(new UTF8Entry("foo"));
+
+        expect(() -> constantPool.getDescriptor(1, MethodRefDescriptor.class)).toThrow(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void getDescriptorShouldReturnMatchingDescriptor() {
+        final DefaultConstantPool constantPool = createConstantPool(
+                new FieldRefEntry(2, 3),
+                new ClassEntry(4),
+                new NameAndTypeEntry(5, 6),
+                new UTF8Entry("Foo"),
+                new UTF8Entry("bar"),
+                new UTF8Entry("I")
+        );
+
+        final FieldRefDescriptor descriptor = constantPool.getDescriptor(1, FieldRefDescriptor.class);
+
+        expect(descriptor.getClassName()).toBe("Foo");
+        expect(descriptor.getName()).toBe("bar");
+        expect(descriptor.getDescriptor()).toBe("I");
+    }
+
     private DefaultConstantPool createConstantPool(ConstantPoolEntry ... entries) {
         final DefaultConstantPool.Builder builder = new DefaultConstantPool.Builder();
 

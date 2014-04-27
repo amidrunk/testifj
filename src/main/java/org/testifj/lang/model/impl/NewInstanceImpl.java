@@ -8,7 +8,7 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
 
-public final class NewInstanceImpl implements NewInstance {
+public final class NewInstanceImpl extends AbstractElement implements NewInstance {
 
     private final Type type;
 

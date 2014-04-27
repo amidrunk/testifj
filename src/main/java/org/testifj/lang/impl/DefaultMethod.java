@@ -6,10 +6,13 @@ import org.testifj.lang.model.Signature;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Supplier;
 
 public final class DefaultMethod implements Method {
+
+    public static final int LAMBDA_MODIFIERS = 0x00001000 | Modifier.PRIVATE;
 
     private final Supplier<ClassFile> classFile;
 
@@ -70,6 +73,27 @@ public final class DefaultMethod implements Method {
     }
 
     @Override
+    public boolean hasCodeForLineNumber(int lineNumber) {
+        return getRequiredLineNumberTable().getEntries().stream()
+                .filter(e -> e.getLineNumber() == lineNumber)
+                .findAny()
+                .isPresent();
+    }
+
+    @Override
+    public boolean isLambdaBackingMethod() {
+        if ((accessFlags & LAMBDA_MODIFIERS) != LAMBDA_MODIFIERS) {
+            return false;
+        }
+
+        if (!getName().startsWith("lambda$")) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
     public List<Attribute> getAttributes() {
         return Arrays.asList(attributes);
     }
@@ -84,35 +108,10 @@ public final class DefaultMethod implements Method {
                 .orElseThrow(() -> new IllegalStateException("Code attribute is not present for method '" + getName() + "'"));
     }
 
-    private LineNumberTableEntry[] collectEntriesForLineNumber(LineNumberTable lineNumberTable, List<Integer> lineNumbers) {
-        final LineNumberTableEntry[] entriesForLineNumber = lineNumberTable.getEntries().stream()
-                .filter(e -> lineNumbers.contains(e.getLineNumber()))
-                .toArray(LineNumberTableEntry[]::new);
-
-        final LineNumberTableEntry[] allEntries = lineNumberTable.getEntries().stream()
-                .filter(e -> e.getStartPC() >= entriesForLineNumber[0].getStartPC() && e.getStartPC() <= entriesForLineNumber[entriesForLineNumber.length - 1].getStartPC())
-                .toArray(LineNumberTableEntry[]::new);
-
-        if (allEntries.length > entriesForLineNumber.length) {
-            final Integer[] newLineNumbers = Arrays.stream(allEntries).map(LineNumberTableEntry::getLineNumber)
-                    .distinct()
-                    .toArray(Integer[]::new);
-
-            return collectEntriesForLineNumber(lineNumberTable, Arrays.asList(newLineNumbers));
-        }
-
-        return allEntries;
-    }
-
     @Override
     public InputStream getCodeForLineNumber(int lineNumber) {
-        final LineNumberTable lineNumberTable = (LineNumberTable) getCode().getAttributes().stream()
-                .filter(a -> a.getName().equals(LineNumberTable.ATTRIBUTE_NAME))
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("Line numbers are not present for method '" + getName() + "'"));
-
+        final LineNumberTable lineNumberTable = getRequiredLineNumberTable();
         final LineNumberTableEntry[] entriesForLineNumber = collectEntriesForLineNumber(lineNumberTable, Arrays.asList(lineNumber));
-
         final LineNumberTableEntry startEntry = entriesForLineNumber[0];
 
         final Optional<LineNumberTableEntry> endEntry = lineNumberTable.getEntries().stream()
@@ -136,6 +135,18 @@ public final class DefaultMethod implements Method {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    public Optional<LineNumberTable> getLineNumberTable() {
+        return (Optional) getCode().getAttributes().stream()
+                    .filter(a -> a.getName().equals(LineNumberTable.ATTRIBUTE_NAME))
+                    .findFirst();
+    }
+
+    protected LineNumberTable getRequiredLineNumberTable() {
+        return getLineNumberTable()
+                .orElseThrow(() -> new IllegalStateException("Line numbers are not present for method '" + getName() + "'"));
+    }
+
     @Override
     public LocalVariable getLocalVariableForIndex(int index) {
         assert index >= 0 : "Index must be positive";
@@ -155,7 +166,7 @@ public final class DefaultMethod implements Method {
                 .findFirst();
 
         if (!localVariable.isPresent()) {
-            throw new IllegalStateException("No local variable exists for index " + index);
+            throw new LocalVariableNotAvailableException("No local variable exists for index " + index + " in method " + getClassFile().getName() + "." + getName());
         }
 
         return localVariable.get();
@@ -167,6 +178,30 @@ public final class DefaultMethod implements Method {
                 .filter(a -> a.getName().equals(LocalVariableTable.ATTRIBUTE_NAME))
                 .map(a -> (LocalVariableTable) a)
                 .findFirst();
+    }
+
+    private LineNumberTableEntry[] collectEntriesForLineNumber(LineNumberTable lineNumberTable, List<Integer> lineNumbers) {
+        final LineNumberTableEntry[] entriesForLineNumber = lineNumberTable.getEntries().stream()
+                .filter(e -> lineNumbers.contains(e.getLineNumber()))
+                .toArray(LineNumberTableEntry[]::new);
+
+        if (entriesForLineNumber.length == 0) {
+            throw new IllegalStateException("No code exists at " + getClassFile().getName() + "." + getName() + ":" + lineNumbers);
+        }
+
+        final LineNumberTableEntry[] allEntries = lineNumberTable.getEntries().stream()
+                .filter(e -> e.getStartPC() >= entriesForLineNumber[0].getStartPC() && e.getStartPC() <= entriesForLineNumber[entriesForLineNumber.length - 1].getStartPC())
+                .toArray(LineNumberTableEntry[]::new);
+
+        if (allEntries.length > entriesForLineNumber.length) {
+            final Integer[] newLineNumbers = Arrays.stream(allEntries).map(LineNumberTableEntry::getLineNumber)
+                    .distinct()
+                    .toArray(Integer[]::new);
+
+            return collectEntriesForLineNumber(lineNumberTable, Arrays.asList(newLineNumbers));
+        }
+
+        return allEntries;
     }
 
     @Override

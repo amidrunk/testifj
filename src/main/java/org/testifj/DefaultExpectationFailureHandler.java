@@ -167,6 +167,7 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
     private Element[] elementsForLine(Caller caller, Method callerMethod) {
         final Element[] elements;
 
+        // TODO This can fail... need to parse the entire method and pick out the matching element(s)
         try (InputStream codeForLineNumber = callerMethod.getCodeForLineNumber(caller.getCallerStackTraceElement().getLineNumber())) {
             elements = decompiler.parse(callerMethod, codeForLineNumber);
         } catch (IOException e) {
@@ -190,6 +191,7 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
 
         Method method = classFile.getMethods().stream()
                 .filter(m -> m.getName().equals(caller.getCallerStackTraceElement().getMethodName()))
+                .filter(m -> m.hasCodeForLineNumber(caller.getCallerStackTraceElement().getLineNumber()))
                 .findFirst().get();
 
         if (!method.getLocalVariableTable().isPresent()) {

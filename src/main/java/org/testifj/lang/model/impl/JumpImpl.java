@@ -2,7 +2,7 @@ package org.testifj.lang.model.impl;
 
 import org.testifj.lang.model.Jump;
 
-public final class JumpImpl implements Jump {
+public final class JumpImpl extends AbstractElement implements Jump {
 
     private final int targetPC;
 

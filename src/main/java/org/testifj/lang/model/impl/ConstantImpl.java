@@ -4,7 +4,7 @@ import org.testifj.lang.model.Constant;
 
 import java.lang.reflect.Type;
 
-public final class ConstantImpl implements Constant {
+public final class ConstantImpl extends AbstractElement implements Constant {
 
     private final Object constant;
 

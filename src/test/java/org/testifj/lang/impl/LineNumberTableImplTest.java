@@ -2,11 +2,13 @@ package org.testifj.lang.impl;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.testifj.lang.LineNumberTable;
 import org.testifj.lang.LineNumberTableEntry;
 
 import java.io.IOException;
 
 import static org.testifj.Expect.expect;
+import static org.testifj.Given.given;
 
 public class LineNumberTableImplTest {
 
@@ -22,5 +24,4 @@ public class LineNumberTableImplTest {
 
         expect(table.getEntries().toArray()).toBe(new Object[]{entry});
     }
-
 }

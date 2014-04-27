@@ -1,10 +1,13 @@
 package org.testifj;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 public final class Caller {
 
+    public static final int CALLER_STACK_TRACE_INDEX = 2;
     private final List<StackTraceElement> stackTraceElements;
 
     private final int callerStackTraceIndex;
@@ -25,8 +28,46 @@ public final class Caller {
         return stackTraceElements.get(callerStackTraceIndex);
     }
 
+    public Caller getCaller() {
+        return new Caller(stackTraceElements, callerStackTraceIndex + 1);
+    }
+
+    public Optional<Caller> scan(Predicate<StackTraceElement> predicate) {
+        assert predicate != null : "Predicate can't be null";
+
+        int currentIndex = callerStackTraceIndex + 1;
+
+        while (currentIndex < stackTraceElements.size()) {
+            if (predicate.test(stackTraceElements.get(currentIndex))) {
+                return Optional.of(new Caller(stackTraceElements, currentIndex));
+            }
+
+            currentIndex++;
+        }
+
+        return Optional.empty();
+    }
+
     public int getCallerStackTraceIndex() {
         return callerStackTraceIndex;
+    }
+
+    public static Caller me() {
+        return new Caller(Arrays.asList(Thread.currentThread().getStackTrace()), CALLER_STACK_TRACE_INDEX);
+    }
+
+    public static Caller adjacent(int offset) {
+        final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        final StackTraceElement callerStackElement = stackTrace[CALLER_STACK_TRACE_INDEX];
+
+        stackTrace[CALLER_STACK_TRACE_INDEX] = new StackTraceElement(
+                callerStackElement.getClassName(),
+                callerStackElement.getMethodName(),
+                callerStackElement.getFileName(),
+                callerStackElement.getLineNumber() + offset
+        );
+
+        return new Caller(Arrays.asList(stackTrace), CALLER_STACK_TRACE_INDEX);
     }
 
     @Override
@@ -52,8 +93,9 @@ public final class Caller {
     @Override
     public String toString() {
         return "Caller{" +
-                "stackTraceElements=" + stackTraceElements +
+                "stackTraceElements=StackTraceElement[" + stackTraceElements.size() + "]" +
                 ", callerStackTraceIndex=" + callerStackTraceIndex +
+                ", callerStackTraceElement=" + getCallerStackTraceElement() +
                 '}';
     }
 }

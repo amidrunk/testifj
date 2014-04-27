@@ -5,7 +5,7 @@ import org.testifj.lang.model.VariableAssignment;
 
 import java.lang.reflect.Type;
 
-public final class VariableAssignmentImpl implements VariableAssignment {
+public final class VariableAssignmentImpl extends AbstractElement implements VariableAssignment {
 
     private final Expression value;
 

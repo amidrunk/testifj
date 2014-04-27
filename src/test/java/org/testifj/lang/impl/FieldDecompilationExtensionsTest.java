@@ -8,7 +8,6 @@ import org.testifj.lang.model.Constant;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.impl.FieldAssignmentImpl;
 import org.testifj.lang.model.impl.FieldReferenceImpl;
-import sun.jvm.hotspot.interpreter.Bytecode;
 
 import java.io.IOException;
 

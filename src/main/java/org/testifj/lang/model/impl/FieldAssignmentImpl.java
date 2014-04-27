@@ -4,7 +4,7 @@ import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.FieldAssignment;
 import org.testifj.lang.model.FieldReference;
 
-public final class FieldAssignmentImpl implements FieldAssignment {
+public final class FieldAssignmentImpl extends AbstractElement implements FieldAssignment {
 
     private final FieldReference fieldReference;
 

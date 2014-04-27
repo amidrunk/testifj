@@ -4,7 +4,7 @@ import org.testifj.lang.model.AllocateInstance;
 
 import java.lang.reflect.Type;
 
-public final class AllocateInstanceImpl implements AllocateInstance {
+public final class AllocateInstanceImpl extends AbstractElement implements AllocateInstance {
 
     private final Type type;
 

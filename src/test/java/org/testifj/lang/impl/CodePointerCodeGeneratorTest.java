@@ -158,6 +158,20 @@ public class CodePointerCodeGeneratorTest {
         expect(description.toString()).toBe("exampleInnerClass.exampleVariable = 1234");
     }
 
+    @Test
+    public void typeCastCanBeDescribed() {
+        final Description description = describer.describe(pointer(AST.cast(constant("foo")).to(String.class)));
+
+        expect(description.toString()).toBe("(String)\"foo\"");
+    }
+
+    @Test
+    public void arrayLoadCanBeDescribed() {
+        final String generatedCode = toString(new ArrayLoadImpl(AST.local("foo", String[].class, 1), AST.constant(1234), String.class));
+
+        expect(generatedCode).toBe("foo[1234]");
+    }
+
     private String toString(Element element) {
         return describer.describe(new CodePointerImpl<>(method, element)).toString();
     }

@@ -20,7 +20,7 @@ public class ASTTest {
 
     @Test
     public void constantStringCannotBeNull() {
-        expect(() -> constant(null)).toThrow(AssertionError.class);
+        expect(() -> constant((String) null)).toThrow(AssertionError.class);
     }
 
     @Test
@@ -269,6 +269,30 @@ public class ASTTest {
         final MethodCall methodCall = AST.call(Boolean.class, "valueOf", signature, constant(1));
 
         expect(methodCall).toBe(new MethodCallImpl(Boolean.class, "valueOf", signature, null, new Expression[]{constant(1)}));
+    }
+
+    @Test
+    public void castShouldNotAcceptNullExpressionOrType() {
+        expect(() -> AST.cast(null)).toThrow(AssertionError.class);
+        expect(() -> AST.cast(constant("foo")).to(null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void castShouldCreateNewCast() {
+        given(cast(constant("foo")).to(String.class)).then(cast -> {
+            expect(cast.getValue()).toBe(constant("foo"));
+            expect(cast.getType()).toBe(String.class);
+        });
+    }
+
+    @Test
+    public void classConstantCannotHaveNullClass() {
+        expect(() -> AST.constant((Class) null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void classConstantCanBeCreated() {
+        expect(AST.constant(String.class)).toBe(new ConstantImpl(String.class, Class.class));
     }
 
 }

@@ -105,8 +105,11 @@ public final class DefaultConstantPool implements ConstantPool {
                 case INVOKE_DYNAMIC:
                     descriptor = getInvokeDynamicDescriptor(index);
                     break;
+                case METHOD_REF:
+                    descriptor = getMethodRefDescriptor(index);
+                    break;
                 default:
-                    throw new IllegalArgumentException("Constant pool entry " + entry);
+                    throw new IllegalArgumentException("Constant pool entry " + entry + " not supported");
             }
 
             descriptors[i] = descriptor;
@@ -129,6 +132,21 @@ public final class DefaultConstantPool implements ConstantPool {
     @Override
     public long getLong(int index) {
         return getEntry(index, ConstantPoolEntry.LongEntry.class).getValue();
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends ConstantPoolEntryDescriptor> T getDescriptor(int index, Class<T> type) {
+        assert index > 0 : "Index must be > 0";
+        assert type != null : "Type can't be null";
+
+        final ConstantPoolEntryDescriptor[] descriptors = getDescriptors(new int[]{index});
+
+        if (!type.isInstance(descriptors[0])) {
+            throw new IllegalArgumentException("Descriptor is not an instance of " + type.getName() + ": " + descriptors[0]);
+        }
+
+        return (T) descriptors[0];
     }
 
     @Override

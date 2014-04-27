@@ -20,6 +20,8 @@ public interface ConstantPool {
 
     long getLong(int index);
 
+    <T extends ConstantPoolEntryDescriptor> T getDescriptor(int index, Class<T> type);
+
     FieldRefDescriptor getFieldRefDescriptor(int index);
 
     NameAndTypeDescriptor getNameAndTypeDescriptor(int index);

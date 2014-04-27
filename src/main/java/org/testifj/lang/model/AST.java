@@ -8,6 +8,11 @@ import java.util.Objects;
 
 public final class AST {
 
+    public static Constant constant(Class<?> clazz) {
+        assert clazz != null : "Class can't be null";
+        return new ConstantImpl(clazz, Class.class);
+    }
+
     public static Constant constant(String constant) {
         assert constant != null : "String constant can't be null";
         return new ConstantImpl(constant, String.class);
@@ -124,6 +129,18 @@ public final class AST {
         assert leftOperand.getType().equals(rightOperand.getType()) : "Operands must be of the same type";
 
         return new BinaryOperatorImpl(leftOperand, OperatorType.PLUS, rightOperand, leftOperand.getType());
+    }
+
+    public static CastContinuation cast(Expression value) {
+        assert value != null : "Value can't be null";
+
+        return type -> new CastImpl(value, type);
+    }
+
+    public interface CastContinuation {
+
+        Cast to(Type type);
+
     }
 
     private static Type[] typesOf(Expression[] parameters) {

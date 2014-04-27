@@ -15,8 +15,14 @@ public interface Method extends Member {
 
     Optional<LocalVariableTable> getLocalVariableTable();
 
+    Optional<LineNumberTable> getLineNumberTable();
+
     Signature getSignature();
 
     Method withLocalVariableTable(LocalVariableTable localVariableTable);
+
+    boolean hasCodeForLineNumber(int lineNumber);
+
+    boolean isLambdaBackingMethod();
 
 }

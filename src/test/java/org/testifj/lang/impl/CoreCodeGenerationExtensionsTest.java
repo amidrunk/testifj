@@ -6,9 +6,7 @@ import org.testifj.Expect;
 import org.testifj.ExpectValueContinuation;
 import org.testifj.lang.*;
 import org.testifj.lang.model.*;
-import org.testifj.lang.model.impl.ArrayInitializerImpl;
-import org.testifj.lang.model.impl.MethodSignature;
-import org.testifj.lang.model.impl.NewArrayImpl;
+import org.testifj.lang.model.impl.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
@@ -323,6 +321,28 @@ public class CoreCodeGenerationExtensionsTest {
         final MethodCall innerClassFieldAssignment = AST.call(Inner.class, "access$102", String.class, local("myInner", Inner.class, 1), constant("foo"));
 
         expect(codeFor(innerClassFieldAssignment)).toBe("myInner.str = \"foo\"");
+    }
+
+    @Test
+    public void castExtensionShouldBeSupported() {
+        expect(codeFor(AST.cast(constant("foo")).to(String.class))).toBe("(String)\"foo\"");
+    }
+
+    @Test
+    public void classConstantShouldOutputClass() {
+        expect(codeFor(constant(String.class))).toBe("String.class");
+    }
+
+    @Test
+    public void arrayLoadShouldOutputArrayElementAccess() {
+        final String code = codeFor(new ArrayLoadImpl(AST.local("foo", String[].class, 1), AST.constant(1234), String.class));
+
+        expect(code).toBe("foo[1234]");
+    }
+
+    @Test
+    public void allocateInstanceShouldBeSupported() {
+        expect(codeFor(new AllocateInstanceImpl(String.class))).toBe("new String<uninitialized>");
     }
 
     private static class Inner {

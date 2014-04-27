@@ -10,7 +10,7 @@ public class ExpectationTest {
     @Test
     public void expectationArgumentCanBeCaptured() {
         final Capture<String> verifiedString = new Capture<>();
-        final Expectation<String> expectation = verifiedString::set;
+        final OutcomeExpectation<String> expectation = verifiedString::set;
 
         final Capture<String> capture = new Capture<>();
 

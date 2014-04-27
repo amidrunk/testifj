@@ -6,10 +6,7 @@ import org.testifj.Caller;
 import org.testifj.Matcher;
 import org.testifj.lang.*;
 import org.testifj.lang.impl.CallerDecompilerImpl;
-import org.testifj.lang.model.Element;
-import org.testifj.lang.model.ElementType;
-import org.testifj.lang.model.LocalVariableReference;
-import org.testifj.lang.model.VariableAssignment;
+import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.ConstantImpl;
 import org.testifj.lang.model.impl.MethodSignature;
 import org.testifj.lang.model.impl.VariableAssignmentImpl;
@@ -21,6 +18,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import static org.testifj.Expect.expect;
+import static org.testifj.Given.given;
 import static org.testifj.matchers.core.CollectionThatIs.empty;
 
 public class CallerDecompilerImplTest {
@@ -80,6 +78,27 @@ public class CallerDecompilerImplTest {
         expect(lambda.getBackingMethodSignature()).toBe(MethodSignature.parse("(Ljava/util/List;Ljava/lang/String;)V"));
         expect(lambda.getEnclosedVariables().size()).toBe(1);
         expect(lambda.getEnclosedVariables().get(0).getName()).toBe("myList");
+    }
+
+    @Test
+    public void nestedLambdaWithEnclosedVariablesCanBeDecompiled() throws IOException {
+        int expectedLength = 3;
+
+        given("foo").then(foo -> {
+            given("bar").then(bar -> {
+                expect(bar.length()).toBe(expectedLength);
+            });
+        });
+
+        final Caller caller = Caller.adjacent(-6);
+        final Element[] elements = decompileCaller(caller);
+
+        expect(elements[0].as(MethodCall.class).getMethodName()).toBe("then");
+        expect(elements[0].as(MethodCall.class).getTargetInstance().as(MethodCall.class).getMethodName()).toBe("given");
+    }
+
+    public void nestedLambdaWithEnclosedVariablesCanBeDecompiled(String str) {
+
     }
 
     private static Matcher<LocalVariableReference> localVariableReference(String name, Type type) {

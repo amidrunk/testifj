@@ -21,7 +21,10 @@ public final class CoreCodeGenerationExtensions {
         configurationBuilder.extend(ElementSelector.forType(ElementType.RETURN_VALUE), returnValue());
         configurationBuilder.extend(ElementSelector.forType(ElementType.CONSTANT), constant());
         configurationBuilder.extend(ElementSelector.forType(ElementType.VARIABLE_REFERENCE), variableReference());
-        configurationBuilder.extend(ElementSelector.<ArrayStore>forType(ElementType.ARRAY_STORE), arrayStoreExtension());
+        configurationBuilder.extend(ElementSelector.forType(ElementType.ARRAY_STORE), arrayStoreExtension());
+        configurationBuilder.extend(ElementSelector.forType(ElementType.CAST), castExtension());
+        configurationBuilder.extend(ElementSelector.forType(ElementType.ARRAY_LOAD), arrayLoadExtension());
+        configurationBuilder.extend(ElementSelector.forType(ElementType.ALLOCATE), allocateInstanceExtension());
 
         configurationBuilder.extend(selectBooleanBoxCall(), boxBooleanExtension());
         configurationBuilder.extend(selectPrimitiveBoxCall(), primitiveBoxCallExtension());
@@ -31,6 +34,57 @@ public final class CoreCodeGenerationExtensions {
         configurationBuilder.extend(selectStaticMethodCall(), staticMethodCallExtension());
         configurationBuilder.extend(selectUninitializedNewArray(), newUninitializedArrayExtension());
         configurationBuilder.extend(selectInitializedNewArray(), newInitializedArrayExtension());
+    }
+
+    /**
+     * Extension for the {@link org.testifj.lang.model.ElementType#ALLOCATE} model element. This element
+     * is discarded during decompilation, since it doesn't correspond to a Java syntax element. However,
+     * generation of the element is required to generate code for intermediate decompilations, e.g. during
+     * debug.
+     *
+     * @return Code generator extension for {@link org.testifj.lang.model.ElementType#ALLOCATE}, which
+     * corresponds to the {@link org.testifj.lang.ByteCode#new_} byte code.
+     */
+    public static CodeGeneratorExtension<AllocateInstance> allocateInstanceExtension() {
+        return (context,codePointer,out) -> {
+            final AllocateInstance allocateInstance = codePointer.getElement();
+
+            out.append("new ").append(context.getCodeStyle().getTypeName(allocateInstance.getType())).append("<uninitialized>");
+        };
+    }
+
+    /**
+     * Handles loading of array elements. This corresponds to the byte code {@link org.testifj.lang.ByteCode#aaload}
+     * and the model element {@link org.testifj.lang.model.ElementType#ARRAY_LOAD}.
+     *
+     * @return A code generator extension for handling array element access.
+     */
+    public static CodeGeneratorExtension<ArrayLoad> arrayLoadExtension() {
+        return (context,codePointer,out) -> {
+            final ArrayLoad arrayLoad = codePointer.getElement();
+
+            context.delegate(codePointer.forElement(arrayLoad.getArray()));
+            out.append("[");
+            context.delegate(codePointer.forElement(arrayLoad.getIndex()));
+            out.append("]");
+        };
+    }
+
+    /**
+     * Extension for a type cast, i.e. the <code>{@link org.testifj.lang.ByteCode#checkcast}</code> instruction,
+     * which is matched by a {@link org.testifj.lang.model.ElementType#CAST} element. The output of the extension
+     * is <code>(typeName)delegate(value)</code> where type name is composed from the active code style.
+     *
+     * @return An extension that handles the {@link org.testifj.lang.model.ElementType#CAST} element.
+     */
+    public static CodeGeneratorExtension<Cast> castExtension() {
+        return (context,codePointer,out) -> {
+            final Cast cast = codePointer.getElement();
+            final String targetTypeName = context.getCodeStyle().getTypeName(cast.getType());
+
+            out.append("(").append(targetTypeName).append(")");
+            context.delegate(codePointer.forElement(cast.getValue()));
+        };
     }
 
     /**
@@ -223,6 +277,8 @@ public final class CoreCodeGenerationExtensions {
                 out.append(String.valueOf(constant)).append('L');
             } else if (type.equals(float.class)) {
                 out.append(String.valueOf(constant)).append('f');
+            } else if (type.equals(Class.class)) {
+                out.append(context.getCodeStyle().getTypeName((Type) constant)).append(".class");
             } else {
                 out.append(String.valueOf(constant));
             }

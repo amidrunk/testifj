@@ -2,7 +2,7 @@ package org.testifj.lang.model.impl;
 
 import org.testifj.lang.model.Return;
 
-public final class ReturnImpl implements Return {
+public final class ReturnImpl extends AbstractElement implements Return {
 
     @Override
     public boolean equals(Object obj) {

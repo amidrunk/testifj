@@ -4,7 +4,7 @@ import org.testifj.lang.model.LocalVariableReference;
 
 import java.lang.reflect.Type;
 
-public class LocalVariableReferenceImpl implements LocalVariableReference {
+public class LocalVariableReferenceImpl extends AbstractElement implements LocalVariableReference {
 
     private final String variableName;
 

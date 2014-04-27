@@ -1,18 +1,56 @@
 package org.testifj;
 
+import org.junit.After;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
+import org.testifj.delegate.ExpectationDelegate;
+import org.testifj.delegate.ExpectationVerification;
+import org.testifj.delegate.ExpectationVerificationContext;
+import org.testifj.delegate.OnGoingExpectation;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
+import static org.testifj.delegate.ExpectationMatchers.isGivenThenWith;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
 public class GivenTest {
+
+    private final Configuration originalConfiguration = Configuration.get();
+    private final ExpectationDelegate expectationDelegate = mock(ExpectationDelegate.class);
+
+    @After
+    public void restoreConfiguration() {
+        Configuration.configure(originalConfiguration);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void givenShouldCreateNewOnGoingExpectationAndCompleteOnThen() {
+        Configuration.configure(originalConfiguration.withServiceContext(getServiceContext()));
+
+        final OnGoingExpectation onGoingExpectation = mock(OnGoingExpectation.class);
+        final Action action = mock(Action.class);
+        final ExpectationVerification compliantVerification = ExpectationVerification.compliant(mock(ExpectationVerificationContext.class), mock(Description.class));
+
+        when(expectationDelegate.startExpectation()).thenReturn(onGoingExpectation);
+        when(onGoingExpectation.complete(any())).thenReturn(compliantVerification);
+
+        given("foo").then(action);
+
+        final InOrder inOrder = Mockito.inOrder(expectationDelegate, onGoingExpectation);
+
+        inOrder.verify(expectationDelegate).startExpectation();
+        inOrder.verify(onGoingExpectation).complete(argThat(isGivenThenWith(getClass(), "givenShouldCreateNewOnGoingExpectationAndCompleteOnThen", "foo", action)));
+
+        verifyNoMoreInteractions(expectationDelegate, onGoingExpectation);
+        verifyZeroInteractions(action);
+    }
 
     @Test
     public void specificationShouldBeCompletedIfFulfilled() {
@@ -68,6 +106,12 @@ public class GivenTest {
 
         inOrder.verify(whenAction).execute(eq("str"));
         inOrder.verify(thenProcedure).call();
+    }
+
+    private ServiceContext getServiceContext() {
+        final ServiceContext serviceContext = mock(ServiceContext.class);
+        when(serviceContext.get(eq(ExpectationDelegate.class))).thenReturn(expectationDelegate);
+        return serviceContext;
     }
 
 }

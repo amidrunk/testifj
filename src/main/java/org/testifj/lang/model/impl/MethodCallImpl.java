@@ -8,7 +8,7 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 
-public final class MethodCallImpl implements MethodCall {
+public final class MethodCallImpl extends AbstractElement implements MethodCall {
 
     private final Type targetType;
 

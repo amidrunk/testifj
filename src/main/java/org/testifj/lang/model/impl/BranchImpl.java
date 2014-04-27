@@ -4,7 +4,7 @@ import org.testifj.lang.model.Branch;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.OperatorType;
 
-public final class BranchImpl implements Branch {
+public final class BranchImpl extends AbstractElement implements Branch {
 
     private final Expression leftOperand;
 

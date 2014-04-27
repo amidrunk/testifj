@@ -31,5 +31,29 @@ public class OptionalThatIsTest {
         expect(() -> expect(Optional.of("foo")).not().toBe(present()));
     }
 
+    @Test
+    public void optionalOfShouldNotAcceptNullArg() {
+        expect(() -> OptionalThatIs.optionalOf(null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void optionalOfShouldNotMatchEmptyOptional() {
+        expect(OptionalThatIs.optionalOf("foo").matches(Optional.<String>empty())).toBe(false);
+    }
+
+    @Test
+    public void optionalOfShouldNotMatchOptionalOfDifferentInstance() {
+        expect(OptionalThatIs.optionalOf("foo").matches(Optional.of("bar"))).toBe(false);
+    }
+
+    @Test
+    public void optionalOfShouldMatchOptionalOfEqualInstance() {
+        expect(OptionalThatIs.optionalOf("foo").matches(Optional.of("foo"))).toBe(true);
+    }
+
+    @Test
+    public void optionalOfMatcherShouldNotMatchNull() {
+        expect(OptionalThatIs.optionalOf("foo").matches(null)).toBe(false);
+    }
 
 }

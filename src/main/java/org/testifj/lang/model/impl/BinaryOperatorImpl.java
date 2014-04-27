@@ -6,7 +6,7 @@ import org.testifj.lang.model.OperatorType;
 
 import java.lang.reflect.Type;
 
-public final class BinaryOperatorImpl implements BinaryOperator {
+public final class BinaryOperatorImpl extends AbstractElement implements BinaryOperator {
 
     private final Expression leftOperand;
 

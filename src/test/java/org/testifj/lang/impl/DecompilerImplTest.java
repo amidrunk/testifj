@@ -2,14 +2,12 @@ package org.testifj.lang.impl;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.testifj.Caller;
 import org.testifj.lang.ClassModelTestUtils;
 import org.testifj.Procedure;
 import org.testifj.lang.CodePointer;
 import org.testifj.lang.*;
-import org.testifj.lang.model.AST;
-import org.testifj.lang.model.Element;
-import org.testifj.lang.model.FieldReference;
-import org.testifj.lang.model.VariableAssignment;
+import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.*;
 
 import java.io.ByteArrayInputStream;
@@ -17,6 +15,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import static org.mockito.Matchers.any;
@@ -39,6 +38,7 @@ public class DecompilerImplTest {
     @Before
     public void setup() {
         when(exampleMethod.getClassFile()).thenReturn(exampleClassFile);
+        when(exampleMethod.getLineNumberTable()).thenReturn(Optional.<LineNumberTable>empty());
     }
 
     @Test
@@ -335,6 +335,32 @@ public class DecompilerImplTest {
                         new FieldReferenceImpl(null, ExampleClass.class, String.class, "STATIC_STRING"),
                         constant("bar"))
         });
+    }
+
+    @Test
+    public void typeCastCanBeDecompiled() {
+        final Object object = "foo";
+        final String string = (String) object;
+
+        final Element[] elements = Arrays.stream(ClassModelTestUtils.codeForLineOffset(-2)).map(CodePointer::getElement).toArray(Element[]::new);
+
+        expect(elements).toBe(new Element[]{
+                AST.set("string", cast(local("object", Object.class, 1)).to(String.class))
+        });
+    }
+
+    @Test
+    public void lineNumbersShouldBeRetained() {
+        final String string = "str";
+
+        final Caller caller = Caller.adjacent(-2);
+        final Element[] elements = Arrays.stream(ClassModelTestUtils.codeForLineOffset(-3)).map(CodePointer::getElement).toArray(Element[]::new);
+
+        final VariableAssignment variableAssignments = (VariableAssignment) elements[0];
+        expect(variableAssignments.getMetaData().getAttribute(ElementMetaData.LINE_NUMBER)).toBe(caller.getCallerStackTraceElement().getLineNumber());
+
+        final Constant value = (Constant) variableAssignments.getValue();
+        expect(value.getMetaData().getAttribute(ElementMetaData.LINE_NUMBER)).toBe(caller.getCallerStackTraceElement().getLineNumber());
     }
 
     private Element[] parseMethodBody(String methodName) {

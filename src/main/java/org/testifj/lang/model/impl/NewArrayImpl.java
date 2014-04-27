@@ -9,7 +9,7 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
 
-public final class NewArrayImpl implements NewArray {
+public final class NewArrayImpl extends AbstractElement implements NewArray {
 
     private final Type arrayType;
 

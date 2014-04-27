@@ -3,6 +3,7 @@ package org.testifj.lang.impl;
 import org.junit.Test;
 import org.testifj.lang.*;
 import org.testifj.lang.model.Signature;
+import org.testifj.lang.model.impl.MethodSignature;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -174,6 +175,55 @@ public class DefaultMethodTest {
 
         expect(newMethod.getLocalVariableTable()).toBe(present());
         expect(newMethod.getLocalVariableTable().get()).toBe(sameAs(newTable));
+    }
+
+    @Test
+    public void hasCodeForLineNumberShouldReturnTrueIfCorrespondingLineNumberTableEntryExists() {
+        final DefaultMethod method = methodWithCodeAttributes(new LineNumberTableImpl(new LineNumberTableEntry[]{
+                new LineNumberTableEntryImpl(0, 1234)
+        }));
+
+        expect(method.hasCodeForLineNumber(1234)).toBe(true);
+    }
+
+    @Test
+    public void hasCodeForLineNumberShouldReturnFalseIfNoCorrespondingLineNumberEntryExists() {
+        final DefaultMethod method = methodWithCodeAttributes(new LineNumberTableImpl(new LineNumberTableEntry[]{
+                new LineNumberTableEntryImpl(0, 1234)
+        }));
+
+        expect(method.hasCodeForLineNumber(1235)).toBe(false);
+    }
+
+    @Test
+    public void hasCodeForLineNumberShouldFailIfLineNumberTableAttributeDoesNotExists() {
+        expect(() -> methodWithCodeAttributes().hasCodeForLineNumber(1234)).toThrow(IllegalStateException.class);
+    }
+
+    @Test
+    public void getLineNumberTableShouldFailIfNoLineNumberTableExists() {
+        expect(() -> methodWithCodeAttributes().getRequiredLineNumberTable()).toThrow(IllegalStateException.class);
+    }
+
+    @Test
+    public void isLambdaBackingMethodShouldReturnTrueIfNameIndicatesLambdaAndModifiersMatchers() {
+        final DefaultMethod method = new DefaultMethod(() -> null, 4106, "lambda$myLambdaMethod", MethodSignature.parse("()I"), new Attribute[0]);
+
+        expect(method.isLambdaBackingMethod()).toBe(true);
+    }
+
+    @Test
+    public void isLambdaBackingMethodShouldReturnFalseIfNameIndicatesLambdaButModifiersAreIncorrect() {
+        final DefaultMethod method = new DefaultMethod(() -> null, 196, "lambda$myLambdaMethod", MethodSignature.parse("()I"), new Attribute[0]);
+
+        expect(method.isLambdaBackingMethod()).toBe(false);
+    }
+
+    @Test
+    public void isLambdaBackingMethodShouldReturnFalseIfNameDoesNotIndicateLambda() {
+        final DefaultMethod method = new DefaultMethod(() -> null, 4106, "myLambdaMethod", MethodSignature.parse("()I"), new Attribute[0]);
+
+        expect(method.isLambdaBackingMethod()).toBe(false);
     }
 
     private DefaultMethod methodWithCodeAttributes(Attribute... attributes) {

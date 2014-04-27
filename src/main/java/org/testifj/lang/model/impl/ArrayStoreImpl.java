@@ -3,7 +3,7 @@ package org.testifj.lang.model.impl;
 import org.testifj.lang.model.ArrayStore;
 import org.testifj.lang.model.Expression;
 
-public class ArrayStoreImpl implements ArrayStore {
+public class ArrayStoreImpl extends AbstractElement implements ArrayStore {
 
     private final Expression array;
 

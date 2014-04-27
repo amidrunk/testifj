@@ -25,7 +25,8 @@ public class MethodCallExtensionsTest {
     private final ClassFile classFile = mock(ClassFile.class);
     private final ProgramCounterImpl pc = new ProgramCounterImpl(-1);
     private final TypeResolver typeResolver = new SimpleTypeResolver();
-    private final DecompilationContext context = new DecompilationContextImpl(decompiler, method, pc, typeResolver);
+    private final LineNumberCounter lineNumberCounter = mock(LineNumberCounter.class);
+    private final DecompilationContext context = new DecompilationContextImpl(decompiler, method, pc, lineNumberCounter,typeResolver);
 
     @Before
     public void setup() {

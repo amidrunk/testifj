@@ -3,7 +3,7 @@ package org.testifj.lang.model.impl;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.ReturnValue;
 
-public final class ReturnValueImpl implements ReturnValue {
+public final class ReturnValueImpl extends AbstractElement implements ReturnValue {
 
     private final Expression expression;
 

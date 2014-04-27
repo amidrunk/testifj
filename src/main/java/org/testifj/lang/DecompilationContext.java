@@ -11,6 +11,8 @@ public interface DecompilationContext {
 
     ProgramCounter getProgramCounter();
 
+    LineNumberCounter getLineNumberCounter();
+
     Decompiler getDecompiler();
 
     Method getMethod();

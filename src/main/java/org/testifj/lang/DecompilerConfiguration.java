@@ -8,8 +8,10 @@ public interface DecompilerConfiguration {
 
     public interface Builder {
 
+        // TODO this should be "on(startByteCode, endByteCode)[.when(predicate)].then(extension)
         Builder extend(int startByteCode, int endByteCode, DecompilerExtension extension);
 
+        // TODO this should be "on(byteCode)[.when(predicate)].then(extension)
         Builder extend(int byteCode, DecompilerExtension extension);
 
         /**

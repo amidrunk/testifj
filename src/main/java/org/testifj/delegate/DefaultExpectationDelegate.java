@@ -20,18 +20,15 @@ public final class DefaultExpectationDelegate implements ExpectationDelegate {
 
     @Override
     public OnGoingExpectation startExpectation() {
-        return new OnGoingExpectation() {
-            @Override
-            public ExpectationVerification complete(Expectation expectation) {
-                final ExpectationVerificationContext<Expectation> expectationVerificationContext = new ExpectationVerificationContextImpl<>(expectation, Collections.emptyList(), serviceContext);
-                final ExpectationDelegateExtension<Expectation> extension = configuration.getExtension(expectationVerificationContext);
+        return expectation -> {
+            final ExpectationVerificationContext<Expectation> expectationVerificationContext = new ExpectationVerificationContextImpl<>(expectation, Collections.emptyList(), serviceContext);
+            final ExpectationDelegateExtension<Expectation> extension = configuration.getExtension(expectationVerificationContext);
 
-                if (extension == null) {
-                    throw new UnsupportedOperationException("Incomplete configuration, expectation not handled: " + expectation);
-                }
-
-                return extension.verify(expectationVerificationContext);
+            if (extension == null) {
+                throw new UnsupportedOperationException("Incomplete configuration, expectation not handled: " + expectation);
             }
+
+            return extension.verify(expectationVerificationContext);
         };
     }
 }

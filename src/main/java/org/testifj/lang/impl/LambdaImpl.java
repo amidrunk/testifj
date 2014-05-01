@@ -1,6 +1,6 @@
 package org.testifj.lang.impl;
 
-import org.testifj.lang.Lambda;
+import org.testifj.lang.model.Lambda;
 import org.testifj.lang.ReferenceKind;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;

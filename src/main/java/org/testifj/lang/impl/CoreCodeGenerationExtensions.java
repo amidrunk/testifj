@@ -6,6 +6,7 @@ import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.MethodSignature;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -173,8 +174,8 @@ public final class CoreCodeGenerationExtensions {
 
             final Element[] methodElements;
 
-            try {
-                methodElements = context.getDecompiler().parse(method, method.getCode().getCode());
+            try (CodeStream code = new InputStreamCodeStream(method.getCode().getCode())) {
+                methodElements = context.getDecompiler().parse(method, code);
             } catch (IOException e) {
                 throw new CodeGenerationException("Failed to decompile method '" + method.getName()
                         + "' in class '" + innerClassClassFile.getName() + "'", e);

@@ -12,9 +12,11 @@ import org.testifj.lang.model.impl.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -24,6 +26,7 @@ import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.*;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
+import static org.testifj.lang.impl.DecompilationHistoryCallback.DecompilerState;
 import static org.testifj.lang.model.AST.*;
 import static org.testifj.lang.model.AST.eq;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
@@ -57,7 +60,7 @@ public class DecompilerImplTest {
 
         when(exampleMethod.getLocalVariableForIndex(eq(1))).thenReturn(new LocalVariableImpl(-1, -1, "test", String.class, 1));
 
-        decompiler.parse(exampleMethod, new ByteArrayInputStream(new byte[]{(byte) ByteCode.iconst_0, ByteCode.istore_1}));
+        decompiler.parse(exampleMethod, new InputStreamCodeStream(new ByteArrayInputStream(new byte[]{(byte) ByteCode.iconst_0, ByteCode.istore_1})));
 
         verify(enhancement).enhance(any(DecompilationContext.class), any(CodeStream.class), eq(ByteCode.istore_1));
     }
@@ -72,11 +75,52 @@ public class DecompilerImplTest {
 
         when(extension.decompile(any(DecompilationContext.class), any(CodeStream.class), anyInt())).thenReturn(true);
 
-        final Element[] elements = decompiler.parse(exampleMethod, new ByteArrayInputStream(new byte[]{(byte) ByteCode.iconst_0}));
+        final Element[] elements = decompiler.parse(exampleMethod, new InputStreamCodeStream(new ByteArrayInputStream(new byte[]{(byte) ByteCode.iconst_0})));
 
         expect(elements.length).toBe(0);
 
         verify(extension).decompile(any(DecompilationContext.class), any(CodeStream.class), anyInt());
+    }
+
+    @Test
+    public void decompilationProgressCallbackShouldBeNotifiedOfProgress() throws IOException {
+        int n = 100;
+
+        final Caller caller = Caller.adjacent(-2);
+        final DecompilationHistoryCallback callback = new DecompilationHistoryCallback();
+
+        decompileCallerWithCallback(caller, callback);
+
+        expect(callback.getDecompilerStates()).toBe(new DecompilerState[]{
+                new DecompilerState(Arrays.asList(AST.constant(100)), Collections.emptyList()),
+                new DecompilerState(Collections.emptyList(), Arrays.asList(AST.set("n", int.class, AST.constant(100))))
+        });
+    }
+
+    @Test
+    public void decompilationCanBeAborted() throws IOException {
+        int n = 100; int m = 200;
+
+        final Caller caller = Caller.adjacent(-2);
+        final DecompilationProgressCallback callback = mock(DecompilationProgressCallback.class);
+        final DecompilationHistoryCallback history = new DecompilationHistoryCallback();
+
+        doAnswer(i -> {
+            final DecompilationContext context = (DecompilationContext) i.getArguments()[0];
+
+            if (context.getStackedExpressions().isEmpty()) {
+                context.abort();
+            }
+
+            return null;
+        }).when(callback).onDecompilationProgressed(any());
+
+        decompileCallerWithCallback(caller, new CompositeDecompilationProgressCallback(new DecompilationProgressCallback[]{callback, history}));
+
+        expect(history.getDecompilerStates()).toBe(new DecompilerState[]{
+                new DecompilerState(Arrays.asList(AST.constant(100)), Collections.emptyList()),
+                new DecompilerState(Collections.emptyList(), Arrays.asList(AST.set("n", int.class, AST.constant(100))))
+        });
     }
 
     @Test
@@ -146,7 +190,7 @@ public class DecompilerImplTest {
         final Element[] elements = parseMethodBody("methodWithFieldAccess");
 
         final Element[] expectedElements = {
-                call(field(local("this", ExampleClass.class, 1), String.class, "string"), "toString", String.class),
+                call(field(local("this", ExampleClass.class, 0), String.class, "string"), "toString", String.class),
                 $return()
         };
 
@@ -365,6 +409,15 @@ public class DecompilerImplTest {
 
     private Element[] parseMethodBody(String methodName) {
         return ClassModelTestUtils.methodBodyOf(ExampleClass.class, methodName);
+    }
+
+    private void decompileCallerWithCallback(Caller caller, DecompilationProgressCallback callback) throws IOException {
+        final Decompiler decompiler = new DecompilerImpl();
+        final Method method = ClassModelTestUtils.methodWithName(getClass(), caller.getCallerStackTraceElement().getMethodName());
+
+        try (CodeStream code = new InputStreamCodeStream(method.getCodeForLineNumber(caller.getCallerStackTraceElement().getLineNumber()))) {
+            decompiler.parse(method, code, callback);
+        }
     }
 
     private static void accept(Procedure procedure) {

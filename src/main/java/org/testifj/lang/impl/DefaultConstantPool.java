@@ -188,12 +188,13 @@ public final class DefaultConstantPool implements ConstantPool {
     @Override
     public MethodHandleDescriptor getMethodHandleDescriptor(int index) {
         final MethodHandleEntry methodHandleEntry = getEntry(index, MethodHandleEntry.class);
-        final MethodRefEntry methodRefEntry = (MethodRefEntry) getEntry(methodHandleEntry.getReferenceIndex(), METHOD_REF);
-        final String className = getClassName(methodRefEntry.getClassIndex());
-        final NameAndTypeDescriptor nameAndType = getNameAndTypeDescriptor(methodRefEntry.getNameAndTypeIndex());
+        final MethodRefDescriptor methodRefDescriptor = getDescriptor(methodHandleEntry.getReferenceIndex(), MethodRefDescriptor.class);
 
-        return new MethodHandleDescriptorImpl(methodHandleEntry.getReferenceKind(),
-                className, nameAndType.getName(), nameAndType.getDescriptor());
+        return new MethodHandleDescriptorImpl(
+                methodHandleEntry.getReferenceKind(),
+                methodRefDescriptor.getClassName(),
+                methodRefDescriptor.getMethodName(),
+                methodRefDescriptor.getDescriptor());
     }
 
     @Override

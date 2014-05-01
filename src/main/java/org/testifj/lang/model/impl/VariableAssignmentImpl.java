@@ -39,11 +39,6 @@ public final class VariableAssignmentImpl extends AbstractElement implements Var
     }
 
     @Override
-    public Type getType() {
-        return value.getType();
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

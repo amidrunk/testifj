@@ -13,6 +13,8 @@ public interface CodeAttribute extends Attribute {
 
     InputStream getCode();
 
+    int getCodeLength();
+
     List<ExceptionTableEntry> getExceptionTable();
 
     List<Attribute> getAttributes();

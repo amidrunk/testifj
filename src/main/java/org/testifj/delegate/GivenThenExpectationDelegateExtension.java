@@ -4,7 +4,6 @@ import org.testifj.BasicDescription;
 import org.testifj.Description;
 import org.testifj.lang.CallerDecompiler;
 import org.testifj.lang.CodePointer;
-import org.testifj.lang.Decompiler;
 import org.testifj.lang.impl.CodePointerCodeGenerator;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.MethodCall;
@@ -22,12 +21,12 @@ public final class GivenThenExpectationDelegateExtension implements ExpectationD
         try {
             expectation.getVerificationAction().execute(expectation.getProvidedValue());
         } catch (AssertionError e) {
-            return ExpectationVerification.notCompliant(context, describe(context), BasicDescription.from(e.getMessage()));
+            return ExpectationVerificationImpl.notCompliant(context, describe(context), BasicDescription.from(e.getMessage()));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        return ExpectationVerification.compliant(context, describe(context));
+        return ExpectationVerificationImpl.compliant(context, describe(context));
     }
 
     @Override

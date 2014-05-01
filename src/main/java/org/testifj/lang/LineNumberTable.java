@@ -8,6 +8,8 @@ public interface LineNumberTable extends Attribute {
 
     List<LineNumberTableEntry> getEntries();
 
+    Range getSourceFileRange();
+
     default String getName() {
         return ATTRIBUTE_NAME;
     }

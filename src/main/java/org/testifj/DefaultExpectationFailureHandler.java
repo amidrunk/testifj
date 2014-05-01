@@ -1,10 +1,7 @@
 package org.testifj;
 
 import org.testifj.lang.*;
-import org.testifj.lang.impl.ClassFileReaderImpl;
-import org.testifj.lang.impl.CodePointerCodeGenerator;
-import org.testifj.lang.impl.CodePointerImpl;
-import org.testifj.lang.impl.DecompilerImpl;
+import org.testifj.lang.impl.*;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;
@@ -12,8 +9,10 @@ import org.testifj.lang.model.MethodCall;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * TODO use some MessageBuilder of sorts...
@@ -38,6 +37,8 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
 
     private final DescriptionFormat descriptionFormat;
 
+    private final CallerDecompiler callerDecompiler;
+
     private DefaultExpectationFailureHandler(ClassFileReader classFileReader,
                                              Decompiler decompiler,
                                              CodeGenerator<CodePointer> syntaxElementCodeGenerator,
@@ -46,6 +47,7 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
         this.decompiler = decompiler;
         this.syntaxElementCodeGenerator = syntaxElementCodeGenerator;
         this.descriptionFormat = descriptionFormat;
+        this.callerDecompiler = new CallerDecompilerImpl(classFileReader, decompiler);
     }
 
     @Override
@@ -58,19 +60,21 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
     }
 
     private void handleValueMismatchFailure(ValueMismatchFailure failure) {
-        final Description description = forCaller(failure.getCaller(), (method,elements)
-                -> describeValueMismatch(new CodePointerImpl(method, elements[0]), failure.getValue(), failure.getExpectedValue()));
+        final Description description = forCaller(failure.getCaller(), (codePointers)
+                -> describeValueMismatch(codePointers[0], failure.getValue(), failure.getExpectedValue()));
 
         throw new AssertionError(descriptionFormat.format(description));
     }
 
     private void handleExpectedExceptionNotThrownException(ExpectedExceptionNotThrown failure) {
-        final Description description = forCaller(failure.getCaller(), (method, elements) -> {
+        final Description description = forCaller(failure.getCaller(), (codePointers) -> {
             Description procedureDescription = null;
             boolean inverted = false;
+            final CodePointer codePointer = codePointers[0];
+            final Element element = codePointer.getElement();
 
-            if (elements[0].getElementType() == ElementType.METHOD_CALL) {
-                final MethodCall methodCall = (MethodCall) elements[0];
+            if (element.getElementType() == ElementType.METHOD_CALL) {
+                final MethodCall methodCall = (MethodCall) element;
 
                 if (methodCall.getMethodName().equals("toThrow")) {
                     MethodCall expectCall = (MethodCall) methodCall.getTargetInstance();
@@ -80,12 +84,12 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
                         inverted = true;
                     }
 
-                    procedureDescription = syntaxElementCodeGenerator.describe(new CodePointerImpl(method, expectCall.getParameters().get(0)));
+                    procedureDescription = syntaxElementCodeGenerator.describe(codePointer.forElement(expectCall.getParameters().get(0)));
                 }
             }
 
             if (procedureDescription == null) {
-                procedureDescription = syntaxElementCodeGenerator.describe(new CodePointerImpl(method, elements[0]));
+                procedureDescription = syntaxElementCodeGenerator.describe(codePointers[0]);
             }
 
             return BasicDescription.from("Expected [")
@@ -157,53 +161,16 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
         return formattedDescription1.equals(formattedDescription2);
     }
 
-    private <T> T forCaller(Caller caller, BiFunction<Method, Element[], T> syntaxElementsHandler) {
-        final Method callerMethod = loadMethod(caller, true);
-        final Element[] elements = elementsForLine(caller, callerMethod);
+    private <T> T forCaller(Caller caller, Function<CodePointer[], T> syntaxElementsHandler) {
+        final CodePointer[] codePointers;
 
-        return syntaxElementsHandler.apply(callerMethod, elements);
-    }
-
-    private Element[] elementsForLine(Caller caller, Method callerMethod) {
-        final Element[] elements;
-
-        // TODO This can fail... need to parse the entire method and pick out the matching element(s)
-        try (InputStream codeForLineNumber = callerMethod.getCodeForLineNumber(caller.getCallerStackTraceElement().getLineNumber())) {
-            elements = decompiler.parse(callerMethod, codeForLineNumber);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return elements;
-    }
-
-    private Method loadMethod(Caller caller, boolean resolveLocalVariableTable) {
-        final ClassFile classFile;
-
-        try (InputStream in = getClass().getResourceAsStream("/" + caller.getCallerStackTraceElement().getClassName().replace('.', '/') + ".class")) {
-            if (in == null) {
-                return loadMethod(new Caller(caller.getCallStack(), caller.getCallerStackTraceIndex() + 1), true);
-            }
-
-            classFile = classFileReader.read(in);
+        try {
+            codePointers = callerDecompiler.decompileCaller(caller);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        Method method = classFile.getMethods().stream()
-                .filter(m -> m.getName().equals(caller.getCallerStackTraceElement().getMethodName()))
-                .filter(m -> m.hasCodeForLineNumber(caller.getCallerStackTraceElement().getLineNumber()))
-                .findFirst().get();
-
-        if (!method.getLocalVariableTable().isPresent()) {
-            if (resolveLocalVariableTable) {
-                final Caller rootCaller = new Caller(caller.getCallStack(), caller.getCallerStackTraceIndex() + 1);
-                final Method enclosure = loadMethod(rootCaller, false);
-
-                int n = 100;
-            }
-        }
-
-        return method;
+        return syntaxElementsHandler.apply(codePointers);
     }
 
     public static final class Builder {

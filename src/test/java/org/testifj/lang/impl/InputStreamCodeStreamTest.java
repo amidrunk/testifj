@@ -105,6 +105,53 @@ public class InputStreamCodeStreamTest {
         verify(pc, times(4)).advance();
     }
 
+    @Test
+    public void pcShouldReturnProvidedProgramCounter() {
+        final ProgramCounter pc = mock(ProgramCounter.class);
+        final InputStreamCodeStream in = new InputStreamCodeStream(in(1, 2), pc);
+
+        expect(in.pc()).toBe(pc);
+    }
+
+    @Test
+    public void skipShouldNotAcceptInvalidCount() {
+        final InputStreamCodeStream in = new InputStreamCodeStream(in(1, 2), mock(ProgramCounter.class));
+
+        expect(() -> in.skip(-1)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void skipShouldDiscardBytesAndAdvancePC() throws IOException {
+        final ProgramCounter pc = mock(ProgramCounter.class);
+        final InputStreamCodeStream in = new InputStreamCodeStream(in(1, 2, 3, 4), pc);
+
+        expect(in.skip(2)).toBe(2);
+        verify(pc, times(2)).advance();
+        expect(in.nextByte()).toBe(3);
+        expect(in.nextByte()).toBe(4);
+    }
+
+    @Test
+    public void skipShouldSkipAllBytesAndAdvanceIfCountIsGreaterThanAvailable() throws IOException {
+        final ProgramCounter pc = mock(ProgramCounter.class);
+        final InputStreamCodeStream in = new InputStreamCodeStream(in(1, 2, 3, 4), pc);
+
+        expect(in.skip(10)).toBe(4);
+        verify(pc, times(4)).advance();
+
+        expect(() -> in.nextByte()).toThrow(EOFException.class);
+    }
+
+    @Test
+    public void skipShouldIgnoreZeroCount() throws IOException {
+        final ProgramCounter pc = mock(ProgramCounter.class);
+        final InputStreamCodeStream in = new InputStreamCodeStream(in(1, 2, 3, 4), pc);
+
+        expect(in.skip(0)).toBe(0);
+        verifyZeroInteractions(pc);
+        expect(in.nextByte()).toBe(1);
+    }
+
     private InputStream in(int ... data) {
         final byte[] buf = new byte[data.length];
 

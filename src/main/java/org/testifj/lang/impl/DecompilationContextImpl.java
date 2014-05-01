@@ -8,6 +8,7 @@ import org.testifj.lang.model.Statement;
 
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class DecompilationContextImpl implements DecompilationContext {
@@ -27,6 +28,8 @@ public final class DecompilationContextImpl implements DecompilationContext {
     private final TypeResolver typeResolver;
 
     private final AtomicInteger contextVersion = new AtomicInteger();
+
+    private final AtomicBoolean aborted = new AtomicBoolean(false);
 
     public DecompilationContextImpl(Decompiler decompiler,
                                     Method method,
@@ -171,6 +174,16 @@ public final class DecompilationContextImpl implements DecompilationContext {
 
         statements.clear();
         statements.addAll(copy);
+    }
+
+    @Override
+    public void abort() {
+        this.aborted.set(true);
+    }
+
+    @Override
+    public boolean isAborted() {
+        return this.aborted.get();
     }
 
     @Override

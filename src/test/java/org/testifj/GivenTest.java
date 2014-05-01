@@ -4,10 +4,7 @@ import org.junit.After;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
-import org.testifj.delegate.ExpectationDelegate;
-import org.testifj.delegate.ExpectationVerification;
-import org.testifj.delegate.ExpectationVerificationContext;
-import org.testifj.delegate.OnGoingExpectation;
+import org.testifj.delegate.*;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -36,7 +33,7 @@ public class GivenTest {
 
         final OnGoingExpectation onGoingExpectation = mock(OnGoingExpectation.class);
         final Action action = mock(Action.class);
-        final ExpectationVerification compliantVerification = ExpectationVerification.compliant(mock(ExpectationVerificationContext.class), mock(Description.class));
+        final ExpectationVerification compliantVerification = ExpectationVerificationImpl.compliant(mock(ExpectationVerificationContext.class), mock(Description.class));
 
         when(expectationDelegate.startExpectation()).thenReturn(onGoingExpectation);
         when(onGoingExpectation.complete(any())).thenReturn(compliantVerification);

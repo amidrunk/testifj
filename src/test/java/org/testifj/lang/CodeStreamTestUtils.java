@@ -21,7 +21,7 @@ public final class CodeStreamTestUtils {
     }
 
     public static CodeStream codeStream(byte[] buffer, int offset, int length) {
-        return new InputStreamCodeStream(new ByteBufferInputStream(ByteBuffer.wrap(buffer, offset, length)), new ProgramCounterImpl());
+        return new InputStreamCodeStream(new ByteBufferInputStream(ByteBuffer.wrap(buffer, offset, length)));
     }
 
 }

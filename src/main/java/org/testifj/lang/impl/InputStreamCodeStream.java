@@ -1,14 +1,13 @@
 package org.testifj.lang.impl;
 
 import org.testifj.lang.CodeStream;
-import org.testifj.lang.impl.ProgramCounter;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-public final class InputStreamCodeStream implements CodeStream {
+public final class InputStreamCodeStream implements CodeStream, AutoCloseable {
 
     public static final int PEEK_LIMIT = 128;
 
@@ -19,6 +18,10 @@ public final class InputStreamCodeStream implements CodeStream {
     private boolean peeking = false;
 
     private int peekCount = -1;
+
+    public InputStreamCodeStream(InputStream inputStream) {
+        this(inputStream, new ProgramCounterImpl(-1));
+    }
 
     public InputStreamCodeStream(InputStream inputStream, ProgramCounter programCounter) {
         assert inputStream != null : "Input stream can't be null";
@@ -106,9 +109,38 @@ public final class InputStreamCodeStream implements CodeStream {
         if (peeking) {
             peeking = false;
 
-            for (int i = 0; i < peekCount; i++) {
-                programCounter.advance();
-            }
+            advanceProgramCounter(peekCount);
+        }
+    }
+
+    @Override
+    public int skip(int count) throws IOException {
+        assert count >= 0 : "Count must be greater than zero";
+
+        if (count == 0) {
+            return 0;
+        }
+
+        final int skippedBytes = (int) inputStream.skip(count);
+
+        advanceProgramCounter(skippedBytes);
+
+        return skippedBytes;
+    }
+
+    @Override
+    public ProgramCounter pc() {
+        return programCounter;
+    }
+
+    @Override
+    public void close() throws IOException {
+        inputStream.close();
+    }
+
+    private void advanceProgramCounter(int count) {
+        for (int i = 0; i < count; i++) {
+            programCounter.advance();
         }
     }
 

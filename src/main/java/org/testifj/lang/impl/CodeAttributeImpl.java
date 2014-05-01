@@ -55,6 +55,11 @@ public final class CodeAttributeImpl implements CodeAttribute {
     }
 
     @Override
+    public int getCodeLength() {
+        return byteCode.remaining();
+    }
+
+    @Override
     public List<ExceptionTableEntry> getExceptionTable() {
         return Collections.unmodifiableList(exceptionTable);
     }

@@ -8,6 +8,7 @@ import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.LocalVariableReference;
 import org.testifj.lang.model.impl.ArrayLoadImpl;
 import org.testifj.lang.model.impl.ArrayStoreImpl;
+import org.testifj.lang.model.impl.FieldReferenceImpl;
 import org.testifj.lang.model.impl.NewArrayImpl;
 
 import java.io.IOException;
@@ -37,6 +38,7 @@ public class ArrayDecompilerExtensionsTest {
         verify(configurationBuilder).extend(eq(ByteCode.anewarray), any());
         verify(configurationBuilder).extend(eq(ByteCode.aaload), any());
         verify(configurationBuilder).extend(eq(ByteCode.aastore), any());
+        verify(configurationBuilder).extend(eq(ByteCode.arraylength), any());
     }
 
     @Test
@@ -164,6 +166,17 @@ public class ArrayDecompilerExtensionsTest {
         ArrayDecompilerExtensions.iastore().decompile(context, code, ByteCode.iastore);
 
         verify(context).enlist(eq(new ArrayStoreImpl(array, index, value)));
+    }
+
+    @Test
+    public void arraylengthShouldPushFieldReferenceOntoStack() throws Exception {
+        final LocalVariableReference array = AST.local("foo", String[].class, 1);
+
+        when(context.pop()).thenReturn(array);
+
+        ArrayDecompilerExtensions.arraylength().decompile(context, code, ByteCode.arraylength);
+
+        verify(context).push(new FieldReferenceImpl(array, String[].class, int.class, "length"));
     }
 
 }

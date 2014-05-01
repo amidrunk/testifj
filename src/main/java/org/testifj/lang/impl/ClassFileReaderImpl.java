@@ -146,14 +146,20 @@ public final class ClassFileReaderImpl implements ClassFileReader {
                     final int count = attributeStream.readShort();
                     final LineNumberTableEntry[] entries = new LineNumberTableEntry[count];
 
+                    int firstLine = -1;
+                    int lastLine = -1;
+
                     for (int j = 0; j < count; j++) {
                         final int startPC = attributeStream.readShort();
                         final int lineNumber = attributeStream.readShort();
 
+                        firstLine = (firstLine == -1 ? lineNumber : Math.min(firstLine, lineNumber));
+                        lastLine = (lastLine == -1 ? lineNumber : Math.max(lastLine, lineNumber));
+
                         entries[j] = new LineNumberTableEntryImpl(startPC, lineNumber);
                     }
 
-                    attributes[i] = new LineNumberTableImpl(entries);
+                    attributes[i] = new LineNumberTableImpl(entries, new Range(firstLine, lastLine));
                     break;
                 }
                 case BootstrapMethodsAttribute.ATTRIBUTE_NAME: {

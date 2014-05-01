@@ -86,4 +86,18 @@ public interface DecompilationContext {
     void replaceStatement(int index, Statement newStatement);
 
     void removeStatement(int index);
+
+    /**
+     * Aborts the decompilation. The decompiler will attempt to complete the decompilation by reducing the
+     * stack and returning completed decompilation.
+     */
+    void abort();
+
+    /**
+     * Returns whether or not decompilation has been aborted. If so, the decompiler should not proceed
+     * with reading any more byte codes, but rather abort immediately and attempt to reduce the stack.
+     *
+     * @return Whether or not the decompilation has been aborted.
+     */
+    boolean isAborted();
 }

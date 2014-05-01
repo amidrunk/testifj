@@ -6,6 +6,7 @@ import org.testifj.ServiceContext;
 
 import java.util.Collections;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -50,14 +51,11 @@ public class ExpectationDelegateConfigurationTest {
                 .on(predicate).then(exampleExtension)
                 .build();
 
-        when(predicate.test(eq(exampleExpectation))).thenReturn(true);
+        when(predicate.test(any())).thenReturn(true);
 
         expect(configuration.getExtension(new ExpectationVerificationContextImpl<>(
                 exampleExpectation,
-                Collections.<ExpectationVerificationContext>emptyList(),
-
-
-
+                Collections.emptyList(),
                 serviceContext))).toBe(exampleExtension);
     }
 

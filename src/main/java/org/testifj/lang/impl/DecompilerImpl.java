@@ -1,21 +1,22 @@
 package org.testifj.lang.impl;
 
-import com.sun.org.apache.bcel.internal.classfile.LineNumber;
 import org.testifj.lang.*;
 import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.*;
-import org.testifj.util.Joiner;
 import org.testifj.util.Strings;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import static org.testifj.lang.ConstantPoolEntry.*;
+
+// TODO Introduce reduce points. E.g. prior to static void method
 
 public final class DecompilerImpl implements Decompiler {
 
@@ -59,10 +60,13 @@ public final class DecompilerImpl implements Decompiler {
     }
 
     @Override
-    public Element[] parse(Method method, InputStream stream) throws IOException {
+    public Element[] parse(Method method, CodeStream stream) throws IOException {
+        return parse(method, stream, DecompilationProgressCallback.NULL);
+    }
+
+    public Element[] parse(Method method, CodeStream codeStream, DecompilationProgressCallback callback) throws IOException {
         final ClassFile classFile = method.getClassFile();
         final ConstantPool constantPool = classFile.getConstantPool();
-        final ProgramCounterImpl programCounter = new ProgramCounterImpl(-1);
         final Optional<LineNumberTable> lineNumberTable = method.getLineNumberTable();
 
         final LineNumberCounter lineNumberCounter;
@@ -70,15 +74,21 @@ public final class DecompilerImpl implements Decompiler {
         if (!lineNumberTable.isPresent()) {
             lineNumberCounter = new NullLineNumberCounter();
         } else {
-            lineNumberCounter = new LineNumberCounterImpl(programCounter, lineNumberTable.get());
+            lineNumberCounter = new LineNumberCounterImpl(codeStream.pc(), lineNumberTable.get());
         }
 
-        final DecompilationContext context = new DecompilationContextImpl(this, method, programCounter, lineNumberCounter, new SimpleTypeResolver());
-        final CodeStream codeStream = new InputStreamCodeStream(stream, context.getProgramCounter());
+        final DecompilationContext context = new DecompilationContextImpl(this, method, codeStream.pc(), lineNumberCounter, new SimpleTypeResolver());
 
-        //System.out.println(method.getClassFile().getName() + "#" + method.getName() + ":");
+        boolean debug = ManagementFactory.getRuntimeMXBean().getInputArguments().stream()
+                .filter(s -> s.contains("-agentlib:jdwp"))
+                .findAny()
+                .isPresent();
 
-        while (true) {
+        if (debug) {
+            System.out.println(method.getClassFile().getName() + "#" + method.getName() + ":");
+        }
+
+        while (!context.isAborted()) {
             final int byteCode;
 
             try {
@@ -88,7 +98,9 @@ public final class DecompilerImpl implements Decompiler {
                 break;
             }
 
-            // debug(context, lineNumberCounter.get(), byteCode);
+            if (debug) {
+                debug(context, lineNumberCounter.get(), byteCode);
+            }
 
             final DecompilerExtension userExtension = configuration.getDecompilerExtension(context, byteCode);
 
@@ -325,6 +337,7 @@ public final class DecompilerImpl implements Decompiler {
 
                     // Control flow
 
+                    case ByteCode.if_acmpne:
                     case ByteCode.if_icmpne: {
                         final int targetPC = context.getProgramCounter().get() + codeStream.nextUnsignedShort();
                         final Expression rightOperand = context.pop();
@@ -336,6 +349,15 @@ public final class DecompilerImpl implements Decompiler {
 
                     case ByteCode.goto_: {
                         // TODO This should be some added feature that hooks goto and matches a sequence
+
+                        final Optional<ExceptionTableEntry> exceptionTableEntry = Methods.getExceptionTableEntryForCatchLocation(method, codeStream.pc().get());
+
+                        if (exceptionTableEntry.isPresent()) {
+                            System.out.println("TODO: This MUST be handled! Find corresponding try - if pc at start of decompile is before try - ignore it and escape immediately! Or set the decompiler in an must-get-abort-immediately state");
+                            context.abort();
+                            break;
+                        }
+
                         final int relativePC = context.getProgramCounter().get();
                         final int offset = codeStream.nextUnsignedShort();
                         final int targetPC = relativePC + offset;
@@ -413,6 +435,8 @@ public final class DecompilerImpl implements Decompiler {
             if (userEnhancement != null) {
                 userEnhancement.enhance(context, codeStream, byteCode);
             }
+
+            callback.onDecompilationProgressed(context);
         }
 
         //debug(context, -1, ByteCode.nop);
@@ -436,8 +460,14 @@ public final class DecompilerImpl implements Decompiler {
         }
 
         final Expression targetInstance = (invokeStatic ? null : context.pop());
+        final MethodCallImpl methodCall = new MethodCallImpl(resolveType(targetClassName), methodName, signature, targetInstance, parameters);
 
-        context.push(new MethodCallImpl(resolveType(targetClassName), methodName, signature, targetInstance, parameters));
+        context.push(methodCall);
+
+        // static, void call always a stand-alone statement (TODO this is a reduce point or an enhancement maybe?)
+        if (methodCall.isStatic() && methodCall.getType().equals(void.class)) {
+            context.reduceAll();
+        }
     }
 
     private Type resolveType(String className) {

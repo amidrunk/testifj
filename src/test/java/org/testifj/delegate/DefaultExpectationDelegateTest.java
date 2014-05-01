@@ -10,6 +10,7 @@ import java.util.Arrays;
 
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
@@ -29,7 +30,7 @@ public class DefaultExpectationDelegateTest {
 
     private final ServiceContext serviceContext = mock(ServiceContext.class);
     private final DefaultExpectationDelegate exampleDelegate = new DefaultExpectationDelegate(serviceContext, exampleConfiguration);
-    private final Caller exampleCaller = new Caller(Arrays.asList(Thread.currentThread().getStackTrace()), 0);
+    private final Caller exampleCaller = Caller.me();
 
     @Before
     public void setup() {
@@ -51,7 +52,15 @@ public class DefaultExpectationDelegateTest {
 
     @Test
     public void singleExpectationCanBeHandled() {
-        fail("Rewrite...");
+        final OnGoingExpectation onGoingExpectation = exampleDelegate.startExpectation();
+        final Expectation expectation = mock(Expectation.class);
+        final ExpectationVerification expectedVerification = mock(ExpectationVerification.class);
+
+        when(exampleExtension.verify(any())).thenReturn(expectedVerification);
+
+        final ExpectationVerification actualVerification = onGoingExpectation.complete(expectation);
+
+        expect(actualVerification).toBe(expectedVerification);
     }
 
     @Test

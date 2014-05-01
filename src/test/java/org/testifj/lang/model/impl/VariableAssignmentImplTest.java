@@ -27,7 +27,6 @@ public class VariableAssignmentImplTest {
         when(exampleValue.getType()).thenReturn(Integer.class);
 
         expect(assignment.getElementType()).toBe(ElementType.VARIABLE_ASSIGNMENT);
-        expect(assignment.getType()).toBe(Integer.class);
         expect(assignment.getValue()).toBe(exampleValue);
         expect(assignment.getVariableName()).toBe("foo");
         expect(assignment.getVariableType()).toBe(String.class);

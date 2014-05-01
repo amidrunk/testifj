@@ -1,9 +1,7 @@
 package org.testifj.lang.model.impl;
 
 import org.junit.Test;
-import org.testifj.lang.model.ElementType;
-import org.testifj.lang.model.Expression;
-import org.testifj.lang.model.Signature;
+import org.testifj.lang.model.*;
 
 import java.lang.reflect.Type;
 
@@ -47,5 +45,19 @@ public class MethodCallImplTest {
                 MethodSignature.parse("()V"), new ConstantImpl("foo", String.class), new Expression[0], int.class);
 
         expect(methodCall.getType()).toBe(int.class);
+    }
+
+    @Test
+    public void isStaticShouldBeTrueForStaticMethodCall() {
+        final MethodCall methodCall = AST.call(String.class, "valueOf", String.class);
+
+        expect(methodCall.isStatic()).toBe(true);
+    }
+
+    @Test
+    public void isStaticCallShouldBeFalseForInstanceMethodCall() {
+        final MethodCall methodCall = AST.call(AST.constant("foo"), "toString", String.class);
+
+        expect(methodCall.isStatic()).toBe(false);
     }
 }

@@ -284,4 +284,16 @@ public class DecompilationContextImplTest {
 
         expect(newStatement.getMetaData().getAttribute(ElementMetaData.LINE_NUMBER)).toBe(1234);
     }
+
+    @Test
+    public void isAbortedShouldByDefaultBeFalse() {
+        expect(context.isAborted()).toBe(false);
+    }
+
+    @Test
+    public void abortShouldSetTheDecompilationToAborted() {
+        context.abort();
+
+        expect(context.isAborted()).toBe(true);
+    }
 }

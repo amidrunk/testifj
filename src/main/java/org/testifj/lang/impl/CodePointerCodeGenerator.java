@@ -97,9 +97,9 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
             }
 
             final Method accessMethod = classFile.getMethods().stream().filter(m -> m.getName().equals(methodCall.getMethodName())).findFirst().get();
-            try {
-                final Element[] elements = decompiler.parse(accessMethod, accessMethod.getCode().getCode());
 
+            try (CodeStream code = new InputStreamCodeStream(accessMethod.getCode().getCode())) {
+                final Element[] elements = decompiler.parse(accessMethod, code);
                 final FieldReference fieldReference = (FieldReference) ((ReturnValue) elements[0]).getValue();
 
                 append(context, codePointer.forElement(instance), out);
@@ -233,6 +233,20 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
                         .append(lambda.getBackingMethodName());
                 return;
             }
+            case INVOKE_INTERFACE: {
+                // TODO Can be instance?
+                out.append(simpleTypeName(lambda.getDeclaringClass()))
+                        .append("::")
+                        .append(lambda.getBackingMethodName());
+                return;
+            }
+            case INVOKE_STATIC:
+                if (!lambda.getBackingMethodName().startsWith("lambda$")) {
+                    out.append(simpleTypeName(lambda.getDeclaringClass()))
+                            .append("::")
+                            .append(lambda.getBackingMethodName());
+                    return;
+                }
         }
 
         Method backingMethod = codePointer.getMethod().getClassFile().getMethods().stream()
@@ -251,7 +265,7 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
                 lambdaLocals = new LinkedList<>(localVariableTable.get().getLocalVariables());
             }
 
-            int index = 0;
+            int index = (lambda.getSelf().isPresent() ? 1 : 0);
 
             for (LocalVariableReference localVariableReference : enclosedVariables) {
                 lambdaLocals.add(new LocalVariableImpl(-1, -1, localVariableReference.getName(),
@@ -268,8 +282,8 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
         final Decompiler parser = new DecompilerImpl();
         final Element[] lambdaMethodElements;
 
-        try (InputStream in = backingMethod.getCode().getCode()) {
-            lambdaMethodElements = parser.parse(backingMethod, in);
+        try (CodeStream code = new InputStreamCodeStream(backingMethod.getCode().getCode())) {
+            lambdaMethodElements = parser.parse(backingMethod, code);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

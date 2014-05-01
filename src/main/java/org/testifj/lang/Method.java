@@ -23,6 +23,8 @@ public interface Method extends Member {
 
     boolean hasCodeForLineNumber(int lineNumber);
 
-    boolean isLambdaBackingMethod();
+    boolean  isLambdaBackingMethod();
+
+    Range getCodeRangeForLineNumber(int lineNumber);
 
 }

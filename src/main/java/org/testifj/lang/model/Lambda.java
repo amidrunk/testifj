@@ -1,8 +1,6 @@
-package org.testifj.lang;
+package org.testifj.lang.model;
 
-import org.testifj.lang.model.Expression;
-import org.testifj.lang.model.LocalVariableReference;
-import org.testifj.lang.model.Signature;
+import org.testifj.lang.ReferenceKind;
 
 import java.lang.reflect.Type;
 import java.util.List;

@@ -1,12 +1,8 @@
 package org.testifj.lang.impl;
 
-import com.sun.org.apache.bcel.internal.generic.NEWARRAY;
 import org.testifj.lang.*;
 import org.testifj.lang.model.*;
-import org.testifj.lang.model.impl.ArrayInitializerImpl;
-import org.testifj.lang.model.impl.ArrayLoadImpl;
-import org.testifj.lang.model.impl.ArrayStoreImpl;
-import org.testifj.lang.model.impl.NewArrayImpl;
+import org.testifj.lang.model.impl.*;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -33,6 +29,7 @@ public final class ArrayDecompilerExtensions {
         configurationBuilder.extend(ByteCode.aastore, aastore());
         configurationBuilder.extend(ByteCode.newarray, newarray());
         configurationBuilder.extend(ByteCode.iastore, iastore());
+        configurationBuilder.extend(ByteCode.arraylength, arraylength());
     }
 
     public static DecompilerExtension aaload() {
@@ -130,6 +127,16 @@ public final class ArrayDecompilerExtensions {
 
     public static DecompilerExtension iastore() {
         return (context,codeStream,byteCode) -> arrayStore(context);
+    }
+
+    public static DecompilerExtension arraylength() {
+        return (context,codeStream,byteCode) -> {
+            final Expression array = context.pop();
+
+            context.push(new FieldReferenceImpl(array, array.getType(), int.class, "length"));
+
+            return true;
+        };
     }
 
     private static boolean arrayStore(DecompilationContext context) {

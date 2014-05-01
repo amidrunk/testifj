@@ -69,7 +69,6 @@ public class NewExtensionsTest {
 
         final VariableAssignment variableAssignment = (VariableAssignment) element;
         expect(variableAssignment.getVariableName()).toBe("str");
-        expect(variableAssignment.getType()).toBe(String.class);
         expect(variableAssignment.getValue().getElementType()).toBe(ElementType.NEW);
 
         final NewInstance newInstance = (NewInstance) variableAssignment.getValue();

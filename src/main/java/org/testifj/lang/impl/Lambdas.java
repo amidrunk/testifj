@@ -1,15 +1,16 @@
 package org.testifj.lang.impl;
 
-import org.testifj.Caller;
 import org.testifj.Predicate;
 import org.testifj.lang.*;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.ElementType;
+import org.testifj.lang.model.Lambda;
 import org.testifj.lang.model.LocalVariableReference;
-import sun.jvm.hotspot.oops.LocalVariableTableElement;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public final class Lambdas {
 
@@ -22,12 +23,45 @@ public final class Lambdas {
                     + "." + lambdaBackingMethod.getName() + " is not a lambda backing method");
         }
 
-        final Method[] candidates = lambdaBackingMethod.getClassFile().getMethods().stream()
-                .filter(m -> lambdaBackingMethod.getName().startsWith("lambda$" + m.getName()))
-                .toArray(Method[]::new);
+        Stream<Method> methods = lambdaBackingMethod.getClassFile().getMethods().stream();
 
-        for (Method candidate : candidates) {
-            final Element[] methodElements = decompiler.parse(candidate, candidate.getCode().getCode());
+        if (lambdaBackingMethod.getName().startsWith("lambda$null$")) {
+            // Lambda in lambda; can't use line number table nor filter on method name; scan all lambda methods
+            methods = methods.filter(m -> m.getName().startsWith("lambda$") && !m.getName().equals(lambdaBackingMethod.getName()))
+                    .map(m -> {
+                        try {
+                            return Lambdas.withEnclosedVariables(decompiler, m);
+                        } catch (IOException e) {
+                            return m;
+                        }
+                    });
+        } else {
+            if (lambdaBackingMethod.getLineNumberTable().isPresent()) {
+                final Range backingMethodSourceFileRange = lambdaBackingMethod.getLineNumberTable().get().getSourceFileRange();
+
+                methods = methods.filter(m -> {
+                    if (!m.getLineNumberTable().isPresent()) {
+                        return true;
+                    }
+
+                    final Range candidateSourceFileRange = m.getLineNumberTable().get().getSourceFileRange();
+
+                    return candidateSourceFileRange.getFrom() <= backingMethodSourceFileRange.getFrom()
+                            && candidateSourceFileRange.getTo() >= backingMethodSourceFileRange.getTo();
+                });
+            }
+
+            methods = methods.filter(m -> lambdaBackingMethod.getName().startsWith("lambda$" + m.getName()));
+        }
+
+        for (Iterator<Method> iterator = methods.iterator(); iterator.hasNext(); ) {
+            final Method candidate = iterator.next();
+            final Element[] methodElements;
+
+            try (CodeStream code = new InputStreamCodeStream(candidate.getCode().getCode())) {
+                methodElements = decompiler.parse(candidate, code);
+            }
+
             final Optional<Element> result = SyntaxTreeVisitor.search(methodElements, isDeclarationOf(lambdaBackingMethod));
 
             if (result.isPresent()) {
@@ -66,10 +100,18 @@ public final class Lambdas {
             existingLocals.forEach(localVariables::add);
         }
 
+        final int localVariableOffset;
+
+        if (lambdaCodePointer.getElement().getSelf().isPresent()) {
+            localVariableOffset = 1;
+        } else {
+            localVariableOffset = 0;
+        }
+
         for (int i = 0; i < enclosedVariables.size(); i++) {
             final LocalVariableReference localVariableReference = enclosedVariables.get(i);
 
-            localVariables.add(new LocalVariableImpl(-1, -1, localVariableReference.getName(), localVariableReference.getType(), i));
+            localVariables.add(new LocalVariableImpl(-1, -1, localVariableReference.getName(), localVariableReference.getType(), localVariableOffset + i));
         }
 
         Collections.sort(localVariables, (v1, v2) -> v1.getIndex() - v2.getIndex());

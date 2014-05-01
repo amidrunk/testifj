@@ -43,6 +43,7 @@ public class LocalVariableReferenceImpl extends AbstractElement implements Local
 
         LocalVariableReferenceImpl that = (LocalVariableReferenceImpl) o;
 
+        if (index != that.index) return false;
         if (!variableName.equals(that.variableName)) return false;
         if (!variableType.equals(that.variableType)) return false;
 
@@ -53,6 +54,7 @@ public class LocalVariableReferenceImpl extends AbstractElement implements Local
     public int hashCode() {
         int result = variableName.hashCode();
         result = 31 * result + variableType.hashCode();
+        result = 31 * result + index;
         return result;
     }
 
@@ -61,6 +63,7 @@ public class LocalVariableReferenceImpl extends AbstractElement implements Local
         return "LocalVariableReferenceImpl{" +
                 "variableName='" + variableName + '\'' +
                 ", variableType=" + variableType +
+                ", index=" + index +
                 '}';
     }
 }

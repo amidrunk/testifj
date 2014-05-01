@@ -1,7 +1,7 @@
 package org.testifj.lang.impl;
 
 import org.junit.Test;
-import org.mockito.Mockito;
+import org.testifj.Caller;
 import org.testifj.Predicate;
 import org.testifj.lang.*;
 import org.testifj.lang.model.*;
@@ -11,14 +11,16 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.withSettings;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
+import static org.testifj.matchers.core.CollectionThatIs.empty;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 import static org.testifj.matchers.core.ObjectThatIs.sameAs;
+import static org.testifj.matchers.core.OptionalThatIs.present;
 
 public class LambdasTest {
 
@@ -56,6 +58,28 @@ public class LambdasTest {
         expect(actualLambdaPointer.getMethod().getName()).toBe("getLambdaDeclarationForMethodShouldResolveDeclaringLambdaMethod");
     }
 
+    @Test
+    public void getLambdaDeclarationForMethodShouldResolveLambdaInLambda() throws IOException {
+        final Supplier<Runnable> supplier = () -> {
+            return () -> {
+                System.out.println("Example statement");
+            };
+        };
+
+        final Caller caller = Caller.adjacent(-4);
+        final Method backingMethod = ClassModelTestUtils.classFileOf(getClass()).getMethods().stream()
+                .filter(m -> m.hasCodeForLineNumber(caller.getCallerStackTraceElement().getLineNumber()))
+                .findFirst().get();
+
+        final CodePointer<Lambda> declarationCodePointer = Lambdas.getLambdaDeclarationForMethod(decompiler, backingMethod).get();
+        final Lambda lambda = declarationCodePointer.getElement().as(Lambda.class);
+
+        expect(lambda.getFunctionalInterface()).toBe(Runnable.class);
+        expect(lambda.getFunctionalMethodName()).toBe("run");
+        expect(lambda.getDeclaringClass()).toBe(getClass());
+        expect(lambda.getSelf()).not().toBe(present());
+        expect(lambda.getEnclosedVariables()).toBe(empty());
+    }
 
     @Test
     public void isDeclarationOfShouldNotAcceptNullArg() {

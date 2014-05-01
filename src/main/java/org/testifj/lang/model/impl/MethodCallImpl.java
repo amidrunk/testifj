@@ -67,6 +67,11 @@ public final class MethodCallImpl extends AbstractElement implements MethodCall 
     }
 
     @Override
+    public boolean isStatic() {
+        return (targetInstance == null);
+    }
+
+    @Override
     public Type getType() {
         return expressionType;
     }

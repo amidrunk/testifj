@@ -109,7 +109,7 @@ public final class DefaultMethod implements Method {
     }
 
     @Override
-    public InputStream getCodeForLineNumber(int lineNumber) {
+    public Range getCodeRangeForLineNumber(int lineNumber) {
         final LineNumberTable lineNumberTable = getRequiredLineNumberTable();
         final LineNumberTableEntry[] entriesForLineNumber = collectEntriesForLineNumber(lineNumberTable, Arrays.asList(lineNumber));
         final LineNumberTableEntry startEntry = entriesForLineNumber[0];
@@ -118,18 +118,27 @@ public final class DefaultMethod implements Method {
                 .filter(e -> e.getStartPC() > entriesForLineNumber[entriesForLineNumber.length - 1].getStartPC())
                 .findFirst();
 
+        return new Range(startEntry.getStartPC(), endEntry.isPresent() ? endEntry.get().getStartPC() - 1 : getCode().getCodeLength());
+    }
+
+    @Override
+    public InputStream getCodeForLineNumber(int lineNumber) {
+        final Range codeRangeForLineNumber = getCodeRangeForLineNumber(lineNumber);
+
         try (InputStream inputStream = getCode().getCode()) {
-            inputStream.skip(startEntry.getStartPC());
+            final int numberOfByteCodes = codeRangeForLineNumber.getTo() - codeRangeForLineNumber.getFrom() + 1;
 
-            if (endEntry.isPresent()) {
-                final byte[] buffer = new byte[endEntry.get().getStartPC() - startEntry.getStartPC()];
+            inputStream.skip(codeRangeForLineNumber.getFrom());
 
-                inputStream.read(buffer);
-
-                return new ByteArrayInputStream(buffer);
-            } else {
+            if (inputStream.available() == numberOfByteCodes) {
                 return inputStream;
             }
+
+            final byte[] buffer = new byte[numberOfByteCodes];
+
+            inputStream.read(buffer);
+
+            return new ByteArrayInputStream(buffer);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

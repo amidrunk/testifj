@@ -181,7 +181,7 @@ public class DefaultMethodTest {
     public void hasCodeForLineNumberShouldReturnTrueIfCorrespondingLineNumberTableEntryExists() {
         final DefaultMethod method = methodWithCodeAttributes(new LineNumberTableImpl(new LineNumberTableEntry[]{
                 new LineNumberTableEntryImpl(0, 1234)
-        }));
+        }, new Range(1234, 1234)));
 
         expect(method.hasCodeForLineNumber(1234)).toBe(true);
     }
@@ -190,7 +190,7 @@ public class DefaultMethodTest {
     public void hasCodeForLineNumberShouldReturnFalseIfNoCorrespondingLineNumberEntryExists() {
         final DefaultMethod method = methodWithCodeAttributes(new LineNumberTableImpl(new LineNumberTableEntry[]{
                 new LineNumberTableEntryImpl(0, 1234)
-        }));
+        }, new Range(1234, 1234)));
 
         expect(method.hasCodeForLineNumber(1235)).toBe(false);
     }

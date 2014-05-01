@@ -4,6 +4,7 @@ import org.testifj.lang.*;
 import org.testifj.lang.impl.CodePointerCodeGenerator;
 import org.testifj.lang.impl.CodePointerImpl;
 import org.testifj.lang.impl.DecompilerImpl;
+import org.testifj.lang.impl.InputStreamCodeStream;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.ElementType;
 
@@ -29,8 +30,8 @@ public final class MethodBodyCodeGenerator implements CodeGenerator<Method> {
     public void generateCode(Method method, PrintWriter out) {
         final Element[] statements;
 
-        try {
-            statements = decompiler.parse(method, method.getCode().getCode());
+        try (CodeStream code = new InputStreamCodeStream(method.getCode().getCode())) {
+            statements = decompiler.parse(method, code);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -47,7 +48,7 @@ public final class MethodBodyCodeGenerator implements CodeGenerator<Method> {
                 out.append("\n");
             }
 
-            methodElementCodeGenerator.generateCode(new CodePointerImpl(method, statement), out);
+            methodElementCodeGenerator.generateCode(new CodePointerImpl<>(method, statement), out);
             out.append(";");
         }
     }
@@ -59,8 +60,8 @@ public final class MethodBodyCodeGenerator implements CodeGenerator<Method> {
         final StringBuilder buffer = new StringBuilder();
         final Element[] statements;
 
-        try {
-            statements = decompiler.parse(method, method.getCode().getCode());
+        try (CodeStream code = new InputStreamCodeStream(method.getCode().getCode())) {
+            statements = decompiler.parse(method, code);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

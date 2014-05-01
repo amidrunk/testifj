@@ -5,7 +5,6 @@ import org.testifj.Action;
 import org.testifj.Caller;
 import org.testifj.Matcher;
 import org.testifj.lang.*;
-import org.testifj.lang.impl.CallerDecompilerImpl;
 import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.ConstantImpl;
 import org.testifj.lang.model.impl.MethodSignature;
@@ -95,6 +94,18 @@ public class CallerDecompilerImplTest {
 
         expect(elements[0].as(MethodCall.class).getMethodName()).toBe("then");
         expect(elements[0].as(MethodCall.class).getTargetInstance().as(MethodCall.class).getMethodName()).toBe("given");
+    }
+
+    @Test
+    public void multiLineExpressionsCanBeHandled() throws IOException {
+        String str = new String("foo")
+                .toString();
+
+        final Element[] elements = decompileCaller(Caller.adjacent(-3));
+
+        expect(elements).toBe(new Element[]{
+                AST.set("str", String.class, AST.call(AST.newInstance(String.class, AST.constant("foo")), "toString", String.class))
+        });
     }
 
     public void nestedLambdaWithEnclosedVariablesCanBeDecompiled(String str) {

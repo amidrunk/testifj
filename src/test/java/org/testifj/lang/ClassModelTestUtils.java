@@ -3,10 +3,7 @@ package org.testifj.lang;
 import org.testifj.Caller;
 import org.testifj.Description;
 import org.testifj.MethodBodyCodeGenerator;
-import org.testifj.lang.impl.ClassFileReaderImpl;
-import org.testifj.lang.impl.CodePointerCodeGenerator;
-import org.testifj.lang.impl.CodePointerImpl;
-import org.testifj.lang.impl.DecompilerImpl;
+import org.testifj.lang.impl.*;
 import org.testifj.lang.model.Element;
 
 import java.io.IOException;
@@ -69,7 +66,7 @@ public class ClassModelTestUtils {
     }
 
     public static Element[] methodBodyOf(Method method) {
-        try (InputStream code = method.getCode().getCode()) {
+        try (CodeStream code = new InputStreamCodeStream(method.getCode().getCode())) {
             return new DecompilerImpl().parse(method, code);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -98,9 +95,9 @@ public class ClassModelTestUtils {
             throw new RuntimeException("Class not found", e);
         }
 
-        try (InputStream in = method.getCodeForLineNumber(callerStackTraceElement.getLineNumber() + delta)) {
-            return Arrays.stream(new DecompilerImpl().parse(method, in))
-                    .map(e -> new CodePointerImpl(method, e))
+        try (CodeStream code = new InputStreamCodeStream(method.getCodeForLineNumber(callerStackTraceElement.getLineNumber() + delta))) {
+            return Arrays.stream(new DecompilerImpl().parse(method, code))
+                    .map(e -> new CodePointerImpl<>(method, e))
                     .toArray(CodePointerImpl[]::new);
         } catch (IOException e) {
             throw new RuntimeException(e);

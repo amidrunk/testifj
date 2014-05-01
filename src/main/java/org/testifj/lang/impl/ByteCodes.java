@@ -22,7 +22,7 @@ public final class ByteCodes {
         final LocalVariable localVariable = method.getLocalVariableForIndex(index);
         final Expression value = context.pop();
 
-        context.push(new VariableAssignmentImpl(value, localVariable.getName(), localVariable.getType()));
+        context.enlist(new VariableAssignmentImpl(value, localVariable.getName(), localVariable.getType()));
     }
 
     public static void getStatic(DecompilationContext context, Type declaringType, Type fieldType, String fieldName) {

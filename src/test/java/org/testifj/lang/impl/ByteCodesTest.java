@@ -45,7 +45,7 @@ public class ByteCodesTest {
 
         ByteCodes.storeVariable(dc, method, 1);
 
-        verify(dc).push(new VariableAssignmentImpl(value, "foo", String.class));
+        verify(dc).enlist(new VariableAssignmentImpl(value, "foo", String.class));
     }
 
     @Test

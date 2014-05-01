@@ -15,21 +15,21 @@ public class ExpectationVerificationTest {
 
     private final ExpectationVerificationContext expectationVerificationContext = mock(ExpectationVerificationContext.class);
     private final Description description = mock(Description.class);
-    private final ExpectationVerification compliantVerification = ExpectationVerification.compliant(expectationVerificationContext, description);
+    private final ExpectationVerificationImpl compliantVerification = ExpectationVerificationImpl.compliant(expectationVerificationContext, description);
     private final Description verificationFailureDescription = mock(Description.class);
-    private final ExpectationVerification inCompliantVerification = ExpectationVerification.notCompliant(expectationVerificationContext, description, verificationFailureDescription);
+    private final ExpectationVerificationImpl inCompliantVerification = ExpectationVerificationImpl.notCompliant(expectationVerificationContext, description, verificationFailureDescription);
 
     @Test
     public void createCompliantVerificationShouldNotAcceptInvalidParameters() {
-        expect(() -> ExpectationVerification.compliant(null, mock(Description.class))).toThrow(AssertionError.class);
-        expect(() -> ExpectationVerification.compliant(mock(ExpectationVerificationContext.class), null)).toThrow(AssertionError.class);
+        expect(() -> ExpectationVerificationImpl.compliant(null, mock(Description.class))).toThrow(AssertionError.class);
+        expect(() -> ExpectationVerificationImpl.compliant(mock(ExpectationVerificationContext.class), null)).toThrow(AssertionError.class);
     }
 
     @Test
     public void createNotCompliantVerificationShouldNotAcceptInvalidParameters() {
-        expect(() -> ExpectationVerification.notCompliant(null, mock(Description.class), mock(Description.class)));
-        expect(() -> ExpectationVerification.notCompliant(mock(ExpectationVerificationContext.class), null, mock(Description.class)));
-        expect(() -> ExpectationVerification.notCompliant(mock(ExpectationVerificationContext.class), mock(Description.class), null));
+        expect(() -> ExpectationVerificationImpl.notCompliant(null, mock(Description.class), mock(Description.class)));
+        expect(() -> ExpectationVerificationImpl.notCompliant(mock(ExpectationVerificationContext.class), null, mock(Description.class)));
+        expect(() -> ExpectationVerificationImpl.notCompliant(mock(ExpectationVerificationContext.class), mock(Description.class), null));
     }
 
     @Test
@@ -66,7 +66,7 @@ public class ExpectationVerificationTest {
 
     @Test
     public void compliantInstancesWithEqualPropertiesShouldBeEqual() {
-        final ExpectationVerification other = ExpectationVerification.compliant(expectationVerificationContext, description);
+        final ExpectationVerificationImpl other = ExpectationVerificationImpl.compliant(expectationVerificationContext, description);
 
         expect(compliantVerification).toBe(equalTo(other));
         expect(compliantVerification.hashCode()).toBe(equalTo(other.hashCode()));
@@ -74,7 +74,7 @@ public class ExpectationVerificationTest {
 
     @Test
     public void inCompliantInstancesWithEqualPropertiesShouldBeEqual() {
-        final ExpectationVerification other = ExpectationVerification.notCompliant(expectationVerificationContext, description, verificationFailureDescription);
+        final ExpectationVerificationImpl other = ExpectationVerificationImpl.notCompliant(expectationVerificationContext, description, verificationFailureDescription);
 
         expect(inCompliantVerification).toBe(equalTo(other));
         expect(inCompliantVerification.hashCode()).toBe(equalTo(other.hashCode()));

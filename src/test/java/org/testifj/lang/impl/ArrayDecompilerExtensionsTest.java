@@ -17,6 +17,8 @@ import java.util.Collections;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 import static org.testifj.Expect.expect;
+import static org.testifj.Given.given;
+import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
 public class ArrayDecompilerExtensionsTest {
 
@@ -31,14 +33,16 @@ public class ArrayDecompilerExtensionsTest {
 
     @Test
     public void configureShouldConfigureSupportForArrayInstructions() {
-        final DecompilerConfiguration.Builder configurationBuilder = mock(DecompilerConfiguration.Builder.class);
+        final DecompilerConfiguration.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
 
         ArrayDecompilerExtensions.configure(configurationBuilder);
 
-        verify(configurationBuilder).extend(eq(ByteCode.anewarray), any());
-        verify(configurationBuilder).extend(eq(ByteCode.aaload), any());
-        verify(configurationBuilder).extend(eq(ByteCode.aastore), any());
-        verify(configurationBuilder).extend(eq(ByteCode.arraylength), any());
+        given(configurationBuilder.build()).then(it -> {
+            expect(it.getDecompilerExtension(context, ByteCode.anewarray)).not().toBe(equalTo(null));
+            expect(it.getDecompilerExtension(context, ByteCode.aaload)).not().toBe(equalTo(null));
+            expect(it.getDecompilerExtension(context, ByteCode.aastore)).not().toBe(equalTo(null));
+            expect(it.getDecompilerExtension(context, ByteCode.arraylength)).not().toBe(equalTo(null));
+        });
     }
 
     @Test

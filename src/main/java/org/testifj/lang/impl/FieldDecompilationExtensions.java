@@ -20,8 +20,8 @@ public final class FieldDecompilationExtensions {
     public static void configure(DecompilerConfiguration.Builder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";
 
-        configurationBuilder.extend(ByteCode.putfield, putfield());
-        configurationBuilder.extend(ByteCode.putstatic, putstatic());
+        configurationBuilder.on(ByteCode.putfield).then(putfield());
+        configurationBuilder.on(ByteCode.putstatic).then(putstatic());
     }
 
     /**

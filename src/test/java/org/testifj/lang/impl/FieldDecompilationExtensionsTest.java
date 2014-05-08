@@ -14,9 +14,11 @@ import java.io.IOException;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 import static org.testifj.Expect.expect;
+import static org.testifj.Given.given;
 import static org.testifj.lang.CodeStreamTestUtils.codeStream;
 import static org.testifj.lang.impl.FieldDecompilationExtensions.putfield;
 import static org.testifj.lang.impl.FieldDecompilationExtensions.putstatic;
+import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
 public class FieldDecompilationExtensionsTest {
 
@@ -43,12 +45,14 @@ public class FieldDecompilationExtensionsTest {
 
     @Test
     public void configureShouldConfigureSupportForByteCodes() {
-        final DecompilerConfiguration.Builder configurationBuilder = mock(DecompilerConfiguration.Builder.class);
+        final DecompilerConfiguration.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
 
         FieldDecompilationExtensions.configure(configurationBuilder);
 
-        verify(configurationBuilder).extend(eq(ByteCode.putfield), any(DecompilerExtension.class));
-        verify(configurationBuilder).extend(eq(ByteCode.putstatic), any(DecompilerExtension.class));
+        given(configurationBuilder.build()).then(it -> {
+            expect(it.getDecompilerExtension(mock(DecompilationContext.class), ByteCode.putfield)).not().toBe(equalTo(null));
+            expect(it.getDecompilerExtension(mock(DecompilationContext.class), ByteCode.putstatic)).not().toBe(equalTo(null));
+        });
     }
 
     @Test

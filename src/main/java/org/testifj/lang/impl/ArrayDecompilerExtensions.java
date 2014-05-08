@@ -14,7 +14,7 @@ public final class ArrayDecompilerExtensions {
         assert configurationBuilder != null : "Configuration builder can't be null";
 
         // TODO Improve, document. Also, it should be possible to specify priority order (on(DUP).where(...).withPriority(HIGH).then(...)
-        configurationBuilder.extend(ByteCode.dup, (context, code, byteCode) -> {
+        configurationBuilder.on(ByteCode.dup).then((context, code, byteCode) -> {
             final Expression expression = context.peek();
 
             if (expression.getElementType() != ElementType.NEW_ARRAY) {
@@ -24,12 +24,12 @@ public final class ArrayDecompilerExtensions {
             return true;
         });
 
-        configurationBuilder.extend(ByteCode.aaload, aaload());
-        configurationBuilder.extend(ByteCode.anewarray, anewarray());
-        configurationBuilder.extend(ByteCode.aastore, aastore());
-        configurationBuilder.extend(ByteCode.newarray, newarray());
-        configurationBuilder.extend(ByteCode.iastore, iastore());
-        configurationBuilder.extend(ByteCode.arraylength, arraylength());
+        configurationBuilder.on(ByteCode.aaload).then(aaload());
+        configurationBuilder.on(ByteCode.anewarray).then(anewarray());
+        configurationBuilder.on(ByteCode.aastore).then(aastore());
+        configurationBuilder.on(ByteCode.newarray).then(newarray());
+        configurationBuilder.on(ByteCode.iastore).then(iastore());
+        configurationBuilder.on(ByteCode.arraylength).then(arraylength());
     }
 
     public static DecompilerExtension aaload() {

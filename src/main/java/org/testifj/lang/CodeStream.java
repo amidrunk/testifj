@@ -22,6 +22,10 @@ public interface CodeStream extends AutoCloseable {
 
     int nextUnsignedShort() throws IOException;
 
+    int peekSignedShort() throws IOException;
+
+    int nextSignedShort() throws IOException;
+
     /**
      * Commit to the peeked result. The buffered data accumulated to enable reset will be discarded and
      * the PC will be advanced to the new location. Note that the PC will be forwarded through all

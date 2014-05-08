@@ -12,7 +12,6 @@ import org.testifj.lang.model.impl.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintStream;
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -69,7 +68,7 @@ public class DecompilerImplTest {
     public void compilerExtensionCanOverrideByteCodeHandling() throws IOException {
         final DecompilerExtension extension = mock(DecompilerExtension.class);
         final DecompilerConfiguration configuration = new DecompilerConfigurationImpl.Builder()
-                .extend(ByteCode.iconst_0, extension)
+                .on(ByteCode.iconst_0).then(extension)
                 .build();
         final DecompilerImpl decompiler = new DecompilerImpl(configuration);
 

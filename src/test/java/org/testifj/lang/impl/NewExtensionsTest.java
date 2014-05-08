@@ -18,6 +18,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 import static org.testifj.Expect.expect;
+import static org.testifj.Given.given;
+import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
 public class NewExtensionsTest {
 
@@ -28,11 +30,13 @@ public class NewExtensionsTest {
 
     @Test
     public void configureShouldConfigureSupportForNewByteCode() {
-        final DecompilerConfiguration.Builder configurationBuilder = mock(DecompilerConfiguration.Builder.class);
+        final DecompilerConfiguration.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
 
         NewExtensions.configure(configurationBuilder);
 
-        verify(configurationBuilder).extend(eq(ByteCode.new_), any());
+        given(configurationBuilder.build()).then(it -> {
+            expect(it.getDecompilerExtension(mock(DecompilationContext.class), ByteCode.new_)).not().toBe(equalTo(null));
+        });
     }
 
     @Test

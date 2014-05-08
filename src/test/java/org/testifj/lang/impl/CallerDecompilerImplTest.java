@@ -1,5 +1,6 @@
 package org.testifj.lang.impl;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.testifj.Action;
 import org.testifj.Caller;
@@ -106,6 +107,41 @@ public class CallerDecompilerImplTest {
         expect(elements).toBe(new Element[]{
                 AST.set("str", String.class, AST.call(AST.newInstance(String.class, AST.constant("foo")), "toString", String.class))
         });
+    }
+
+    @Test
+    @Ignore("This must be fixed")
+    // TODO: If (1) iinc and (2) stacked expression is non-int variable reference (3) we're trying to escape
+    public void expressionInLoopCanBeDecompiled() throws IOException {
+        for (int i = 0; i < 1; i++) {
+            expect(true).toBe(true);
+        }
+
+        final Element[] elements = decompileCaller(Caller.adjacent(-3));
+
+        expect(elements.length).toBe(1);
+
+        given(elements[0].as(MethodCall.class)).then(it -> {
+            expect(it.getMethodName()).toBe("toBe");
+            expect(it.getParameters().toArray()).toBe(new Object[]{AST.constant(1)});
+        });
+    }
+
+    @Test
+    @Ignore("This must be fixed")
+    public void multiLineStatementInForEachCanBeDecompiled() throws IOException {
+        final Integer[] integers = {1, 2, 3, 4};
+
+        for (Integer n : integers) {
+            expect(n)
+                    .toBe(n);
+        }
+
+        final Element[] elements = decompileCaller(Caller.adjacent(-4));
+
+        expect(elements.length).toBe(1);
+
+        System.out.println(Arrays.asList(elements));
     }
 
     public void nestedLambdaWithEnclosedVariablesCanBeDecompiled(String str) {

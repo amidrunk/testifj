@@ -1,5 +1,7 @@
 package org.testifj.lang;
 
+import org.testifj.util.Priority;
+
 public interface DecompilerConfiguration {
 
     DecompilerExtension getDecompilerExtension(DecompilationContext context, int byteCode);
@@ -7,12 +9,6 @@ public interface DecompilerConfiguration {
     DecompilerEnhancement getDecompilerEnhancement(DecompilationContext context, int byteCode);
 
     public interface Builder {
-
-        // TODO this should be "on(startByteCode, endByteCode)[.when(predicate)].then(extension)
-        Builder extend(int startByteCode, int endByteCode, DecompilerExtension extension);
-
-        // TODO this should be "on(byteCode)[.when(predicate)].then(extension)
-        Builder extend(int byteCode, DecompilerExtension extension);
 
         /**
          * Adds an enhancement to the specified byte code. An enhancement is executed after the actual executement
@@ -27,6 +23,28 @@ public interface DecompilerConfiguration {
          * @return The same instance will always be returned.
          */
         Builder enhance(int byteCode, DecompilerEnhancement enhancement);
+
+        ExtendContinuation on(int byteCode);
+
+        ExtendContinuation on(int startByteCode, int endByteCode);
+
+        interface ExtendContinuation extends WithPriorityContinuation {
+
+            WithPriorityContinuation withPriority(Priority priority);
+        }
+
+        interface WithPriorityContinuation extends WhenContinuation {
+
+            WhenContinuation when(DecompilationStateSelector selector);
+
+        }
+
+
+        interface WhenContinuation {
+
+            Builder then(DecompilerExtension extension);
+
+        }
 
         DecompilerConfiguration build();
 

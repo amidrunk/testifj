@@ -4,8 +4,6 @@ import org.testifj.lang.*;
 import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.MethodSignature;
 
-import java.beans.MethodDescriptor;
-import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -16,7 +14,7 @@ public final class InvokeDynamicExtensions {
     public static void configure(DecompilerConfiguration.Builder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";
 
-        configurationBuilder.extend(ByteCode.invokedynamic, invokedynamic());
+        configurationBuilder.on(ByteCode.invokedynamic).then(invokedynamic());
 
         configurationBuilder.enhance(ByteCode.invokedynamic, (context, codeStream, byteCode) -> {
             // Ok, this is like really weird. There's no way to determine that a lambda method reference

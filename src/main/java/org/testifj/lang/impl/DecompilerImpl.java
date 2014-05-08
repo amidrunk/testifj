@@ -78,6 +78,7 @@ public final class DecompilerImpl implements Decompiler {
         }
 
         final DecompilationContext context = new DecompilationContextImpl(this, method, codeStream.pc(), lineNumberCounter, new SimpleTypeResolver());
+        final int startPC = codeStream.pc().get();
 
         boolean debug = ManagementFactory.getRuntimeMXBean().getInputArguments().stream()
                 .filter(s -> s.contains("-agentlib:jdwp"))
@@ -225,6 +226,10 @@ public final class DecompilerImpl implements Decompiler {
 
                         break;
                     }
+                    case ByteCode.iinc: {
+                        context.push(new IncrementImpl(context.pop()));
+                        break;
+                    }
 
                     // Push constants onto stack
 
@@ -359,8 +364,14 @@ public final class DecompilerImpl implements Decompiler {
                         }
 
                         final int relativePC = context.getProgramCounter().get();
-                        final int offset = codeStream.nextUnsignedShort();
+                        final int offset = codeStream.nextSignedShort();
                         final int targetPC = relativePC + offset;
+
+                        // TODO Put startPC in context and place this in an extension
+                        if (targetPC < startPC) {
+                            context.abort();
+                            break;
+                        }
 
                         if (context.hasStackedExpressions()) {
                             final List<Statement> statements = context.getStatements();

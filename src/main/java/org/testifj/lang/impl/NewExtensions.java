@@ -19,7 +19,7 @@ public final class NewExtensions {
     public static void configure(DecompilerConfiguration.Builder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";
 
-        configurationBuilder.extend(ByteCode.new_, newInstance());
+        configurationBuilder.on(ByteCode.new_).then(newInstance());
         configurationBuilder.enhance(ByteCode.invokespecial, (context, code, byteCode) -> {
             final MethodCall methodCall = (MethodCall) context.peek();
 

@@ -245,4 +245,8 @@ public final class ByteCode {
         }).findFirst().map(java.lang.reflect.Field::getName).get();
     }
 
+    public static boolean isValid(int byteCode) {
+        return byteCode >= 0 && byteCode <= 255;
+    }
+
 }

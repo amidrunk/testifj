@@ -2,6 +2,7 @@ package org.testifj.lang.impl;
 
 import org.junit.Test;
 import org.testifj.lang.*;
+import org.testifj.util.Priority;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -10,6 +11,7 @@ import java.util.List;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
@@ -40,7 +42,7 @@ public class DecompilerConfigurationImplTest {
     @Test
     public void configurationCanHaveSingleExtensionForByteCode() throws IOException {
         final DecompilerConfiguration configuration = builder
-                .extend(ByteCode.nop, extension1)
+                .on(ByteCode.nop).then(extension1)
                 .build();
 
         final DecompilerExtension extension = configuration.getDecompilerExtension(decompilationContext, ByteCode.nop);
@@ -51,38 +53,43 @@ public class DecompilerConfigurationImplTest {
     }
 
     @Test
-    public void extendShouldNotAcceptInvalidArguments() {
+    public void onShouldNotAcceptInvalidArguments() {
         final DecompilerConfigurationImpl.Builder builder = this.builder;
 
-        expect(() -> builder.extend(-1, extension1)).toThrow(AssertionError.class);
-        expect(() -> builder.extend(257, extension1)).toThrow(AssertionError.class);
-        expect(() -> builder.extend(100, null)).toThrow(AssertionError.class);
+        expect(() -> builder.on(-1)).toThrow(AssertionError.class);
+        expect(() -> builder.on(257)).toThrow(AssertionError.class);
+        expect(() -> builder.on(100).then(null)).toThrow(AssertionError.class);
     }
 
     @Test
     public void multipleExtensionsCanExistsForTheSameByteCode() throws IOException {
+        final DecompilationStateSelector selector1 = mock(DecompilationStateSelector.class);
+        final DecompilationStateSelector selector2 = mock(DecompilationStateSelector.class);
         final DecompilerConfiguration configuration = builder
-                .extend(ByteCode.nop, extension1)
-                .extend(ByteCode.nop, extension2)
+                .on(ByteCode.nop).when(selector1).then(extension1)
+                .on(ByteCode.nop).when(selector2).then(extension2)
                 .build();
 
-        configuration.getDecompilerExtension(decompilationContext, ByteCode.nop).decompile(decompilationContext, codeStream, ByteCode.nop);
+        when(selector1.select(eq(decompilationContext), eq(ByteCode.nop))).thenReturn(false);
+        when(selector2.select(eq(decompilationContext), eq(ByteCode.nop))).thenReturn(true);
 
-        verify(extension1).decompile(eq(decompilationContext), eq(codeStream), eq(ByteCode.nop));
-        verify(extension2).decompile(eq(decompilationContext), eq(codeStream), eq(ByteCode.nop));
+        expect(configuration.getDecompilerExtension(decompilationContext, ByteCode.nop)).toBe(extension2);
+
+        verify(selector1).select(eq(decompilationContext), eq(ByteCode.nop));
+        verify(selector2).select(eq(decompilationContext), eq(ByteCode.nop));
     }
 
     @Test
     public void extendByteCodeRangeShouldNotAcceptInvalidRange() {
-        expect(() -> builder.extend(1, 0, extension1)).toThrow(AssertionError.class);
-        expect(() -> builder.extend(1, 1, extension1)).toThrow(AssertionError.class);
+        expect(() -> builder.on(1, 0)).toThrow(AssertionError.class);
+        expect(() -> builder.on(1, 1)).toThrow(AssertionError.class);
     }
 
     @Test
     public void byteCodeRangeCanBeExtended() throws IOException {
         final DecompilerExtension extension = mock(DecompilerExtension.class);
         final DecompilerConfiguration configuration = builder
-                .extend(ByteCode.iconst_0, ByteCode.iconst_5, extension)
+                .on(ByteCode.iconst_0, ByteCode.iconst_5).then(extension)
                 .build();
 
         final List<Integer> byteCodes = Arrays.asList(
@@ -151,6 +158,40 @@ public class DecompilerConfigurationImplTest {
             expect(() -> it.getDecompilerEnhancement(decompilationContext, -1)).toThrow(AssertionError.class);
             expect(() -> it.getDecompilerEnhancement(decompilationContext, 257)).toThrow(AssertionError.class);
         });
+    }
+
+    @Test
+    public void decompilerExtensionWithoutPriorityAndPredicateAndBeConfigured() {
+        given(builder.on(ByteCode.nop).then(extension1).build()).then(it -> {
+            expect(it.getDecompilerExtension(decompilationContext, ByteCode.nop)).toBe(extension1);
+        });
+    }
+
+    @Test
+    public void decompilerExtensionWithPriorityAndNoPredicateCanBeConfigured() {
+        given(builder.on(ByteCode.nop).withPriority(Priority.HIGH).then(extension1).build()).then(it -> {
+            expect(it.getDecompilerExtension(decompilationContext, ByteCode.nop)).toBe(extension1);
+        });
+    }
+
+    @Test
+    public void decompilerExtensionWithPriorityAndPredicateCanBeConfigured() {
+        final DecompilationStateSelector selector = mock(DecompilationStateSelector.class);
+
+        given(builder.on(ByteCode.nop).withPriority(Priority.HIGH).when(selector).then(extension1).build()).then(it -> {
+            when(selector.select(eq(decompilationContext), eq(ByteCode.nop))).thenReturn(true);
+            expect(it.getDecompilerExtension(decompilationContext, ByteCode.nop)).toBe(extension1);
+        });
+    }
+
+    @Test
+    public void multipleMatchingDecompilerExtensionsWithDifferentPrioritiesCanBeConfigured() {
+        final DecompilerConfiguration configuration = builder
+                .on(ByteCode.nop).withPriority(Priority.HIGH).then(extension1)
+                .on(ByteCode.nop).withPriority(Priority.HIGHER).then(extension2)
+                .build();
+
+        expect(configuration.getDecompilerExtension(decompilationContext, ByteCode.nop)).toBe(extension2);
     }
 
 }

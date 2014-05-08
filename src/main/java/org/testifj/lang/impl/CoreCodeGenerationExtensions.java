@@ -26,6 +26,7 @@ public final class CoreCodeGenerationExtensions {
         configurationBuilder.extend(ElementSelector.forType(ElementType.CAST), castExtension());
         configurationBuilder.extend(ElementSelector.forType(ElementType.ARRAY_LOAD), arrayLoadExtension());
         configurationBuilder.extend(ElementSelector.forType(ElementType.ALLOCATE), allocateInstanceExtension());
+        configurationBuilder.extend(ElementSelector.forType(ElementType.INCREMENT), increment());
 
         configurationBuilder.extend(selectBooleanBoxCall(), boxBooleanExtension());
         configurationBuilder.extend(selectPrimitiveBoxCall(), primitiveBoxCallExtension());
@@ -35,6 +36,13 @@ public final class CoreCodeGenerationExtensions {
         configurationBuilder.extend(selectStaticMethodCall(), staticMethodCallExtension());
         configurationBuilder.extend(selectUninitializedNewArray(), newUninitializedArrayExtension());
         configurationBuilder.extend(selectInitializedNewArray(), newInitializedArrayExtension());
+    }
+
+    public static CodeGeneratorExtension<Increment> increment() {
+        return (context,codePointer,out) -> {
+            context.delegate(codePointer.forElement(codePointer.getElement().getOperand()));
+            out.append("++");
+        };
     }
 
     /**
@@ -342,11 +350,7 @@ public final class CoreCodeGenerationExtensions {
 
             final Expression parameter = methodCall.getParameters().get(0);
 
-            if (!parameter.getType().equals(int.class)) {
-                return false;
-            }
-
-            if (parameter.getElementType() != ElementType.CONSTANT) {
+            if (!parameter.getType().equals(int.class) && !parameter.getType().equals(boolean.class)) {
                 return false;
             }
 
@@ -364,12 +368,16 @@ public final class CoreCodeGenerationExtensions {
      */
     public static CodeGeneratorExtension<MethodCall> boxBooleanExtension() {
         return (context, codePointer, out) -> {
-            final Constant parameter = (Constant) codePointer.getElement().getParameters().get(0);
+            final Expression parameter = codePointer.getElement().getParameters().get(0);
 
-            if (parameter.getConstant().equals(0)) {
-                out.print("false");
+            if (parameter.getElementType() == ElementType.CONSTANT && parameter.getType().equals(int.class)) {
+                if (parameter.as(Constant.class).getConstant().equals(0)) {
+                    out.print("false");
+                } else {
+                    out.print("true");
+                }
             } else {
-                out.print("true");
+                context.delegate(codePointer.forElement(parameter));
             }
         };
     }

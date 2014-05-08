@@ -2,11 +2,9 @@ package org.testifj.lang.impl;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.testifj.lang.*;
 import org.testifj.lang.model.AST;
 import org.testifj.lang.model.Cast;
-import org.testifj.lang.model.impl.CastImpl;
 
 import java.io.IOException;
 
@@ -16,7 +14,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
+import static org.testifj.Given.given;
 import static org.testifj.lang.model.AST.constant;
+import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
 public class TypeCheckDecompilerExtensionsTest {
 
@@ -42,11 +42,13 @@ public class TypeCheckDecompilerExtensionsTest {
 
     @Test
     public void configureShouldConfigureSupportForCheckCast() {
-        final DecompilerConfiguration.Builder configurationBuilder = mock(DecompilerConfiguration.Builder.class);
+        final DecompilerConfiguration.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
 
         TypeCheckDecompilerExtensions.configure(configurationBuilder);
 
-        verify(configurationBuilder).extend(eq(ByteCode.checkcast), any(DecompilerExtension.class));
+        given(configurationBuilder.build()).then(it -> {
+            expect(it.getDecompilerExtension(mock(DecompilationContext.class), ByteCode.checkcast)).not().toBe(equalTo(null));
+        });
     }
 
     @Test

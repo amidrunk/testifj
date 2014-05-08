@@ -96,7 +96,6 @@ public class DefaultExpectationFailureHandlerTest {
     }
 
     @Test
-    @Ignore("Reintroduce and fix later")
     public void expectedExceptionFailureShouldDescribeProcedureAndExpectedExpression() {
         boolean failed = false;
 
@@ -105,7 +104,7 @@ public class DefaultExpectationFailureHandlerTest {
         } catch (AssertionError e) {
             failed = true;
             expect(e.getMessage()).toBe(
-                "Expected \"doStuff()\" to throw java.lang.RuntimeException");
+                "Expected [this::doStuff]  to throw java.lang.RuntimeException");
         }
 
         expect(failed).toBe(true);

@@ -15,8 +15,8 @@ public final class TypeCheckDecompilerExtensions {
     public static void configure(DecompilerConfiguration.Builder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";
 
-        configurationBuilder.extend(ByteCode.pop, discardImplicitCast());
-        configurationBuilder.extend(ByteCode.checkcast, checkcast());
+        configurationBuilder.on(ByteCode.pop).then(discardImplicitCast());
+        configurationBuilder.on(ByteCode.checkcast).then(checkcast());
     }
 
     /**

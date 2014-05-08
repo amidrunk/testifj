@@ -105,6 +105,25 @@ public final class InputStreamCodeStream implements CodeStream, AutoCloseable {
     }
 
     @Override
+    public int peekSignedShort() throws IOException {
+        peek();
+        peekCount += 2;
+        return inputStream.readShort();
+    }
+
+    @Override
+    public int nextSignedShort() throws IOException {
+        unpeek();
+
+        final int nextUnsignedShort = inputStream.readShort();
+
+        programCounter.advance();
+        programCounter.advance();
+
+        return nextUnsignedShort;
+    }
+
+    @Override
     public void commit() {
         if (peeking) {
             peeking = false;

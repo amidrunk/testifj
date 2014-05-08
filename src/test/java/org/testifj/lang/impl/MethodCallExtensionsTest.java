@@ -17,6 +17,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 import static org.testifj.Expect.expect;
+import static org.testifj.Given.given;
+import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
 public class MethodCallExtensionsTest {
 
@@ -40,12 +42,14 @@ public class MethodCallExtensionsTest {
 
     @Test
     public void configureShouldConfigureSupportForMethodCalls() {
-        final DecompilerConfiguration.Builder builder = mock(DecompilerConfiguration.Builder.class);
+        final DecompilerConfiguration.Builder builder = new DecompilerConfigurationImpl.Builder();
 
         MethodCallExtensions.configure(builder);
 
-        verify(builder).extend(eq(ByteCode.invokeinterface), any());
-        verify(builder).extend(eq(ByteCode.invokespecial), any());
+        given(builder.build()).then(it -> {
+            expect(it.getDecompilerExtension(context, ByteCode.invokeinterface)).not().toBe(equalTo(null));
+            expect(it.getDecompilerExtension(context, ByteCode.invokespecial)).not().toBe(equalTo(null));
+        });
     }
 
     @Test

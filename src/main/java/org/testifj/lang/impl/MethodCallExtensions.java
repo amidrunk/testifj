@@ -13,8 +13,8 @@ public final class MethodCallExtensions {
     public static void configure(DecompilerConfiguration.Builder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";
 
-        configurationBuilder.extend(ByteCode.invokeinterface, invokeinterface());
-        configurationBuilder.extend(ByteCode.invokespecial, invokespecial());
+        configurationBuilder.on(ByteCode.invokeinterface).then(invokeinterface());
+        configurationBuilder.on(ByteCode.invokespecial).then(invokespecial());
     }
 
     public static DecompilerExtension invokeinterface() {

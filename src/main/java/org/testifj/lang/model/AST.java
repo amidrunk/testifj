@@ -52,18 +52,18 @@ public final class AST {
         return new NewInstanceImpl(type, signature, Arrays.asList(arguments));
     }
 
-    public static VariableAssignment set(String variableName, Expression value) {
+    public static VariableAssignment set(int index, String variableName, Expression value) {
         assert value != null : "Value can't be null";
 
-        return set(variableName, value.getType(), value);
+        return set(index, variableName, value.getType(), value);
     }
 
-    public static VariableAssignment set(String variableName, Type variableType, Expression value) {
+    public static VariableAssignment set(int index, String variableName, Type variableType, Expression value) {
         assert variableName != null && !variableName.isEmpty() : "Variable name can't be null or empty";
         assert value != null : "Value can't be null";
         assert variableType != null : "Variable type can't be null";
 
-        return new VariableAssignmentImpl(value, variableName, variableType);
+        return new VariableAssignmentImpl(value, index, variableName, variableType);
     }
 
     public static BinaryOperator eq(Expression leftOperand, Expression rightOperand) {

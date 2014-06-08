@@ -3,9 +3,7 @@ package org.testifj.lang;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.testifj.lang.impl.ExceptionTableEntryImpl;
-import org.testifj.lang.impl.LineNumberTableEntryImpl;
-import org.testifj.lang.impl.LineNumberTableImpl;
+import org.testifj.lang.impl.*;
 import org.testifj.matchers.core.OptionalThatIs;
 
 import java.util.Arrays;
@@ -99,5 +97,35 @@ public class MethodsTest {
         when(methodWithLineNumbers1.getCode()).thenReturn(codeAttribute);
 
         expect(Methods.getExceptionTableEntryForCatchLocation(methodWithLineNumbers1, 10)).toBe(optionalOf(expectedEntry));
+    }
+
+    @Test
+    public void findLocalVariableForIndexAndPCShouldNotAcceptInvalidArguments() {
+        expect(() -> Methods.findLocalVariableForIndexAndPC(null, 0, 0)).toThrow(AssertionError.class);
+        expect(() -> Methods.findLocalVariableForIndexAndPC(mock(Method.class), -1, 0)).toThrow(AssertionError.class);
+        expect(() -> Methods.findLocalVariableForIndexAndPC(mock(Method.class), 0, -1)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void findLocalVariableForIndexAndPCShouldReturnNonPresentOptionalIfNoVariableTableExists() {
+        when(methodWithLineNumbers1.getLocalVariableTable()).thenReturn(Optional.empty());
+
+        final Optional<LocalVariable> optionalLocal = Methods.findLocalVariableForIndexAndPC(methodWithLineNumbers1, 0, 0);
+
+        expect(optionalLocal).not().toBe(present());
+    }
+
+    @Test
+    public void findLocalVariableShouldReturnMatchingVariable() {
+        final LocalVariableImpl variable1 = new LocalVariableImpl(0, 10, "foo", String.class, 0);
+        final LocalVariableImpl variable2 = new LocalVariableImpl(11, 20, "bar", int.class, 0);
+
+        when(methodWithLineNumbers1.getLocalVariableTable()).thenReturn(Optional.of(new LocalVariableTableImpl(new LocalVariable[]{
+                variable1,
+                variable2
+        })));
+
+        expect(Methods.findLocalVariableForIndexAndPC(methodWithLineNumbers1, 0, 0)).toBe(optionalOf(variable1));
+        expect(Methods.findLocalVariableForIndexAndPC(methodWithLineNumbers1, 0, 11)).toBe(optionalOf(variable2));
     }
 }

@@ -3,6 +3,7 @@ package org.testifj.lang.impl;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.testifj.BasicDescription;
+import org.testifj.Caller;
 import org.testifj.Description;
 import org.testifj.lang.ClassModelTestUtils;
 import org.testifj.lang.CodePointer;
@@ -21,7 +22,9 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static org.mockito.Mockito.mock;
+import static org.testifj.Caller.adjacent;
 import static org.testifj.Expect.expect;
+import static org.testifj.lang.ClassModelTestUtils.code;
 import static org.testifj.lang.model.AST.constant;
 import static org.testifj.lang.model.AST.local;
 
@@ -47,7 +50,7 @@ public class CodePointerCodeGeneratorTest {
     public void lambdaMethodReferenceCanBeDescribed() {
         expect(this::lambdaTargetTest);
 
-        final Description description = describer.describe(ClassModelTestUtils.codeForLineOffset(-2)[0]);
+        final Description description = describer.describe(code(adjacent(-2))[0]);
 
         expect(description.toString()).toBe("expect(this::lambdaTargetTest)");
     }
@@ -59,7 +62,7 @@ public class CodePointerCodeGeneratorTest {
             this.lambdaTargetTest();
         });
 
-        final Description description = describer.describe(ClassModelTestUtils.codeForLineOffset(-5)[0]);
+        final Description description = describer.describe(code(adjacent(-5))[0]);
 
         expect(description.toString()).toBe(
             "expect(() -> {\n" +
@@ -73,7 +76,7 @@ public class CodePointerCodeGeneratorTest {
     public void lambdaWithInstanceMethodReferenceCanBeDescribed() {
         callFunction(String::length, "foo");
 
-        final Description description = describer.describe(ClassModelTestUtils.codeForLineOffset(-2)[0]);
+        final Description description = describer.describe(code(adjacent(-2))[0]);
 
         expect(description.toString()).toBe("callFunction(String::length, \"foo\")");
     }
@@ -82,7 +85,7 @@ public class CodePointerCodeGeneratorTest {
     public void lambdaWithArgumentsAndCodeCanBeDescribed() {
         callFunction(s -> s.length() + 1, "foo");
 
-        final Description description = describer.describe(ClassModelTestUtils.codeForLineOffset(-2)[0]);
+        final Description description = describer.describe(code(adjacent(-2))[0]);
 
         expect(description.toString()).toBe("callFunction(s -> s.length() + 1, \"foo\")");
     }
@@ -91,7 +94,7 @@ public class CodePointerCodeGeneratorTest {
     public void enumReferenceCanBeDescribed() {
         final ElementType fieldReference = ElementType.FIELD_REFERENCE;
 
-        final Description description = describer.describe(ClassModelTestUtils.codeForLineOffset(-2)[0]);
+        final Description description = describer.describe(code(adjacent(-2))[0]);
 
         expect(description.toString()).toBe("ElementType fieldReference = ElementType.FIELD_REFERENCE");
     }
@@ -101,7 +104,7 @@ public class CodePointerCodeGeneratorTest {
     public void lambdaWithGenericsTypeParametersCanBeDescribed() {
         final Supplier<String> supplier = () -> "Hello World!";
 
-        final Description description = describer.describe(ClassModelTestUtils.codeForLineOffset(-2)[0]);
+        final Description description = describer.describe(code(adjacent(-2))[0]);
 
         expect(description.toString()).toBe("Supplier<String> supplier = () -> \"Hello World!\"");
     }
@@ -119,7 +122,7 @@ public class CodePointerCodeGeneratorTest {
 
         expect(exampleInnerClass.exampleVariable).toBe(0);
 
-        final Description description = describer.describe(ClassModelTestUtils.codeForLineOffset(-2)[0]);
+        final Description description = describer.describe(code(adjacent(-2))[0]);
 
         expect(description.toString()).toBe("expect(exampleInnerClass.exampleVariable).toBe(0)");
     }
@@ -153,7 +156,7 @@ public class CodePointerCodeGeneratorTest {
 
         exampleInnerClass.exampleVariable = 1234;
 
-        final Description description = describer.describe(ClassModelTestUtils.codeForLineOffset(-2)[0]);
+        final Description description = describer.describe(code(adjacent(-2))[0]);
 
         expect(description.toString()).toBe("exampleInnerClass.exampleVariable = 1234");
     }

@@ -50,14 +50,15 @@ public class ASTTest {
 
     @Test
     public void setShouldNotAcceptInvalidParameters() {
-        expect(() -> AST.set(null, constant("foo"))).toThrow(AssertionError.class);
-        expect(() -> AST.set("", constant("foo"))).toThrow(AssertionError.class);
-        expect(() -> AST.set("foo", null)).toThrow(AssertionError.class);
+        expect(() -> AST.set(-1, "foo", constant("foo"))).toThrow(AssertionError.class);
+        expect(() -> AST.set(0, null, constant("foo"))).toThrow(AssertionError.class);
+        expect(() -> AST.set(0, "", constant("foo"))).toThrow(AssertionError.class);
+        expect(() -> AST.set(0, "foo", null)).toThrow(AssertionError.class);
     }
 
     @Test
     public void setShouldCreateNewVariableAssignment() {
-        given(AST.set("str", constant("foo"))).then(va -> {
+        given(AST.set(0, "str", constant("foo"))).then(va -> {
             expect(va.getVariableName()).toBe("str");
             expect(va.getValue()).toBe(constant("foo"));
             expect(va.getVariableType()).toBe(String.class);
@@ -66,12 +67,12 @@ public class ASTTest {
 
     @Test
     public void setShouldNotAcceptNullVariableType() {
-        expect(() -> set("foo", null, constant(1234))).toThrow(AssertionError.class);
+        expect(() -> set(0, "foo", null, constant(1234))).toThrow(AssertionError.class);
     }
 
     @Test
     public void variableAssignmentCanBeCreatedWithExplicitVariableType() {
-        given(set("str", boolean.class, constant(1234))).then(expr -> {
+        given(set(0, "str", boolean.class, constant(1234))).then(expr -> {
             expect(expr.getVariableName()).toBe("str");
             expect(expr.getVariableType()).toBe(boolean.class);
             expect(expr.getValue()).toBe(constant(1234));

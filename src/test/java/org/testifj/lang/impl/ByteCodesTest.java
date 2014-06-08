@@ -27,14 +27,6 @@ public class ByteCodesTest {
 
     private final Method method = mock(Method.class);
 
-    @Test
-    public void loadVariableShouldPushVariableReferenceOntoStack() {
-        expectLocalVariable(getLocalVariable("myVariable", String.class, 1));
-
-        ByteCodes.loadVariable(dc, method, 1);
-
-        verify(dc).push(eq(new LocalVariableReferenceImpl("myVariable", String.class, 1)));
-    }
 
     @Test
     public void storeVariableShouldPushAssignmentToStack() {
@@ -45,7 +37,7 @@ public class ByteCodesTest {
 
         ByteCodes.storeVariable(dc, method, 1);
 
-        verify(dc).enlist(new VariableAssignmentImpl(value, "foo", String.class));
+        verify(dc).enlist(new VariableAssignmentImpl(value, 1, "foo", String.class));
     }
 
     @Test
@@ -82,14 +74,6 @@ public class ByteCodesTest {
         ByteCodes.getField(dc, String.class, String.class, "foo", false);
 
         verify(dc).push(new FieldReferenceImpl(value, String.class, String.class, "foo"));
-    }
-
-    @Test
-    public void booleanVariableCanBeLoadedFromInt() {
-        expectLocalVariable(getLocalVariable("test", boolean.class, 1));
-        ByteCodes.loadVariable(dc, method, 1);
-
-        verify(dc).push(new LocalVariableReferenceImpl("test", boolean.class, 1));
     }
 
     private LocalVariable getLocalVariable(String name, Class<?> type, int index) {

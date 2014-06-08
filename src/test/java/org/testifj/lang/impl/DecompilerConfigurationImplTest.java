@@ -6,14 +6,18 @@ import org.testifj.util.Priority;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
+import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
+import static org.testifj.matchers.core.IteratorThatIs.emptyIterator;
+import static org.testifj.matchers.core.IteratorThatIs.iteratorOf;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
 public class DecompilerConfigurationImplTest {
@@ -108,59 +112,6 @@ public class DecompilerConfigurationImplTest {
     }
 
     @Test
-    public void enhanceInBuilderShouldNotAcceptInvalidArguments() {
-        expect(() -> builder.enhance(123, null)).toThrow(AssertionError.class);
-        expect(() -> builder.enhance(-1, mock(DecompilerEnhancement.class))).toThrow(AssertionError.class);
-        expect(() -> builder.enhance(257, mock(DecompilerEnhancement.class))).toThrow(AssertionError.class);
-    }
-
-    @Test
-    public void builderCanConfigureByteCodeEnhancement() {
-        final DecompilerEnhancement enhancement = mock(DecompilerEnhancement.class);
-        final DecompilerConfiguration.Builder builder = this.builder.enhance(ByteCode.new_, enhancement);
-
-        given(builder.build()).then(it -> {
-            expect(it.getDecompilerEnhancement(mock(DecompilationContext.class), ByteCode.new_)).toBe(enhancement);
-        });
-    }
-
-    @Test
-    public void configurationShouldReturnNullEnhancementForByteCodeIfNoEnhancementIsConfigured() {
-        given(new DecompilerConfigurationImpl.Builder().build()).then(it -> {
-            expect(it.getDecompilerEnhancement(decompilationContext, ByteCode.nop)).toBe(equalTo(null));
-        });
-    }
-
-    @Test
-    public void multipleEnhancementsCanBeConfiguredForTheSameByteCode() {
-        final DecompilerEnhancement enhancement1 = mock(DecompilerEnhancement.class);
-        final DecompilerEnhancement enhancement2 = mock(DecompilerEnhancement.class);
-
-        given(new DecompilerConfigurationImpl.Builder()).then(builder -> {
-            builder.enhance(ByteCode.nop, enhancement1);
-            builder.enhance(ByteCode.nop, enhancement2);
-
-            given(builder.build()).then(configuration -> {
-                final DecompilerEnhancement enhancement = configuration.getDecompilerEnhancement(decompilationContext, ByteCode.nop);
-
-                enhancement.enhance(decompilationContext, codeStream, ByteCode.nop);
-
-                verify(enhancement1).enhance(eq(decompilationContext), eq(codeStream), eq(ByteCode.nop));
-                verify(enhancement2).enhance(eq(decompilationContext), eq(codeStream), eq(ByteCode.nop));
-            });
-        });
-    }
-
-    @Test
-    public void getDecompilerEnhancementShouldNotAcceptInvalidParameters() {
-        given(new DecompilerConfigurationImpl.Builder().build()).then(it -> {
-            expect(() -> it.getDecompilerEnhancement(null, 0)).toThrow(AssertionError.class);
-            expect(() -> it.getDecompilerEnhancement(decompilationContext, -1)).toThrow(AssertionError.class);
-            expect(() -> it.getDecompilerEnhancement(decompilationContext, 257)).toThrow(AssertionError.class);
-        });
-    }
-
-    @Test
     public void decompilerExtensionWithoutPriorityAndPredicateAndBeConfigured() {
         given(builder.on(ByteCode.nop).then(extension1).build()).then(it -> {
             expect(it.getDecompilerExtension(decompilationContext, ByteCode.nop)).toBe(extension1);
@@ -192,6 +143,78 @@ public class DecompilerConfigurationImplTest {
                 .build();
 
         expect(configuration.getDecompilerExtension(decompilationContext, ByteCode.nop)).toBe(extension2);
+    }
+
+    @Test
+    public void onByteCodesShouldNotAcceptInvalidArguments() {
+        expect(() -> builder.on()).toThrow(AssertionError.class);
+        expect(() -> builder.on((int[]) null)).toThrow(AssertionError.class);
+        expect(() -> builder.on(1234)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void onByteCodesShouldSetupExtensionsForByteCodes() {
+        final Range range = Range.from(1).to(3);
+
+        given(builder.on(range.all()).then(extension1).build()).then(it -> {
+            range.each(byteCode -> expect(it.getDecompilerExtension(decompilationContext, byteCode)).not().toBe(equalTo(null)));
+        });
+    }
+
+    @Test
+    public void getAdvisoryDecompilerEnhancementsShouldNotAcceptInvalidArguments() {
+        final DecompilerConfiguration configuration = builder.build();
+
+        expect(() -> configuration.getAdvisoryDecompilerEnhancements(null, 1)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void getAdvisoryDecompilerEnhancementsShouldReturnEmptyIteratorIfNoMatchingEnhancementExists() {
+        given(builder.build()).then(configuration -> {
+            expect(configuration.getAdvisoryDecompilerEnhancements(decompilationContext, 1)).toBe(emptyIterator());
+        });
+    }
+
+    @Test
+    public void getAdvisoryDecompilerEnhancementsShouldReturnConfiguredEnhancementsInPriorityOrder() {
+        final DecompilerEnhancement enhancement1 = mock(DecompilerEnhancement.class, "enhancement1");
+        final DecompilerEnhancement enhancement2 = mock(DecompilerEnhancement.class, "enhancement2");
+
+        final DecompilerConfiguration configuration = builder
+                .before(ByteCode.nop).withPriority(Priority.DEFAULT).then(enhancement1)
+                .before(ByteCode.nop).withPriority(Priority.HIGH).then(enhancement2)
+                .build();
+
+        final Iterator<DecompilerEnhancement> iterator = configuration.getAdvisoryDecompilerEnhancements(decompilationContext, ByteCode.nop);
+
+        expect(iterator).toBe(iteratorOf(enhancement2, enhancement1));
+    }
+
+    @Test
+    public void getCorrectionalDecompilerEnhancementsShouldNotAcceptInvalidArguments() {
+        final DecompilerConfiguration configuration = builder.build();
+
+        expect(() -> configuration.getCorrectionalDecompilerEnhancements(null, 0)).toThrow(AssertionError.class);
+        expect(() -> configuration.getCorrectionalDecompilerEnhancements(decompilationContext, -1)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void getCorrectionalDecompilerEnhancementsShouldReturnEmptyIteratorIfNoMatchesExist() {
+        expect(builder.build().getCorrectionalDecompilerEnhancements(decompilationContext, 1)).toBe(emptyIterator());
+    }
+
+    @Test
+    public void getCorrectionalDecompilerEnhancementsShouldReturnMatchingCorrectors() {
+        final DecompilerEnhancement enhancement1 = mock(DecompilerEnhancement.class, "enhancement1");
+        final DecompilerEnhancement enhancement2 = mock(DecompilerEnhancement.class, "enhancement2");
+        final DecompilerConfiguration configuration = builder
+                .after(ByteCode.nop).withPriority(Priority.DEFAULT).then(enhancement1)
+                .after(ByteCode.nop).withPriority(Priority.HIGH).then(enhancement2)
+                .build();
+
+        final Iterator<DecompilerEnhancement> iterator = configuration.getCorrectionalDecompilerEnhancements(decompilationContext, ByteCode.nop);
+
+        expect(iterator).toBe(iteratorOf(enhancement2, enhancement1));
     }
 
 }

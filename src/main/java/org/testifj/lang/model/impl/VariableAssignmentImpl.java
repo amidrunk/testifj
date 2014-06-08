@@ -9,18 +9,27 @@ public final class VariableAssignmentImpl extends AbstractElement implements Var
 
     private final Expression value;
 
+    private final int variableIndex;
+
     private final String variableName;
 
     private final Type variableType;
 
-    public VariableAssignmentImpl(Expression value, String variableName, Type variableType) {
+    public VariableAssignmentImpl(Expression value, int variableIndex, String variableName, Type variableType) {
         assert value != null : "Value can't be null";
+        assert variableIndex >= 0 : "Variable must be positive";
         assert variableName != null && !variableName.isEmpty() : "Variable name can't be null or empty";
         assert variableType != null : "Variable type can't be null";
 
         this.value = value;
+        this.variableIndex = variableIndex;
         this.variableName = variableName;
         this.variableType = variableType;
+    }
+
+    @Override
+    public int getVariableIndex() {
+        return variableIndex;
     }
 
     @Override
@@ -45,6 +54,7 @@ public final class VariableAssignmentImpl extends AbstractElement implements Var
 
         VariableAssignmentImpl that = (VariableAssignmentImpl) o;
 
+        if (variableIndex != that.variableIndex) return false;
         if (!value.equals(that.value)) return false;
         if (!variableName.equals(that.variableName)) return false;
         if (!variableType.equals(that.variableType)) return false;
@@ -55,6 +65,7 @@ public final class VariableAssignmentImpl extends AbstractElement implements Var
     @Override
     public int hashCode() {
         int result = value.hashCode();
+        result = 31 * result + variableIndex;
         result = 31 * result + variableName.hashCode();
         result = 31 * result + variableType.hashCode();
         return result;
@@ -64,6 +75,7 @@ public final class VariableAssignmentImpl extends AbstractElement implements Var
     public String toString() {
         return "VariableAssignmentImpl{" +
                 "value=" + value +
+                ", variableIndex=" + variableIndex +
                 ", variableName='" + variableName + '\'' +
                 ", variableType=" + variableType +
                 '}';

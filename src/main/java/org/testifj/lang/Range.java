@@ -1,5 +1,10 @@
 package org.testifj.lang;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.IntConsumer;
+import java.util.function.IntFunction;
+
 public final class Range {
 
     private final int from;
@@ -19,6 +24,10 @@ public final class Range {
 
     public int getTo() {
         return to;
+    }
+
+    public static FromContinuation from(int from) {
+        return to -> new Range(from, to);
     }
 
     @Override
@@ -44,5 +53,45 @@ public final class Range {
     @Override
     public String toString() {
         return "[" + from + ", " + to + "]";
+    }
+
+    public int[] all() {
+        final int[] elements = new int[to - from + 1];
+
+        for (int i = from; i <= to; i++) {
+            elements[i - from] = i;
+        }
+
+        return elements;
+    }
+
+    public List<Integer> allAsList() {
+        return collect(n -> n);
+    }
+
+    public void each(IntConsumer intConsumer) {
+        assert intConsumer != null : "IntConsumer can't be null";
+
+        for (int i = from; i <= to; i++) {
+            intConsumer.accept(i);
+        }
+    }
+
+    public<R> List<R> collect(IntFunction<R> intFunction) {
+        assert intFunction != null : "IntFunction can't be null";
+
+        final List<R> result = new ArrayList<>(to - from + 1);
+
+        for (int i = from; i <= to; i++) {
+            result.add(intFunction.apply(i));
+        }
+
+        return result;
+    }
+
+    public interface FromContinuation {
+
+        Range to(int to);
+
     }
 }

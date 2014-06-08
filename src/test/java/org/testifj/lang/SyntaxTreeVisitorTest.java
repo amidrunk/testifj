@@ -140,7 +140,7 @@ public class SyntaxTreeVisitorTest {
     @Test
     public void variableAssignmentCanBeVisited() {
         final Constant value = constant("bar");
-        final VariableAssignment assignment = AST.set("foo", value);
+        final VariableAssignment assignment = AST.set(0, "foo", value);
 
         SyntaxTreeVisitor.visit(assignment, callback);
 
@@ -307,7 +307,7 @@ public class SyntaxTreeVisitorTest {
     @Test
     public void searchCanBeAborted() {
         final Constant constant = constant(1);
-        final VariableAssignment assignment = AST.set("myVar", constant);
+        final VariableAssignment assignment = AST.set(0, "myVar", constant);
 
         doAnswer(i -> {
             ((SyntaxTreeVisitor.Walker) i.getArguments()[0]).abort();

@@ -73,47 +73,16 @@ public class ClassModelTestUtils {
         }
     }
 
-    public static String lineToString(int delta) {
-        final CodePointer[] codePointers = codeForLineOffset(3, delta);
-        expect(codePointers.length).toBe(1);
-        return new CodePointerCodeGenerator().describe(codePointers[0]).toString();
+    public static String toCode(CodePointer codePointer) {
+        return new CodePointerCodeGenerator().describe(codePointer).toString();
     }
 
-    public static CodePointer[] codeForLineOffset(int delta) {
-        return codeForLineOffset(3, delta);
-    }
-
-    public static CodePointer[] codeForLineOffset(int stackTraceIndex, int delta) {
-        final StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-        final StackTraceElement callerStackTraceElement = stackTraceElements[stackTraceIndex];
-
-        final Method method;
-
+    public static CodePointer[] code(Caller caller) {
         try {
-            method = methodWithName(Class.forName(callerStackTraceElement.getClassName()), callerStackTraceElement.getMethodName());
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException("Class not found", e);
-        }
-
-        try (CodeStream code = new InputStreamCodeStream(method.getCodeForLineNumber(callerStackTraceElement.getLineNumber() + delta))) {
-            return Arrays.stream(new DecompilerImpl().parse(method, code))
-                    .map(e -> new CodePointerImpl<>(method, e))
-                    .toArray(CodePointerImpl[]::new);
+            return new CallerDecompilerImpl().decompileCaller(caller);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public static Caller callerForOffset(int offset) {
-        final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-
-        stackTrace[2] = offset(stackTrace[2], offset);
-
-        return new Caller(Arrays.asList(stackTrace), 2);
-    }
-
-    public static String toCode(CodePointer codePointer) {
-        return new CodePointerCodeGenerator().describe(codePointer).toString();
     }
 
 }

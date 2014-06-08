@@ -4,6 +4,8 @@ import java.lang.reflect.Type;
 
 public interface VariableAssignment extends Statement {
 
+    int getVariableIndex();
+
     Expression getValue();
 
     String getVariableName();

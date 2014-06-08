@@ -15,8 +15,10 @@ import java.util.function.Supplier;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.testifj.Caller.adjacent;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
+import static org.testifj.lang.ClassModelTestUtils.code;
 import static org.testifj.matchers.core.CollectionThatIs.empty;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 import static org.testifj.matchers.core.ObjectThatIs.sameAs;
@@ -47,7 +49,7 @@ public class LambdasTest {
     public void getLambdaDeclarationForMethodShouldResolveDeclaringLambdaMethod() throws IOException {
         final Runnable runnable = () -> {};
 
-        final CodePointer codePointer = ClassModelTestUtils.codeForLineOffset(-2)[0];
+        final CodePointer codePointer = code(adjacent(-2))[0];
         final Lambda expectedLambda = codePointer.getElement().as(VariableAssignment.class).getValue().as(Lambda.class);
         final Method backingMethod = getBackingMethod(codePointer, expectedLambda);
 
@@ -129,7 +131,7 @@ public class LambdasTest {
     public void withEnclosedVariablesShouldReturnSameLambdaIfNoVariablesAreEnclosed() throws IOException {
         final Runnable runnable = () -> {};
 
-        final CodePointer codePointer = ClassModelTestUtils.codeForLineOffset(-2)[0];
+        final CodePointer codePointer = code(adjacent(-2))[0];
         final Method backingMethod = getBackingMethodInClosestLambda(codePointer);
         final Method complementedMethod = Lambdas.withEnclosedVariables(decompiler, backingMethod);
 
@@ -141,7 +143,7 @@ public class LambdasTest {
         final String variable = new String("foo");
         final Runnable runnable = () -> { System.out.println(variable); };
 
-        final CodePointer codePointer = ClassModelTestUtils.codeForLineOffset(-2)[0];
+        final CodePointer codePointer = ClassModelTestUtils.code(Caller.adjacent(-2))[0];
         final Method complementedMethod = complementWithEnclosedVariables(codePointer);
         final Optional<LocalVariableTable> localVariableTable = complementedMethod.getLocalVariableTable();
 
@@ -158,7 +160,7 @@ public class LambdasTest {
         final String other = new String("foo");
         final Function<String, Integer> f = string -> string.length() + other.length();
 
-        final CodePointer codePointer = ClassModelTestUtils.codeForLineOffset(-2)[0];
+        final CodePointer codePointer = ClassModelTestUtils.code(Caller.adjacent(-2))[0];
         final Method complementedMethod = complementWithEnclosedVariables(codePointer);
         final Optional<LocalVariableTable> localVariableTable = complementedMethod.getLocalVariableTable();
 

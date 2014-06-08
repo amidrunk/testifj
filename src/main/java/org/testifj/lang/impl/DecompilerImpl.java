@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,6 +42,7 @@ public final class DecompilerImpl implements Decompiler {
     private static DecompilerConfiguration createCoreConfiguration() {
         final DecompilerConfigurationImpl.Builder builder = new DecompilerConfigurationImpl.Builder();
 
+        VariableDecompilerExtensions.configure(builder);
         ArrayDecompilerExtensions.configure(builder);
         NewExtensions.configure(builder);
         InvokeDynamicExtensions.configure(builder);
@@ -53,7 +55,7 @@ public final class DecompilerImpl implements Decompiler {
 
     private void debug(DecompilationContext context, int lineNumber, int byteCode) {
         final String[] stackedExpressions = context.getStackedExpressions().stream()
-                .map(e -> debugCodeGenerator.describe(new CodePointerImpl(context.getMethod(), e)).toString())
+                .map(e -> debugCodeGenerator.describe(new CodePointerImpl<>(context.getMethod(), e)).toString())
                 .toArray(String[]::new);
 
         System.out.println("\t[" + Strings.rightPad(String.valueOf(lineNumber), 3, ' ') + "] " + Strings.rightPad(ByteCode.toString(byteCode), 20, ' ') + Arrays.asList(stackedExpressions));
@@ -62,6 +64,18 @@ public final class DecompilerImpl implements Decompiler {
     @Override
     public Element[] parse(Method method, CodeStream stream) throws IOException {
         return parse(method, stream, DecompilationProgressCallback.NULL);
+    }
+
+    private void advice(DecompilerConfiguration configuration, DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
+        for (Iterator<DecompilerEnhancement> iterator = configuration.getAdvisoryDecompilerEnhancements(context, byteCode); iterator.hasNext(); ) {
+            iterator.next().enhance(context, codeStream, byteCode);
+        }
+    }
+
+    private void correct(DecompilerConfiguration configuration, DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
+        for (Iterator<DecompilerEnhancement> iterator = configuration.getCorrectionalDecompilerEnhancements(context, byteCode); iterator.hasNext(); ) {
+            iterator.next().enhance(context, codeStream, byteCode);
+        }
     }
 
     public Element[] parse(Method method, CodeStream codeStream, DecompilationProgressCallback callback) throws IOException {
@@ -86,7 +100,7 @@ public final class DecompilerImpl implements Decompiler {
                 .isPresent();
 
         if (debug) {
-            System.out.println(method.getClassFile().getName() + "#" + method.getName() + ":");
+            System.out.println(method.getClassFile().getName() + "#" + method.getName() + "[" + codeStream.pc().get() + "/" + lineNumberCounter.get() + "]:");
         }
 
         while (!context.isAborted()) {
@@ -102,6 +116,9 @@ public final class DecompilerImpl implements Decompiler {
             if (debug) {
                 debug(context, lineNumberCounter.get(), byteCode);
             }
+
+            advice(configuration, context, codeStream, byteCode);
+            advice(coreConfiguration, context, codeStream, byteCode);
 
             final DecompilerExtension userExtension = configuration.getDecompilerExtension(context, byteCode);
 
@@ -143,78 +160,6 @@ public final class DecompilerImpl implements Decompiler {
                         context.insert(-2, context.peek());
                         break;
                     }
-                    // Load local variable
-                    case ByteCode.aload:
-                        ByteCodes.loadVariable(context, method, codeStream.nextByte());
-                        break;
-                    case ByteCode.aload_0:
-                    case ByteCode.aload_1:
-                    case ByteCode.aload_2:
-                    case ByteCode.aload_3:
-                        ByteCodes.loadVariable(context, method, byteCode - ByteCode.aload_0);
-                        break;
-                    case ByteCode.iload_0:
-                    case ByteCode.iload_1:
-                    case ByteCode.iload_2:
-                    case ByteCode.iload_3:
-                        ByteCodes.loadVariable(context, method, byteCode - ByteCode.iload_0);
-                        break;
-                    case ByteCode.lload_0:
-                    case ByteCode.lload_1:
-                    case ByteCode.lload_2:
-                    case ByteCode.lload_3:
-                        ByteCodes.loadVariable(context, method, byteCode - ByteCode.lload_0);
-                        break;
-
-                    // Store local variable
-
-                    case ByteCode.istore:
-                        ByteCodes.storeVariable(context, method, codeStream.nextByte());
-                        break;
-                    case ByteCode.istore_0:
-                    case ByteCode.istore_1:
-                    case ByteCode.istore_2:
-                    case ByteCode.istore_3:
-                        ByteCodes.storeVariable(context, method, byteCode - ByteCode.istore_0);
-                        break;
-                    case ByteCode.lstore:
-                        ByteCodes.storeVariable(context, method, codeStream.nextByte());
-                        break;
-                    case ByteCode.lstore_0:
-                    case ByteCode.lstore_1:
-                    case ByteCode.lstore_2:
-                    case ByteCode.lstore_3:
-                        ByteCodes.storeVariable(context, method, byteCode - ByteCode.lstore_0);
-                        break;
-                    case ByteCode.fstore:
-                        ByteCodes.storeVariable(context, method, codeStream.nextByte());
-                        break;
-                    case ByteCode.fstore_0:
-                    case ByteCode.fstore_1:
-                    case ByteCode.fstore_2:
-                    case ByteCode.fstore_3:
-                        ByteCodes.storeVariable(context, method, byteCode - ByteCode.fstore_0);
-                        break;
-                    case ByteCode.dstore:
-                        ByteCodes.storeVariable(context, method, codeStream.nextByte());
-                        break;
-                    case ByteCode.dstore_0:
-                    case ByteCode.dstore_1:
-                    case ByteCode.dstore_2:
-                    case ByteCode.dstore_3:
-                        ByteCodes.storeVariable(context, method, byteCode - ByteCode.dstore_0);
-                        break;
-                    case ByteCode.astore:
-                        ByteCodes.storeVariable(context, method, codeStream.nextByte());
-                        break;
-                    case ByteCode.astore_0:
-                    case ByteCode.astore_1:
-                    case ByteCode.astore_2:
-                    case ByteCode.astore_3: {
-                        final int index = byteCode - ByteCode.astore_0;
-                        ByteCodes.storeVariable(context, method, index);
-                        break;
-                    }
 
                     // Operators
 
@@ -223,6 +168,14 @@ public final class DecompilerImpl implements Decompiler {
                         final Expression leftOperand = context.pop();
 
                         context.push(new BinaryOperatorImpl(leftOperand, OperatorType.PLUS, rightOperand, int.class));
+
+                        break;
+                    }
+                    case ByteCode.isub: {
+                        final Expression rightOperand = context.pop();
+                        final Expression leftOperand = context.pop();
+
+                        context.push(new BinaryOperatorImpl(leftOperand, OperatorType.MINUS, rightOperand, int.class));
 
                         break;
                     }
@@ -435,17 +388,9 @@ public final class DecompilerImpl implements Decompiler {
                 }
             }
 
-            final DecompilerEnhancement coreEnhancement = coreConfiguration.getDecompilerEnhancement(context, byteCode);
-
-            if (coreEnhancement != null) {
-                coreEnhancement.enhance(context, codeStream, byteCode);
-            }
-
-            final DecompilerEnhancement userEnhancement = configuration.getDecompilerEnhancement(context, byteCode);
-
-            if (userEnhancement != null) {
-                userEnhancement.enhance(context, codeStream, byteCode);
-            }
+            // TODO: Merge configurations instead
+            correct(configuration, context, codeStream, byteCode);
+            correct(coreConfiguration, context, codeStream, byteCode);
 
             callback.onDecompilationProgressed(context);
         }

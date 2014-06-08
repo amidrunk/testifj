@@ -1,20 +1,30 @@
 package org.testifj.lang.impl;
 
 import org.testifj.lang.*;
+import org.testifj.util.Iterators;
 import org.testifj.util.Priority;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.Iterator;
+
+import static org.testifj.util.Iterators.collect;
+import static org.testifj.util.Iterators.empty;
+import static org.testifj.util.Iterators.filter;
 
 public final class DecompilerConfigurationImpl implements DecompilerConfiguration {
 
-    private final DecompilerDelegateAdapter[][] decompilerExtensions;
+    private final DecompilerDelegateAdapter<DecompilerExtension>[][] decompilerExtensions;
 
-    private final DecompilerEnhancement[] decompilerEnhancements;
+    private final DecompilerDelegateAdapter<DecompilerEnhancement>[][] advisoryDecompilerEnhancements;
 
-    private DecompilerConfigurationImpl(DecompilerDelegateAdapter[][] decompilerExtensions, DecompilerEnhancement[] decompilerEnhancements) {
+    private final DecompilerDelegateAdapter<DecompilerEnhancement>[][] correctionalDecompilerEnhancements;
+
+    private DecompilerConfigurationImpl(DecompilerDelegateAdapter<DecompilerExtension>[][] decompilerExtensions,
+                                        DecompilerDelegateAdapter<DecompilerEnhancement>[][] advisoryDecompilerEnhancements,
+                                        DecompilerDelegateAdapter<DecompilerEnhancement>[][] correctionalDecompilerEnhancements) {
         this.decompilerExtensions = decompilerExtensions;
-        this.decompilerEnhancements = decompilerEnhancements;
+        this.advisoryDecompilerEnhancements = advisoryDecompilerEnhancements;
+        this.correctionalDecompilerEnhancements = correctionalDecompilerEnhancements;
     }
 
     @Override
@@ -38,11 +48,29 @@ public final class DecompilerConfigurationImpl implements DecompilerConfiguratio
     }
 
     @Override
-    public DecompilerEnhancement getDecompilerEnhancement(DecompilationContext context, int byteCode) {
-        assert context != null : "Decompilation context can't be null";
-        assert validByteCode(byteCode) : "Byte code must be in range [0, 255]";
+    public Iterator<DecompilerEnhancement> getAdvisoryDecompilerEnhancements(DecompilationContext context, int byteCode) {
+        return selectEnhancements(advisoryDecompilerEnhancements, context, byteCode);
+    }
 
-        return decompilerEnhancements[byteCode];
+    @Override
+    public Iterator<DecompilerEnhancement> getCorrectionalDecompilerEnhancements(DecompilationContext context, int byteCode) {
+        return selectEnhancements(correctionalDecompilerEnhancements, context, byteCode);
+    }
+
+    private Iterator<DecompilerEnhancement> selectEnhancements(DecompilerDelegateAdapter<DecompilerEnhancement>[][] source,
+                                                               DecompilationContext context, int byteCode) {
+        assert context != null : "Context can't be null";
+        assert ByteCode.isValid(byteCode) : "Byte code is not valid";
+
+        final DecompilerDelegateAdapter<DecompilerEnhancement>[] enhancements = source[byteCode];
+
+        if (enhancements == null) {
+            return empty();
+        }
+
+        return collect(filter(Iterators.of(enhancements),
+                        adapter -> adapter.getDecompilationStateSelector().select(context, byteCode)),
+                DecompilerDelegateAdapter::getDelegate);
     }
 
     private static boolean validByteCode(int byteCode) {
@@ -54,30 +82,29 @@ public final class DecompilerConfigurationImpl implements DecompilerConfiguratio
 
         private final DecompilerDelegateAdapter<DecompilerExtension>[][] decompilerExtensions = new DecompilerDelegateAdapter[256][];
 
-        private final DecompilerEnhancement[] decompilerEnhancements = new DecompilerEnhancement[256];
+        private final DecompilerDelegateAdapter<DecompilerEnhancement>[][] advisoryDecompilerEnhancements = new DecompilerDelegateAdapter[256][];
+
+        private final DecompilerDelegateAdapter<DecompilerEnhancement>[][] correctionalDecompilerEnhancements = new DecompilerDelegateAdapter[256][];
 
         public DecompilerConfiguration build() {
-            return new DecompilerConfigurationImpl(decompilerExtensions, decompilerEnhancements);
+            return new DecompilerConfigurationImpl(
+                    decompilerExtensions,
+                    advisoryDecompilerEnhancements,
+                    correctionalDecompilerEnhancements);
         }
 
         @Override
-        public DecompilerConfiguration.Builder enhance(int byteCode, DecompilerEnhancement enhancement) {
-            assert validByteCode(byteCode) : "Byte code must be in range [0, 255]";
-            assert enhancement != null : "Enhancement can't be null";
-
-            final DecompilerEnhancement existingEnhancement = decompilerEnhancements[byteCode];
-
-            if (existingEnhancement != null) {
-                decompilerEnhancements[byteCode] = new DecompilerEnhancementLink(existingEnhancement, enhancement);
-            } else {
-                decompilerEnhancements[byteCode] = enhancement;
-            }
-
-            return this;
+        public ExtendContinuation<DecompilerEnhancement> before(int byteCode) {
+            return new DecompilerExtensionBuilder<>(this, new int[]{byteCode}, advisoryDecompilerEnhancements);
         }
 
         @Override
-        public ExtendContinuation on(int startByteCode, int endByteCode) {
+        public ExtendContinuation<DecompilerEnhancement> after(int byteCode) {
+            return new DecompilerExtensionBuilder<>(this, new int[]{byteCode}, correctionalDecompilerEnhancements);
+        }
+
+        @Override
+        public ExtendContinuation<DecompilerExtension> on(int startByteCode, int endByteCode) {
             assert endByteCode > startByteCode : "End byte code must be greater than start byte code";
             assert ByteCode.isValid(startByteCode) : "Start byte code is not valid";
             assert ByteCode.isValid(endByteCode) : "End byte code is not valid";
@@ -88,62 +115,88 @@ public final class DecompilerConfigurationImpl implements DecompilerConfiguratio
                 byteCodes[i - startByteCode] = i;
             }
 
-            return new DecompilerExtensionBuilder(byteCodes);
+            return new DecompilerExtensionBuilder(this, byteCodes, decompilerExtensions);
         }
 
         @Override
-        public ExtendContinuation on(int byteCode) {
+        public ExtendContinuation<DecompilerExtension> on(int byteCode) {
             assert ByteCode.isValid(byteCode) : "Byte code is not valid";
-            return new DecompilerExtensionBuilder(new int[]{byteCode});
+            return new DecompilerExtensionBuilder(this, new int[]{byteCode}, decompilerExtensions);
         }
 
-        private class DecompilerExtensionBuilder implements ExtendContinuation {
+        @Override
+        public ExtendContinuation<DecompilerExtension> on(int... byteCodes) {
+            assert byteCodes != null : "Byte codes can't be null";
+            assert byteCodes.length > 0 : "Byte codes can't be empty";
+
+            final int[] copy = new int[byteCodes.length];
+
+            for (int i = 0; i < byteCodes.length; i++) {
+                assert ByteCode.isValid(byteCodes[i]) : "Byte code is not valid: " + byteCodes[i];
+
+                copy[i] = byteCodes[i];
+            }
+
+            return new DecompilerExtensionBuilder<>(this, copy, decompilerExtensions);
+        }
+
+        private static class DecompilerExtensionBuilder<T> implements ExtendContinuation<T> {
+
+            private final Builder builder;
 
             private final int[] byteCodes;
+
+            private final DecompilerDelegateAdapter<T>[][] targetArray;
 
             private Priority priority = Priority.DEFAULT;
 
             private DecompilationStateSelector decompilationStateSelector = DecompilationStateSelector.ALL;
 
-            private DecompilerExtensionBuilder(int[] byteCodes) {
+            private DecompilerExtensionBuilder(Builder builder, int[] byteCodes, DecompilerDelegateAdapter<T>[][] targetArray) {
+                this.builder = builder;
                 this.byteCodes = byteCodes;
+                this.targetArray = targetArray;
             }
 
             @Override
-            public WithPriorityContinuation withPriority(Priority priority) {
+            public WithPriorityContinuation<T> withPriority(Priority priority) {
                 this.priority = priority;
                 return this;
             }
 
             @Override
-            public WhenContinuation when(DecompilationStateSelector selector) {
+            public WhenContinuation<T> when(DecompilationStateSelector selector) {
                 this.decompilationStateSelector = selector;
                 return this;
             }
 
             @Override
-            public DecompilerConfiguration.Builder then(DecompilerExtension extension) {
+            public DecompilerConfiguration.Builder then(T extension) {
                 for (int byteCode : byteCodes) {
-                    final DecompilerDelegateAdapter<DecompilerExtension>[] existingExtensions = decompilerExtensions[byteCode];
-                    final DecompilerDelegateAdapter<DecompilerExtension> newAdapter = new DecompilerDelegateAdapter<>(byteCode, priority, decompilationStateSelector, extension);
+                    final DecompilerDelegateAdapter<T>[] existingExtensions = targetArray[byteCode];
+                    final DecompilerDelegateAdapter<T> newAdapter = new DecompilerDelegateAdapter<>(byteCode, priority, decompilationStateSelector, extension);
 
                     if (existingExtensions == null) {
-                        decompilerExtensions[byteCode] = new DecompilerDelegateAdapter[]{newAdapter};
+                        targetArray[byteCode] = new DecompilerDelegateAdapter[]{newAdapter};
                     } else {
-                        final DecompilerDelegateAdapter<DecompilerExtension>[] newExtensions = Arrays.copyOf(existingExtensions, existingExtensions.length + 1);
+                        final DecompilerDelegateAdapter<T>[] newExtensions = Arrays.copyOf(
+                                existingExtensions,
+                                existingExtensions.length + 1,
+                                DecompilerDelegateAdapter[].class);
 
                         for (int i = 0; i < newExtensions.length; i++) {
                             if (newExtensions[i] == null || priority.ordinal() > newExtensions[i].getPriority().ordinal()) {
                                 System.arraycopy(newExtensions, i, newExtensions, i + 1, newExtensions.length - 1 - i);
                                 newExtensions[i] = newAdapter;
+                                break;
                             }
                         }
 
-                        decompilerExtensions[byteCode] = newExtensions;
+                        targetArray[byteCode] = newExtensions;
                     }
                 }
 
-                return Builder.this;
+                return builder;
             }
         }
 

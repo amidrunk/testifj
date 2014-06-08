@@ -1,6 +1,7 @@
 package org.testifj.lang.impl;
 
 import org.junit.Test;
+import org.testifj.Caller;
 import org.testifj.lang.ClassModelTestUtils;
 import org.testifj.lang.CodePointer;
 import org.testifj.lang.*;
@@ -19,6 +20,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
+import static org.testifj.lang.ClassModelTestUtils.code;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
 public class NewExtensionsTest {
@@ -65,7 +67,7 @@ public class NewExtensionsTest {
     public void newByteCodeShouldBeSupportedInByteCode() {
         final String str = new String("str");
 
-        final CodePointer[] codePointers = ClassModelTestUtils.codeForLineOffset(-2);
+        final CodePointer[] codePointers = code(Caller.adjacent(-2));
         expect(codePointers.length).toBe(1);
 
         final Element element = codePointers[0].getElement();

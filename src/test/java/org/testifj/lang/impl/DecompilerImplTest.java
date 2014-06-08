@@ -2,6 +2,8 @@ package org.testifj.lang.impl;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InOrder;
+import org.mockito.Mockito;
 import org.testifj.Caller;
 import org.testifj.lang.ClassModelTestUtils;
 import org.testifj.Procedure;
@@ -23,8 +25,11 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.*;
+import static org.testifj.Caller.adjacent;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
+import static org.testifj.lang.ClassModelTestUtils.code;
+import static org.testifj.lang.ClassModelTestUtils.toCode;
 import static org.testifj.lang.impl.DecompilationHistoryCallback.DecompilerState;
 import static org.testifj.lang.model.AST.*;
 import static org.testifj.lang.model.AST.eq;
@@ -35,6 +40,7 @@ import static org.testifj.matchers.core.StringShould.containString;
 public class DecompilerImplTest {
 
     private final Method exampleMethod = mock(Method.class);
+
     private final ClassFile exampleClassFile = mock(ClassFile.class);
 
     @Before
@@ -49,15 +55,54 @@ public class DecompilerImplTest {
     }
 
     @Test
-    public void configuredDecompilerEnhancementShouldBeCalledAfterInstruction() throws IOException {
+    public void advisoryDecompilerEnhancementShouldBeCalledBeforeInstructionIsProcessed() throws IOException {
         final DecompilerEnhancement enhancement = mock(DecompilerEnhancement.class);
+        final DecompilerExtension extension = mock(DecompilerExtension.class);
+
         final DecompilerConfiguration configuration = new DecompilerConfigurationImpl.Builder()
-                .enhance(ByteCode.istore_1, enhancement)
+                .before(ByteCode.nop).then(enhancement)
+                .on(ByteCode.nop).then(extension)
                 .build();
 
         final DecompilerImpl decompiler = new DecompilerImpl(configuration);
 
-        when(exampleMethod.getLocalVariableForIndex(eq(1))).thenReturn(new LocalVariableImpl(-1, -1, "test", String.class, 1));
+        decompiler.parse(exampleMethod, CodeStreamTestUtils.codeStream(ByteCode.nop));
+
+        final InOrder inOrder = Mockito.inOrder(extension, enhancement);
+
+        inOrder.verify(enhancement).enhance(any(DecompilationContext.class), any(CodeStream.class), eq(ByteCode.nop));
+        inOrder.verify(extension).decompile(any(DecompilationContext.class), any(CodeStream.class), eq(ByteCode.nop));
+    }
+
+    @Test
+    public void correctionalDecompilerEnhancementShouldBeCalledAfterInstructionIsProcessed() throws IOException {
+        final DecompilerExtension extension = mock(DecompilerExtension.class);
+        final DecompilerEnhancement enhancement = mock(DecompilerEnhancement.class);
+        final DecompilerConfiguration configuration = new DecompilerConfigurationImpl.Builder()
+                .on(ByteCode.nop).then(extension)
+                .after(ByteCode.nop).then(enhancement)
+                .build();
+
+        new DecompilerImpl(configuration).parse(exampleMethod, CodeStreamTestUtils.codeStream(ByteCode.nop));
+
+        final InOrder inOrder = Mockito.inOrder(extension, enhancement);
+
+        inOrder.verify(extension).decompile(any(DecompilationContext.class), any(CodeStream.class), eq(ByteCode.nop));
+        inOrder.verify(enhancement).enhance(any(DecompilationContext.class), any(CodeStream.class), eq(ByteCode.nop));
+    }
+
+    @Test
+    public void configuredDecompilerEnhancementShouldBeCalledAfterInstruction() throws IOException {
+        final DecompilerEnhancement enhancement = mock(DecompilerEnhancement.class);
+        final DecompilerConfiguration configuration = new DecompilerConfigurationImpl.Builder()
+                .after(ByteCode.istore_1).then(enhancement)
+                .build();
+
+        final DecompilerImpl decompiler = new DecompilerImpl(configuration);
+
+        when(exampleMethod.getLocalVariableTable()).thenReturn(Optional.of(new LocalVariableTableImpl(new LocalVariable[]{
+                new LocalVariableImpl(-1, -1, "test", String.class, 1)
+        })));
 
         decompiler.parse(exampleMethod, new InputStreamCodeStream(new ByteArrayInputStream(new byte[]{(byte) ByteCode.iconst_0, ByteCode.istore_1})));
 
@@ -85,14 +130,14 @@ public class DecompilerImplTest {
     public void decompilationProgressCallbackShouldBeNotifiedOfProgress() throws IOException {
         int n = 100;
 
-        final Caller caller = Caller.adjacent(-2);
+        final Caller caller = adjacent(-2);
         final DecompilationHistoryCallback callback = new DecompilationHistoryCallback();
 
         decompileCallerWithCallback(caller, callback);
 
         expect(callback.getDecompilerStates()).toBe(new DecompilerState[]{
                 new DecompilerState(Arrays.asList(AST.constant(100)), Collections.emptyList()),
-                new DecompilerState(Collections.emptyList(), Arrays.asList(AST.set("n", int.class, AST.constant(100))))
+                new DecompilerState(Collections.emptyList(), Arrays.asList(AST.set(1, "n", int.class, AST.constant(100))))
         });
     }
 
@@ -100,7 +145,7 @@ public class DecompilerImplTest {
     public void decompilationCanBeAborted() throws IOException {
         int n = 100; int m = 200;
 
-        final Caller caller = Caller.adjacent(-2);
+        final Caller caller = adjacent(-2);
         final DecompilationProgressCallback callback = mock(DecompilationProgressCallback.class);
         final DecompilationHistoryCallback history = new DecompilationHistoryCallback();
 
@@ -118,7 +163,7 @@ public class DecompilerImplTest {
 
         expect(history.getDecompilerStates()).toBe(new DecompilerState[]{
                 new DecompilerState(Arrays.asList(AST.constant(100)), Collections.emptyList()),
-                new DecompilerState(Collections.emptyList(), Arrays.asList(AST.set("n", int.class, AST.constant(100))))
+                new DecompilerState(Collections.emptyList(), Arrays.asList(AST.set(1, "n", int.class, AST.constant(100))))
         });
     }
 
@@ -159,7 +204,7 @@ public class DecompilerImplTest {
         final Element[] elements = parseMethodBody("returnLocal");
 
         final Element[] expectedElements = {
-                set("n", constant(100)),
+                set(1, "n", constant(100)),
                 $return(local("n", int.class, 1))
         };
 
@@ -169,7 +214,7 @@ public class DecompilerImplTest {
     @Test
     public void expectationsCanBeParsed() {
         expect(true).toBe(true);
-        expect(ClassModelTestUtils.lineToString(-1)).toBe("expect(true).toBe(true)");
+        expect(toCode(code(adjacent(-1))[0])).toBe("expect(true).toBe(true)");
     }
 
     @Test
@@ -177,9 +222,9 @@ public class DecompilerImplTest {
         final Element[] elements = parseMethodBody("methodWithConstantPoolReferences");
 
         expect(elements).toBe(new Element[]{
-                set("n", constant(123456789)),
-                set("f", constant(123456789f)),
-                set("str", constant("foobar")),
+                set(1, "n", constant(123456789)),
+                set(2, "f", constant(123456789f)),
+                set(3, "str", constant("foobar")),
                 $return()
         });
     }
@@ -225,7 +270,7 @@ public class DecompilerImplTest {
     public void methodWithStaticFieldReferenceCanBeParsed() {
         final Element[] actualElements = parseMethodBody("methodWithStaticFieldReference");
         final Element[] expectedElements = {
-                set("b", field(BigDecimal.class, BigDecimal.class, "ZERO")),
+                set(1, "b", field(BigDecimal.class, BigDecimal.class, "ZERO")),
                 $return()
         };
 
@@ -237,8 +282,8 @@ public class DecompilerImplTest {
         final Element[] elements = parseMethodBody("methodWithLongConstants");
 
         expect(elements).toBe(new Element[]{
-                set("l1", constant(0L)),
-                set("l2", constant(1L)),
+                set(1, "l1", constant(0L)),
+                set(3, "l2", constant(1L)),
                 $return()
         });
     }
@@ -248,9 +293,9 @@ public class DecompilerImplTest {
         final Element[] elements = parseMethodBody("methodWithByteConstants");
 
         expect(elements).toBe(new Element[]{
-                set("b1", byte.class, constant(0)),
-                set("b2", byte.class, constant(1)),
-                set("b3", byte.class, constant(2)),
+                set(1, "b1", byte.class, constant(0)),
+                set(2, "b2", byte.class, constant(1)),
+                set(3, "b3", byte.class, constant(2)),
                 $return()
         });
     }
@@ -260,7 +305,7 @@ public class DecompilerImplTest {
         final Element[] elements = parseMethodBody("methodWithEqComparison");
 
         expect(elements).toBe(new Element[]{
-                set("b1", eq(call(constant("str"), "length", int.class), constant(3))),
+                set(1, "b1", eq(call(constant("str"), "length", int.class), constant(3))),
                 $return()
         });
     }
@@ -270,14 +315,14 @@ public class DecompilerImplTest {
         final Element[] elements = parseMethodBody("constantsOfAllTypes");
 
         expect(elements).toBe(new Element[]{
-                set("z", boolean.class, constant(1)),
-                set("b", byte.class, constant(100)),
-                set("s", short.class, constant(200)),
-                set("c", char.class, constant(300)),
-                set("n", int.class, constant(400)),
-                set("l", long.class, constant(500L)),
-                set("f", float.class, constant(600.1234f)),
-                set("d", double.class, constant(700.1234d)),
+                set(1, "z", boolean.class, constant(1)),
+                set(2, "b", byte.class, constant(100)),
+                set(3, "s", short.class, constant(200)),
+                set(4, "c", char.class, constant(300)),
+                set(5, "n", int.class, constant(400)),
+                set(6, "l", long.class, constant(500L)),
+                set(8, "f", float.class, constant(600.1234f)),
+                set(9, "d", double.class, constant(700.1234d)),
                 $return()
         });
     }
@@ -288,17 +333,17 @@ public class DecompilerImplTest {
 
         expect(() -> constantPool.getInterfaceMethodRefDescriptor(1)).toThrow(IndexOutOfBoundsException.class);
 
-        final CodePointer[] codePointers = ClassModelTestUtils.codeForLineOffset(-2);
+        final CodePointer[] codePointers = code(adjacent(-2));
 
         expect(codePointers.length).toBe(1);
-        expect(ClassModelTestUtils.toCode(codePointers[0])).to(containString("expect(() -> constantPool.getInterfaceMethodRefDescriptor(1))"));
+        expect(toCode(codePointers[0])).to(containString("expect(() -> constantPool.getInterfaceMethodRefDescriptor(1))"));
     }
 
     @Test
     public void newStatementCanBeDecompiled() {
         new String("Hello World!");
 
-        final Element[] elements = Arrays.stream(ClassModelTestUtils.codeForLineOffset(-2)).map(CodePointer::getElement).toArray(Element[]::new);
+        final Element[] elements = Arrays.stream(code(adjacent(-2))).map(CodePointer::getElement).toArray(Element[]::new);
 
         expect(elements).toBe(new Element[]{ newInstance(String.class, constant("Hello World!")) });
     }
@@ -307,22 +352,22 @@ public class DecompilerImplTest {
     public void newStatementWithAssignmentCanBeDecompiled() {
         final String str = new String("Hello World!");
 
-        final Element[] elements = Arrays.stream(ClassModelTestUtils.codeForLineOffset(-2)).map(CodePointer::getElement).toArray(Element[]::new);
+        final Element[] elements = Arrays.stream(code(adjacent(-2))).map(CodePointer::getElement).toArray(Element[]::new);
 
-        expect(elements).toBe(new Element[]{ set("str", newInstance(String.class, constant("Hello World!"))) });
+        expect(elements).toBe(new Element[]{ set(1, "str", newInstance(String.class, constant("Hello World!"))) });
     }
 
     @Test
     public void newArrayWithAssignmentCanBeDecompiled() {
         final String[] array = {"Hello!"};
 
-        final Element[] elements = Arrays.stream(ClassModelTestUtils.codeForLineOffset(-2)).map(CodePointer::getElement).toArray(Element[]::new);
+        final Element[] elements = Arrays.stream(code(adjacent(-2))).map(CodePointer::getElement).toArray(Element[]::new);
 
         expect(elements).toBe(new Element[]{
                 new VariableAssignmentImpl(
                         new NewArrayImpl(String[].class, String.class, constant(1),
                                 Arrays.asList(new ArrayInitializerImpl(0, constant("Hello!")))),
-                        "array", String[].class)
+                        1, "array", String[].class)
         });
     }
 
@@ -332,7 +377,9 @@ public class DecompilerImplTest {
 
         array[0] = "Hello World!";
 
-        final Element[] elements = Arrays.stream(ClassModelTestUtils.codeForLineOffset(-2)).map(CodePointer::getElement).toArray(Element[]::new);
+        final Element[] elements = Arrays.stream(code(adjacent(-2)))
+                .map(CodePointer::getElement)
+                .toArray(Element[]::new);
 
         expect(elements).toBe(new Element[]{
                 new ArrayStoreImpl(local("array", String[].class, 1), constant(0), constant("Hello World!"))
@@ -345,7 +392,9 @@ public class DecompilerImplTest {
     public void fieldAssignmentCanBeDecompiled() {
         this.str = "newvalue";
 
-        final Element[] elements = Arrays.stream(ClassModelTestUtils.codeForLineOffset(-2)).map(CodePointer::getElement).toArray(Element[]::new);
+        final Element[] elements = Arrays.stream(code(adjacent(-2)))
+                .map(CodePointer::getElement)
+                .toArray(Element[]::new);
 
         expect(elements).toBe(new Element[]{
                 new FieldAssignmentImpl(
@@ -358,12 +407,12 @@ public class DecompilerImplTest {
     public void staticFieldReferenceCanBeDecompiled() {
         final PrintStream out = System.out;
 
-        final Element[] elements = Arrays.stream(ClassModelTestUtils.codeForLineOffset(-2)).map(CodePointer::getElement).toArray(Element[]::new);
+        final Element[] elements = Arrays.stream(code(adjacent(-2))).map(CodePointer::getElement).toArray(Element[]::new);
 
         expect(elements).toBe(new Element[]{
                 new VariableAssignmentImpl(
                         new FieldReferenceImpl(null, System.class, PrintStream.class, "out"),
-                        "out", PrintStream.class)
+                        1, "out", PrintStream.class)
         });
     }
 
@@ -371,7 +420,7 @@ public class DecompilerImplTest {
     public void staticFieldAssignmentCanBeDecompiled() {
         ExampleClass.STATIC_STRING = "bar";
 
-        final Element[] elements = Arrays.stream(ClassModelTestUtils.codeForLineOffset(-2)).map(CodePointer::getElement).toArray(Element[]::new);
+        final Element[] elements = Arrays.stream(code(adjacent(-2))).map(CodePointer::getElement).toArray(Element[]::new);
 
         expect(elements).toBe(new Element[]{
                 new FieldAssignmentImpl(
@@ -385,10 +434,10 @@ public class DecompilerImplTest {
         final Object object = "foo";
         final String string = (String) object;
 
-        final Element[] elements = Arrays.stream(ClassModelTestUtils.codeForLineOffset(-2)).map(CodePointer::getElement).toArray(Element[]::new);
+        final Element[] elements = Arrays.stream(code(adjacent(-2))).map(CodePointer::getElement).toArray(Element[]::new);
 
         expect(elements).toBe(new Element[]{
-                AST.set("string", cast(local("object", Object.class, 1)).to(String.class))
+                AST.set(2, "string", cast(local("object", Object.class, 1)).to(String.class))
         });
     }
 
@@ -396,14 +445,112 @@ public class DecompilerImplTest {
     public void lineNumbersShouldBeRetained() {
         final String string = "str";
 
-        final Caller caller = Caller.adjacent(-2);
-        final Element[] elements = Arrays.stream(ClassModelTestUtils.codeForLineOffset(-3)).map(CodePointer::getElement).toArray(Element[]::new);
+        final Caller caller = adjacent(-2);
+        final Element[] elements = Arrays.stream(code(adjacent(-3))).map(CodePointer::getElement).toArray(Element[]::new);
 
         final VariableAssignment variableAssignments = (VariableAssignment) elements[0];
         expect(variableAssignments.getMetaData().getAttribute(ElementMetaData.LINE_NUMBER)).toBe(caller.getCallerStackTraceElement().getLineNumber());
 
         final Constant value = (Constant) variableAssignments.getValue();
         expect(value.getMetaData().getAttribute(ElementMetaData.LINE_NUMBER)).toBe(caller.getCallerStackTraceElement().getLineNumber());
+    }
+
+    @Test
+    public void intArrayStoreCanBeDecompiled() {
+        int[] array = new int[2];
+        array[0] = 1234;
+
+        final CodePointer codePointer = code(adjacent(-2))[0];
+
+        expect(codePointer.getElement()).toBe(
+                new ArrayStoreImpl(
+                        new LocalVariableReferenceImpl("array", int[].class, 1),
+                        AST.constant(0),
+                        AST.constant(1234)));
+    }
+
+    @Test
+    public void longArrayLoadCanBeDecompiled() {
+        long[] array = new long[] {1};
+        long l = array[0];
+
+        expect(code(adjacent(-2))[0].getElement()).toBe(
+                new VariableAssignmentImpl(
+                        new ArrayLoadImpl(
+                                new LocalVariableReferenceImpl("array", long[].class, 1),
+                                AST.constant(0),
+                                long.class),
+                        2, "l", long.class));
+    }
+
+    @Test
+    public void floatArrayLoadCanBeDecompiled() {
+        float[] array = new float[]{1f};
+        float f = array[0];
+
+        expect(code(adjacent(-2))[0].getElement()).toBe(
+                new VariableAssignmentImpl(
+                        new ArrayLoadImpl(
+                                new LocalVariableReferenceImpl("array", float[].class, 1),
+                                AST.constant(0),
+                                float.class),
+                        2, "f", float.class));
+    }
+
+    @Test
+    public void doubleArrayLoadCanBeDecompiled() {
+        double[] array = new double[]{1d};
+        double d = array[0];
+
+        expect(code(adjacent(-2))[0].getElement()).toBe(
+                new VariableAssignmentImpl(
+                        new ArrayLoadImpl(
+                                new LocalVariableReferenceImpl("array", double[].class, 1),
+                                AST.constant(0),
+                                double.class),
+                        2, "d", double.class));
+    }
+
+    @Test
+    public void booleanArrayLoadCanBeDecompiled() {
+        boolean[] array = new boolean[]{true};
+        boolean b = array[0];
+
+        expect(code(adjacent(-2))[0].getElement()).toBe(
+                new VariableAssignmentImpl(
+                        new ArrayLoadImpl(
+                                new LocalVariableReferenceImpl("array", boolean[].class, 1),
+                                AST.constant(0),
+                                boolean.class),
+                        2, "b", boolean.class));
+    }
+
+    @Test
+    public void charArrayLoadCanBeDecompiled() {
+        char[] array = new char[]{'c'};
+        char c = array[0];
+
+        expect(code(adjacent(-2))[0].getElement()).toBe(
+                new VariableAssignmentImpl(
+                        new ArrayLoadImpl(
+                                new LocalVariableReferenceImpl("array", char[].class, 1),
+                                AST.constant(0),
+                                char.class),
+                        2, "c", char.class));
+    }
+
+    @Test
+    public void shortArrayLoadCanBeDecompiled() {
+        short[] array = new short[]{(short) 1};
+        short s = array[0];
+
+        expect(code(adjacent(-2))[0].getElement()).toBe(
+                new VariableAssignmentImpl(
+                        new ArrayLoadImpl(
+                                new LocalVariableReferenceImpl("array", short[].class, 1),
+                                AST.constant(0),
+                                short.class),
+                        2, "s", short.class));
     }
 
     private Element[] parseMethodBody(String methodName) {

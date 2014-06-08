@@ -16,7 +16,7 @@ public final class InvokeDynamicExtensions {
 
         configurationBuilder.on(ByteCode.invokedynamic).then(invokedynamic());
 
-        configurationBuilder.enhance(ByteCode.invokedynamic, (context, codeStream, byteCode) -> {
+        configurationBuilder.after(ByteCode.invokedynamic).when(DecompilationStateSelector.ALL).then((context,codeStream,byteCode) -> {
             // Ok, this is like really weird. There's no way to determine that a lambda method reference
             // is an instance method reference as opposed to a static method reference. However, the compiler
             // will insert a <targetInstance>.getClass() prior to the method call and immediately discard the

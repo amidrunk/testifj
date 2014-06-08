@@ -2,6 +2,9 @@ package org.testifj.lang;
 
 import java.io.IOException;
 
+// TODO: Should be called "ByteCodeProcessor" or something
+// TODO: Should not return boolean
+// TODO: Should be the same as enhancement
 @FunctionalInterface
 public interface DecompilerExtension {
 

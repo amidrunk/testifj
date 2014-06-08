@@ -9,6 +9,15 @@ public interface Matcher<T> {
 
     boolean matches(T instance);
 
-    // default Matcher<T> or(Matcher<T> otherMatcher)
+    default Matcher<T> or(Matcher<T> matcher)  {
+        assert matcher != null : "Matcher can't be null";
 
+        return (e) -> Matcher.this.matches(e) || matcher.matches(e);
+    }
+
+    default Matcher<T> and(Matcher<T> matcher) {
+        assert matcher != null : "Matcher can't be null";
+
+        return (e) -> Matcher.this.matches(e) && matcher.matches(e);
+    }
 }

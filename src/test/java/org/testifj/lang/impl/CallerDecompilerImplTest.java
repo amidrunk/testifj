@@ -7,9 +7,7 @@ import org.testifj.Caller;
 import org.testifj.Matcher;
 import org.testifj.lang.*;
 import org.testifj.lang.model.*;
-import org.testifj.lang.model.impl.ConstantImpl;
-import org.testifj.lang.model.impl.MethodSignature;
-import org.testifj.lang.model.impl.VariableAssignmentImpl;
+import org.testifj.lang.model.impl.*;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -17,8 +15,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
+import static org.testifj.Caller.adjacent;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
+import static org.testifj.lang.ClassModelTestUtils.code;
 import static org.testifj.matchers.core.CollectionThatIs.empty;
 
 public class CallerDecompilerImplTest {
@@ -34,10 +34,10 @@ public class CallerDecompilerImplTest {
     public void decompileCallerCanDecompileSimpleStatement() throws IOException {
         int n = 100;
 
-        final Element[] elements = decompileCaller(ClassModelTestUtils.callerForOffset(-2));
+        final Element[] elements = decompileCaller(adjacent(-2));
 
         expect(elements).toBe(new Element[]{
-                new VariableAssignmentImpl(new ConstantImpl(100, int.class), "n", int.class)
+                new VariableAssignmentImpl(new ConstantImpl(100, int.class), 1, "n", int.class)
         });
     }
 
@@ -45,7 +45,7 @@ public class CallerDecompilerImplTest {
     public void decompileCallerCanDecompileSimpleLambda() throws IOException {
         Supplier<String> s = () -> "foo";
 
-        final Element[] elements = decompileCaller(ClassModelTestUtils.callerForOffset(-2));
+        final Element[] elements = decompileCaller(adjacent(-2));
         final Lambda lambda = assignedLambda("s", elements);
 
         expect(lambda.getBackingMethodSignature()).toBe(MethodSignature.parse("()Ljava/lang/String;"));
@@ -58,7 +58,7 @@ public class CallerDecompilerImplTest {
         final String str = new String("str");
         final Supplier<String> s = () -> str;
 
-        final Element[] elements = decompileCaller(ClassModelTestUtils.callerForOffset(-2));
+        final Element[] elements = decompileCaller(adjacent(-2));
         final Lambda lambda = assignedLambda("s", elements);
 
         expect(lambda.getBackingMethodSignature()).toBe(MethodSignature.parse("(Ljava/lang/String;)Ljava/lang/String;"));
@@ -72,7 +72,7 @@ public class CallerDecompilerImplTest {
         final List myList = Arrays.asList("foo");
         final Action<String> a = s -> myList.toString();
 
-        final Element[] elements = decompileCaller(ClassModelTestUtils.callerForOffset(-2));
+        final Element[] elements = decompileCaller(adjacent(-2));
         final Lambda lambda = assignedLambda("a", elements);
 
         expect(lambda.getBackingMethodSignature()).toBe(MethodSignature.parse("(Ljava/util/List;Ljava/lang/String;)V"));
@@ -105,12 +105,27 @@ public class CallerDecompilerImplTest {
         final Element[] elements = decompileCaller(Caller.adjacent(-3));
 
         expect(elements).toBe(new Element[]{
-                AST.set("str", String.class, AST.call(AST.newInstance(String.class, AST.constant("foo")), "toString", String.class))
+                AST.set(1, "str", String.class, AST.call(AST.newInstance(String.class, AST.constant("foo")), "toString", String.class))
         });
     }
 
     @Test
-    @Ignore("This must be fixed")
+    public void intArrayElementReferenceCanBeDecompiled() throws Exception {
+        final int[] array = {1, 2, 3, 4};
+        final int n = array[0];
+
+        final Element[] elements = decompileCaller(Caller.adjacent(-2));
+
+        expect(elements).toBe(new Element[]{
+                new VariableAssignmentImpl(
+                        new ArrayLoadImpl(AST.local("array", int[].class, 1), AST.constant(0), int.class),
+                        2, "n", int.class
+                )
+        });
+    }
+
+    @Test
+    @Ignore
     // TODO: If (1) iinc and (2) stacked expression is non-int variable reference (3) we're trying to escape
     public void expressionInLoopCanBeDecompiled() throws IOException {
         for (int i = 0; i < 1; i++) {
@@ -119,6 +134,7 @@ public class CallerDecompilerImplTest {
 
         final Element[] elements = decompileCaller(Caller.adjacent(-3));
 
+        System.out.println(Arrays.asList(elements));
         expect(elements.length).toBe(1);
 
         given(elements[0].as(MethodCall.class)).then(it -> {
@@ -137,7 +153,7 @@ public class CallerDecompilerImplTest {
                     .toBe(n);
         }
 
-        final Element[] elements = decompileCaller(Caller.adjacent(-4));
+        final Element[] elements = decompileCaller(Caller.adjacent(-5));
 
         expect(elements.length).toBe(1);
 

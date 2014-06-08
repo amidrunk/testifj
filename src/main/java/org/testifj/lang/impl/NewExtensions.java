@@ -20,7 +20,7 @@ public final class NewExtensions {
         assert configurationBuilder != null : "Configuration builder can't be null";
 
         configurationBuilder.on(ByteCode.new_).then(newInstance());
-        configurationBuilder.enhance(ByteCode.invokespecial, (context, code, byteCode) -> {
+        configurationBuilder.after(ByteCode.invokespecial).then((context, code, byteCode) -> {
             final MethodCall methodCall = (MethodCall) context.peek();
 
             if (methodCall.getMethodName().equals("<init>") && methodCall.getTargetInstance().getElementType() == ElementType.ALLOCATE) {

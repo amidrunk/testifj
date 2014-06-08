@@ -6,10 +6,7 @@ import org.testifj.lang.model.AST;
 import org.testifj.lang.model.Constant;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.LocalVariableReference;
-import org.testifj.lang.model.impl.ArrayLoadImpl;
-import org.testifj.lang.model.impl.ArrayStoreImpl;
-import org.testifj.lang.model.impl.FieldReferenceImpl;
-import org.testifj.lang.model.impl.NewArrayImpl;
+import org.testifj.lang.model.impl.*;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -42,6 +39,7 @@ public class ArrayDecompilerExtensionsTest {
             expect(it.getDecompilerExtension(context, ByteCode.aaload)).not().toBe(equalTo(null));
             expect(it.getDecompilerExtension(context, ByteCode.aastore)).not().toBe(equalTo(null));
             expect(it.getDecompilerExtension(context, ByteCode.arraylength)).not().toBe(equalTo(null));
+            expect(it.getDecompilerExtension(context, ByteCode.iaload)).not().toBe(equalTo(null));
         });
     }
 
@@ -183,4 +181,90 @@ public class ArrayDecompilerExtensionsTest {
         verify(context).push(new FieldReferenceImpl(array, String[].class, int.class, "length"));
     }
 
+    @Test
+    public void integerArrayElementCanBeRetrieved() throws IOException {
+        final DecompilerExtension iaload = ArrayDecompilerExtensions.iaload();
+
+        when(context.pop()).thenReturn(
+                AST.constant(1),
+                AST.local("myArray", int[].class, 1));
+
+        iaload.decompile(context, mock(CodeStream.class), ByteCode.iaload);
+
+        verify(context).push(eq(new ArrayLoadImpl(AST.local("myArray", int[].class, 1), AST.constant(1), int.class)));
+    }
+
+    @Test
+    public void laloadShouldLoadElementFromArray() throws IOException {
+        final DecompilerExtension extension = ArrayDecompilerExtensions.laload();
+
+        final Expression index = mock(Expression.class);
+        final Expression array = mock(LocalVariableReference.class);
+
+        when(context.pop()).thenReturn(index, array);
+
+        extension.decompile(context, code, ByteCode.laload);
+
+        verify(context).push(eq(new ArrayLoadImpl(array, index, long.class)));
+    }
+
+    @Test
+    public void faloadShouldLoadElementFromArray() throws IOException {
+        final Expression index = mock(Expression.class);
+        final Expression array = mock(LocalVariableReference.class);
+
+        when(context.pop()).thenReturn(index, array);
+
+        ArrayDecompilerExtensions.faload().decompile(context, code, ByteCode.faload);
+
+        verify(context).push(eq(new ArrayLoadImpl(array, index, float.class)));
+    }
+
+    @Test
+    public void daloadShouldLoadElementFromArray() throws IOException {
+        final Expression index = mock(Expression.class);
+        final Expression array = mock(Expression.class);
+
+        when(context.pop()).thenReturn(index, array);
+
+        ArrayDecompilerExtensions.daload().decompile(context, code, ByteCode.daload);
+
+        verify(context).push(eq(new ArrayLoadImpl(array, index, double.class)));
+    }
+
+    @Test
+    public void baloadShouldLoadElementFromArray() throws IOException {
+        final Expression index = mock(Expression.class);
+        final Expression array = mock(Expression.class);
+
+        when(context.pop()).thenReturn(index, array);
+
+        ArrayDecompilerExtensions.baload().decompile(context, code, ByteCode.baload);
+
+        verify(context).push(eq(new ArrayLoadImpl(array, index, boolean.class)));
+    }
+
+    @Test
+    public void caloadShouldLoadElementFromArray() throws IOException {
+        final Expression index = mock(Expression.class);
+        final Expression array = mock(Expression.class);
+
+        when(context.pop()).thenReturn(index, array);
+
+        ArrayDecompilerExtensions.caload().decompile(context, code, ByteCode.caload);
+
+        verify(context).push(eq(new ArrayLoadImpl(array, index, char.class)));
+    }
+
+    @Test
+    public void saloadShouldLoadElementFromArray() throws IOException {
+        final Expression index = mock(Expression.class);
+        final Expression array = mock(Expression.class);
+
+        when(context.pop()).thenReturn(index, array);
+
+        ArrayDecompilerExtensions.saload().decompile(context, code, ByteCode.saload);
+
+        verify(context).push(eq(new ArrayLoadImpl(array, index, short.class)));
+    }
 }

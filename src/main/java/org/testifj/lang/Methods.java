@@ -1,7 +1,5 @@
 package org.testifj.lang;
 
-import com.sun.org.apache.bcel.internal.classfile.ExceptionTable;
-
 import java.util.Optional;
 
 public final class Methods {
@@ -37,6 +35,22 @@ public final class Methods {
         }
 
         return Optional.empty();
+    }
+
+    public static Optional<LocalVariable> findLocalVariableForIndexAndPC(Method method, int index, int pc) {
+        assert method != null : "Method can't be null";
+        assert index >= 0 : "Index must be positive";
+        assert pc >= 0 : "PC must be positive";
+
+        final Optional<LocalVariableTable> optionalLocalVariableTable = method.getLocalVariableTable();
+
+        if (!optionalLocalVariableTable.isPresent()) {
+            return Optional.empty();
+        }
+
+        return optionalLocalVariableTable.get().getLocalVariables().stream()
+                .filter(local -> local.getIndex() == index && (pc >= local.getStartPC() && pc < local.getStartPC() + local.getLength()) || (local.getStartPC() == -1))
+                .findFirst();
     }
 
 }

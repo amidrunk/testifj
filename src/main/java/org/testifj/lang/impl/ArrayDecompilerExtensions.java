@@ -30,6 +30,13 @@ public final class ArrayDecompilerExtensions {
         configurationBuilder.on(ByteCode.newarray).then(newarray());
         configurationBuilder.on(ByteCode.iastore).then(iastore());
         configurationBuilder.on(ByteCode.arraylength).then(arraylength());
+        configurationBuilder.on(ByteCode.iaload).then(iaload());
+        configurationBuilder.on(ByteCode.laload).then(laload());
+        configurationBuilder.on(ByteCode.faload).then(faload());
+        configurationBuilder.on(ByteCode.daload).then(daload());
+        configurationBuilder.on(ByteCode.baload).then(baload());
+        configurationBuilder.on(ByteCode.caload).then(caload());
+        configurationBuilder.on(ByteCode.saload).then(saload());
     }
 
     public static DecompilerExtension aaload() {
@@ -139,6 +146,62 @@ public final class ArrayDecompilerExtensions {
         };
     }
 
+    public static DecompilerExtension iaload() {
+        return (context,codeStream,byteCode) -> {
+            arrayLoad(context, int.class);
+            return true;
+        };
+    }
+
+    public static DecompilerExtension laload() {
+        return (context,codeStream,byteCode) -> {
+            arrayLoad(context, long.class);
+            return true;
+        };
+    }
+
+    public static DecompilerExtension faload() {
+        return (context,codeStream,byteCode) -> {
+            arrayLoad(context, float.class);
+            return true;
+        };
+    }
+
+    public static DecompilerExtension daload() {
+        return (context,codeStream,byteCode) -> {
+            arrayLoad(context, double.class);
+            return true;
+        };
+    }
+
+    public static DecompilerExtension baload() {
+        return (context,codeStream,byteCode) -> {
+            arrayLoad(context, boolean.class);
+            return true;
+        };
+    }
+
+    public static DecompilerExtension caload() {
+        return (context,codeStream,byteCode) -> {
+            arrayLoad(context, char.class);
+            return true;
+        };
+    }
+
+    public static DecompilerExtension saload() {
+        return (context,codeStream,byteCode) -> {
+            arrayLoad(context, short.class);
+            return true;
+        };
+    }
+
+    private static void arrayLoad(DecompilationContext context, Class<?> type) {
+        final Expression index = context.pop();
+        final Expression array = context.pop();
+
+        context.push(new ArrayLoadImpl(array, index, type));
+    }
+
     private static boolean arrayStore(DecompilationContext context) {
         Expression value = context.pop();
         Expression index = context.pop();
@@ -157,5 +220,4 @@ public final class ArrayDecompilerExtensions {
 
         return true;
     }
-
 }

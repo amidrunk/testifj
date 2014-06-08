@@ -4,6 +4,6 @@ public enum OperatorType {
 
     PLUS,
     NE,
-    EQ
+    MINUS, EQ
 
 }

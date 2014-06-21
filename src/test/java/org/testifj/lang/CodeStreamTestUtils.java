@@ -1,8 +1,8 @@
 package org.testifj.lang;
 
 import org.testifj.io.ByteBufferInputStream;
-import org.testifj.lang.impl.InputStreamCodeStream;
-import org.testifj.lang.impl.ProgramCounterImpl;
+import org.testifj.lang.decompile.CodeStream;
+import org.testifj.lang.decompile.impl.InputStreamCodeStream;
 
 import java.nio.ByteBuffer;
 

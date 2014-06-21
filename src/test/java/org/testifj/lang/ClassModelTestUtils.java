@@ -3,12 +3,20 @@ package org.testifj.lang;
 import org.testifj.Caller;
 import org.testifj.Description;
 import org.testifj.MethodBodyCodeGenerator;
-import org.testifj.lang.impl.*;
+import org.testifj.lang.classfile.ClassFile;
+import org.testifj.lang.classfile.ClassFileReader;
+import org.testifj.lang.classfile.Method;
+import org.testifj.lang.classfile.impl.ClassFileReaderImpl;
+import org.testifj.lang.decompile.CodePointer;
+import org.testifj.lang.decompile.CodeStream;
+import org.testifj.lang.decompile.impl.CallerDecompilerImpl;
+import org.testifj.lang.decompile.impl.CodePointerCodeGenerator;
+import org.testifj.lang.decompile.impl.DecompilerImpl;
+import org.testifj.lang.decompile.impl.InputStreamCodeStream;
 import org.testifj.lang.model.Element;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.Optional;
 
 import static org.testifj.Expect.expect;

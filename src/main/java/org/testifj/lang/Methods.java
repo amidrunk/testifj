@@ -1,5 +1,7 @@
 package org.testifj.lang;
 
+import org.testifj.lang.classfile.*;
+
 import java.util.Optional;
 
 public final class Methods {

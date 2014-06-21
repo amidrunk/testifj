@@ -1,7 +1,7 @@
 package org.testifj.lang.model.impl;
 
 import org.junit.Test;
-import org.testifj.lang.ClassFileFormatException;
+import org.testifj.lang.classfile.ClassFileFormatException;
 
 import java.lang.reflect.Type;
 

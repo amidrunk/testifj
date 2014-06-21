@@ -1,6 +1,6 @@
 package org.testifj.lang.model.impl;
 
-import org.testifj.lang.ClassFileFormatException;
+import org.testifj.lang.classfile.ClassFileFormatException;
 import org.testifj.lang.model.Signature;
 import org.testifj.util.StringReader;
 

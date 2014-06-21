@@ -2,9 +2,9 @@ package org.testifj.delegate;
 
 import org.testifj.BasicDescription;
 import org.testifj.Description;
-import org.testifj.lang.CallerDecompiler;
-import org.testifj.lang.CodePointer;
-import org.testifj.lang.impl.CodePointerCodeGenerator;
+import org.testifj.lang.decompile.CallerDecompiler;
+import org.testifj.lang.decompile.CodePointer;
+import org.testifj.lang.decompile.impl.CodePointerCodeGenerator;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.MethodCall;
 

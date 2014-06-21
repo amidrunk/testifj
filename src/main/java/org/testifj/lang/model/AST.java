@@ -119,6 +119,31 @@ public final class AST {
         return new LocalVariableReferenceImpl(variableName, variableType, index);
     }
 
+    public static BinaryOperator add(Expression left, Expression right, Type resultType) {
+        return binaryOperator(left, OperatorType.PLUS, right, resultType);
+    }
+
+    public static BinaryOperator sub(Expression left, Expression right, Type resultType) {
+        return binaryOperator(left, OperatorType.MINUS, right, resultType);
+    }
+
+    public static BinaryOperator mul(Expression left, Expression right, Type resultType) {
+        return binaryOperator(left, OperatorType.MULTIPLY, right, resultType);
+    }
+
+    public static BinaryOperator div(Expression left, Expression right, Type resultType) {
+        return binaryOperator(left, OperatorType.DIVIDE, right, resultType);
+    }
+
+    public static BinaryOperator binaryOperator(Expression left, OperatorType operatorType, Expression right, Type resultType) {
+        assert left != null : "Left operand can't be null";
+        assert operatorType != null : "Operator type can't be null";
+        assert right != null : "Right operand can't be null";
+        assert resultType != null : "Result type can't be null";
+
+        return new BinaryOperatorImpl(left, operatorType, right, resultType);
+    }
+
     public static ReturnValue $return(Expression value) {
         return new ReturnValueImpl(value);
     }

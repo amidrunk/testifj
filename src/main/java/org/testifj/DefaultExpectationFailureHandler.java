@@ -1,17 +1,21 @@
 package org.testifj;
 
-import org.testifj.lang.*;
-import org.testifj.lang.impl.*;
+import org.testifj.lang.classfile.ClassFileReader;
+import org.testifj.lang.classfile.impl.ClassFileReaderImpl;
+import org.testifj.lang.decompile.CallerDecompiler;
+import org.testifj.lang.decompile.CodeGenerator;
+import org.testifj.lang.decompile.CodePointer;
+import org.testifj.lang.decompile.Decompiler;
+import org.testifj.lang.decompile.impl.CallerDecompilerImpl;
+import org.testifj.lang.decompile.impl.CodePointerCodeGenerator;
+import org.testifj.lang.decompile.impl.DecompilerImpl;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.MethodCall;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
 import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**

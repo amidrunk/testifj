@@ -4,8 +4,8 @@ import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.testifj.lang.ConstantPoolEntry;
-import org.testifj.lang.impl.DefaultConstantPool;
+import org.testifj.lang.decompile.ConstantPoolEntry;
+import org.testifj.lang.classfile.impl.DefaultConstantPool;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;

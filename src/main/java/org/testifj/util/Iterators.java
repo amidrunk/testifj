@@ -73,5 +73,4 @@ public final class Iterators {
             return Optional.of(function.apply(iterator.next()));
         });
     }
-
 }

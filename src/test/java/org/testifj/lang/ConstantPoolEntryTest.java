@@ -2,6 +2,9 @@ package org.testifj.lang;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.testifj.lang.classfile.ReferenceKind;
+import org.testifj.lang.decompile.ConstantPoolEntry;
+import org.testifj.lang.decompile.ConstantPoolEntryTag;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.*;

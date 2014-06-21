@@ -3,8 +3,11 @@ package org.testifj.lang;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.testifj.lang.impl.*;
-import org.testifj.matchers.core.OptionalThatIs;
+import org.testifj.lang.classfile.*;
+import org.testifj.lang.classfile.impl.ExceptionTableEntryImpl;
+import org.testifj.lang.classfile.impl.LineNumberTableImpl;
+import org.testifj.lang.classfile.impl.LocalVariableImpl;
+import org.testifj.lang.classfile.impl.LocalVariableTableImpl;
 
 import java.util.Arrays;
 import java.util.Optional;

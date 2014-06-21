@@ -3,6 +3,9 @@ package org.testifj.lang;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
+import org.testifj.lang.decompile.CompositeDecompilationProgressCallback;
+import org.testifj.lang.decompile.DecompilationContext;
+import org.testifj.lang.decompile.DecompilationProgressCallback;
 
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;

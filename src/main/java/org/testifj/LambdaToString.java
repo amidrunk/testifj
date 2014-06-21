@@ -1,8 +1,8 @@
 package org.testifj;
 
-import org.testifj.lang.ClassFile;
-import org.testifj.lang.ClassFileReader;
-import org.testifj.lang.impl.ClassFileReaderImpl;
+import org.testifj.lang.classfile.ClassFile;
+import org.testifj.lang.classfile.ClassFileReader;
+import org.testifj.lang.classfile.impl.ClassFileReaderImpl;
 
 import java.io.InputStream;
 

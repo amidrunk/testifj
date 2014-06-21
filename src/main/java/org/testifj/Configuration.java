@@ -1,13 +1,13 @@
 package org.testifj;
 
 import org.testifj.delegate.*;
-import org.testifj.lang.CallerDecompiler;
-import org.testifj.lang.ClassFileReader;
-import org.testifj.lang.Decompiler;
-import org.testifj.lang.impl.CallerDecompilerImpl;
-import org.testifj.lang.impl.ClassFileReaderImpl;
-import org.testifj.lang.impl.CodePointerCodeGenerator;
-import org.testifj.lang.impl.DecompilerImpl;
+import org.testifj.lang.decompile.CallerDecompiler;
+import org.testifj.lang.classfile.ClassFileReader;
+import org.testifj.lang.decompile.Decompiler;
+import org.testifj.lang.decompile.impl.CallerDecompilerImpl;
+import org.testifj.lang.classfile.impl.ClassFileReaderImpl;
+import org.testifj.lang.decompile.impl.CodePointerCodeGenerator;
+import org.testifj.lang.decompile.impl.DecompilerImpl;
 
 import java.util.concurrent.atomic.AtomicReference;
 

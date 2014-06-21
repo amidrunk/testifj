@@ -1,6 +1,6 @@
 package org.testifj.lang.model;
 
-import org.testifj.lang.ReferenceKind;
+import org.testifj.lang.classfile.ReferenceKind;
 
 import java.lang.reflect.Type;
 import java.util.List;

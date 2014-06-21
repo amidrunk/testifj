@@ -1,6 +1,7 @@
 package org.testifj.lang;
 
 import org.junit.Test;
+import org.testifj.lang.classfile.ByteCode;
 
 import static org.testifj.Expect.expect;
 

@@ -1,7 +1,8 @@
 package org.testifj.lang;
 
 import org.junit.Test;
-import org.mockito.Mockito;
+import org.testifj.lang.decompile.DecompilationContext;
+import org.testifj.lang.decompile.DecompilationProgressCallback;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyZeroInteractions;

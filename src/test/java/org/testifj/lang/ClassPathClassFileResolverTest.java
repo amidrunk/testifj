@@ -1,19 +1,17 @@
 package org.testifj.lang;
 
 import org.junit.Test;
-import org.mockito.Mockito;
+import org.testifj.lang.classfile.*;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
-import static org.testifj.Given.given;
 
 public class ClassPathClassFileResolverTest {
 

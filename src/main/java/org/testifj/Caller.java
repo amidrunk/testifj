@@ -52,6 +52,10 @@ public final class Caller {
         return callerStackTraceIndex;
     }
 
+    public int getLineNumber() {
+        return getCallerStackTraceElement().getLineNumber();
+    }
+
     public static Caller me() {
         return new Caller(Arrays.asList(Thread.currentThread().getStackTrace()), CALLER_STACK_TRACE_INDEX);
     }

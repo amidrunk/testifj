@@ -18,6 +18,10 @@ import static org.testifj.matchers.core.OptionalThatIs.present;
 
 public class ASTTest {
 
+    private final Expression operand1 = mock(Expression.class, "operand1");
+
+    private final Expression operand2 = mock(Expression.class, "operand2");
+
     @Test
     public void constantStringCannotBeNull() {
         expect(() -> constant((String) null)).toThrow(AssertionError.class);
@@ -294,6 +298,61 @@ public class ASTTest {
     @Test
     public void classConstantCanBeCreated() {
         expect(AST.constant(String.class)).toBe(new ConstantImpl(String.class, Class.class));
+    }
+
+    @Test
+    public void addShouldNotAcceptAnyNullOperandOrResultType() {
+        expect(() -> AST.add(null, mock(Expression.class), Integer.class)).toThrow(AssertionError.class);
+        expect(() -> AST.add(mock(Expression.class), null, Integer.class)).toThrow(AssertionError.class);
+        expect(() -> AST.add(mock(Expression.class), mock(Expression.class), null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void addShouldCreateBinaryOperatorWithOperands() {
+        given(AST.add(operand1, operand2, Integer.class)).then(it -> {
+            expect(it.getLeftOperand()).toBe(operand1);
+            expect(it.getRightOperand()).toBe(operand2);
+            expect(it.getType()).toBe(Integer.class);
+            expect(it.getOperatorType()).toBe(OperatorType.PLUS);
+        });
+    }
+
+    @Test
+    public void subShouldCreateBinaryOperatorWithOperands() {
+        given(AST.sub(operand1, operand2, Integer.class)).then(it -> {
+            expect(it.getLeftOperand()).toBe(operand1);
+            expect(it.getRightOperand()).toBe(operand2);
+            expect(it.getType()).toBe(Integer.class);
+            expect(it.getOperatorType()).toBe(OperatorType.MINUS);
+        });
+    }
+
+    @Test
+    public void binaryOperatorShouldNotAcceptInvalidArguments() {
+        expect(() -> AST.binaryOperator(null, OperatorType.PLUS, operand1, Integer.class)).toThrow(AssertionError.class);
+        expect(() -> AST.binaryOperator(operand1, null, operand2, Integer.class)).toThrow(AssertionError.class);
+        expect(() -> AST.binaryOperator(operand1, OperatorType.PLUS, null, Integer.class)).toThrow(AssertionError.class);
+        expect(() -> AST.binaryOperator(operand1, OperatorType.PLUS, operand2, null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void mulShouldCreateBinaryOperatorWithOperands() {
+        given(AST.mul(operand1, operand2, Integer.class)).then(it -> {
+            expect(it.getLeftOperand()).toBe(operand1);
+            expect(it.getRightOperand()).toBe(operand2);
+            expect(it.getType()).toBe(Integer.class);
+            expect(it.getOperatorType()).toBe(OperatorType.MULTIPLY);
+        });
+    }
+
+    @Test
+    public void divShouldCreateBinaryOperatorWithOperands() {
+        given(AST.div(operand1, operand2, Integer.class)).then(it -> {
+            expect(it.getLeftOperand()).toBe(operand1);
+            expect(it.getRightOperand()).toBe(operand2);
+            expect(it.getType()).toBe(Integer.class);
+            expect(it.getOperatorType()).toBe(OperatorType.DIVIDE);
+        });
     }
 
 }

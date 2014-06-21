@@ -4,7 +4,9 @@ import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 import org.testifj.Predicate;
-import org.testifj.lang.impl.LambdaImpl;
+import org.testifj.lang.classfile.ReferenceKind;
+import org.testifj.lang.decompile.SyntaxTreeVisitor;
+import org.testifj.lang.classfile.impl.LambdaImpl;
 import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.*;
 

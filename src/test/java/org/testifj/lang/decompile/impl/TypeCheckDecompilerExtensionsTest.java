@@ -68,9 +68,7 @@ public class TypeCheckDecompilerExtensionsTest {
         when(exampleContext.resolveType(eq("java/lang/String"))).thenReturn(String.class);
         when(exampleContext.pop()).thenReturn(constant("foo"));
 
-        boolean checkcastHandled = checkcast.decompile(exampleContext, CodeStreamTestUtils.codeStream(0, 1), ByteCode.checkcast);
-
-        expect(checkcastHandled).toBe(true);
+        checkcast.decompile(exampleContext, CodeStreamTestUtils.codeStream(0, 1), ByteCode.checkcast);
 
         verify(exampleContext).push(eq(AST.cast(constant("foo")).to(String.class)));
     }
@@ -83,9 +81,7 @@ public class TypeCheckDecompilerExtensionsTest {
         when(exampleContext.peek()).thenReturn(cast);
         when(exampleContext.pop()).thenReturn(cast);
 
-        final boolean popInstructionHandled = discardImplicitCast.decompile(exampleContext, CodeStreamTestUtils.codeStream(), ByteCode.pop);
-
-        expect(popInstructionHandled).toBe(true);
+        discardImplicitCast.decompile(exampleContext, CodeStreamTestUtils.codeStream(), ByteCode.pop);
 
         verify(exampleContext).push(eq(AST.constant("foo")));
     }

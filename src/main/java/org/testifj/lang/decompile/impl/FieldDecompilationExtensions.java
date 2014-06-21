@@ -36,7 +36,6 @@ public final class FieldDecompilationExtensions {
     public static DecompilerExtension putfield() {
         return (context, codeStream, byteCode) -> {
             handlePutField(context, codeStream, false);
-            return true;
         };
     }
 
@@ -50,7 +49,6 @@ public final class FieldDecompilationExtensions {
     public static DecompilerExtension putstatic() {
         return (context,codeStream,byteCode) -> {
             handlePutField(context, codeStream, true);
-            return true;
         };
     }
 

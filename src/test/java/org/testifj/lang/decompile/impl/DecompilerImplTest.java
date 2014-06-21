@@ -121,8 +121,6 @@ public class DecompilerImplTest {
                 .build();
         final DecompilerImpl decompiler = new DecompilerImpl(configuration);
 
-        when(extension.decompile(any(DecompilationContext.class), any(CodeStream.class), anyInt())).thenReturn(true);
-
         final Element[] elements = decompiler.parse(exampleMethod, new InputStreamCodeStream(new ByteArrayInputStream(new byte[]{(byte) ByteCode.iconst_0})));
 
         expect(elements.length).toBe(0);

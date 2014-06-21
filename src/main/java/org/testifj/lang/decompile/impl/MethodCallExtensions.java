@@ -36,8 +36,6 @@ public final class MethodCallExtensions {
             if (code.nextUnsignedByte() == 0) {
                 throw new ClassFileFormatException("Expected byte subsequent to interface method invocation to be non-zero");
             }
-
-            return true;
         };
     }
 
@@ -50,17 +48,17 @@ public final class MethodCallExtensions {
                     .getMethodRefDescriptor(code.nextUnsignedShort());
 
             invoke(context, methodRefDescriptor);
-
-            return true;
         };
     }
 
+    // TODO Implement
     public static DecompilerExtension invokevirtual() {
-        return (dc, cs, bc) -> true;
+        return (dc, cs, bc) -> {};
     }
 
+    // TODO Implement
     public static DecompilerExtension invokestatic() {
-        return (dc, cs, bc) -> true;
+        return (dc, cs, bc) -> {};
     }
 
     private static void invoke(DecompilationContext context, MethodRefDescriptor methodReference) {
@@ -74,7 +72,7 @@ public final class MethodCallExtensions {
 
         final Type expressionType;
 
-        if (methodReference.getMethodName().equals("<init>")) {
+        if (methodReference.getMethodName().equals("<init>")) { // TODO Correctional enhancement
             expressionType = targetType;
         } else {
             expressionType = signature.getReturnType();

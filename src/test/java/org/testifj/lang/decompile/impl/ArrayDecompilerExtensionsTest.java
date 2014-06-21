@@ -70,9 +70,7 @@ public class ArrayDecompilerExtensionsTest {
 
         when(context.pop()).thenReturn(index, array);
 
-        boolean aaloadHandled = ArrayDecompilerExtensions.aaload().decompile(context, code, ByteCode.aaload);
-
-        expect(aaloadHandled).toBe(true);
+        ArrayDecompilerExtensions.aaload().decompile(context, code, ByteCode.aaload);
 
         verify(context).push(eq(new ArrayLoadImpl(array, index, String.class)));
     }

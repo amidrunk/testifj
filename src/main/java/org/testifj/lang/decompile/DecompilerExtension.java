@@ -8,6 +8,12 @@ import java.io.IOException;
 @FunctionalInterface
 public interface DecompilerExtension {
 
-    boolean decompile(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException;
+    DecompilerExtension NOP = new DecompilerExtension() {
+        @Override
+        public void decompile(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
+        }
+    };
+
+    void decompile(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException;
 
 }

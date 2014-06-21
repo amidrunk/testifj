@@ -7,6 +7,7 @@ import org.testifj.lang.decompile.DecompilerConfiguration;
 import org.testifj.lang.decompile.DecompilerExtension;
 import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.*;
+import org.testifj.util.Priority;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -17,16 +18,10 @@ public final class ArrayDecompilerExtensions {
     public static void configure(DecompilerConfiguration.Builder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";
 
-        // TODO Improve, document. Also, it should be possible to specify priority order (on(DUP).where(...).withPriority(HIGH).then(...)
-        configurationBuilder.on(ByteCode.dup).then((context, code, byteCode) -> {
-            final Expression expression = context.peek();
-
-            if (expression.getElementType() != ElementType.NEW_ARRAY) {
-                return false;
-            }
-
-            return true;
-        });
+        configurationBuilder.on(ByteCode.dup)
+                .withPriority(Priority.HIGH)
+                .when((context, byteCode) -> context.peek().getElementType() == ElementType.NEW_ARRAY)
+                .then(DecompilerExtension.NOP);
 
         configurationBuilder.on(ByteCode.aaload).then(aaload());
         configurationBuilder.on(ByteCode.anewarray).then(anewarray());
@@ -67,8 +62,6 @@ public final class ArrayDecompilerExtensions {
             }
 
             context.push(new ArrayLoadImpl(array, index, componentType));
-
-            return true;
         };
     }
 
@@ -85,8 +78,6 @@ public final class ArrayDecompilerExtensions {
             if (code.peekByte() == ByteCode.dup) {
                 code.commit();
             }
-
-            return true;
         };
     }
 
@@ -131,8 +122,6 @@ public final class ArrayDecompilerExtensions {
             final Expression length = context.pop();
 
             context.push(new NewArrayImpl(arrayType, arrayType.getComponentType(), length, Collections.emptyList()));
-
-            return true;
         };
     }
 
@@ -145,57 +134,48 @@ public final class ArrayDecompilerExtensions {
             final Expression array = context.pop();
 
             context.push(new FieldReferenceImpl(array, array.getType(), int.class, "length"));
-
-            return true;
         };
     }
 
     public static DecompilerExtension iaload() {
         return (context,codeStream,byteCode) -> {
             arrayLoad(context, int.class);
-            return true;
         };
     }
 
     public static DecompilerExtension laload() {
         return (context,codeStream,byteCode) -> {
             arrayLoad(context, long.class);
-            return true;
         };
     }
 
     public static DecompilerExtension faload() {
         return (context,codeStream,byteCode) -> {
             arrayLoad(context, float.class);
-            return true;
         };
     }
 
     public static DecompilerExtension daload() {
         return (context,codeStream,byteCode) -> {
             arrayLoad(context, double.class);
-            return true;
         };
     }
 
     public static DecompilerExtension baload() {
         return (context,codeStream,byteCode) -> {
             arrayLoad(context, boolean.class);
-            return true;
         };
     }
 
     public static DecompilerExtension caload() {
         return (context,codeStream,byteCode) -> {
             arrayLoad(context, char.class);
-            return true;
         };
     }
 
     public static DecompilerExtension saload() {
         return (context,codeStream,byteCode) -> {
             arrayLoad(context, short.class);
-            return true;
         };
     }
 

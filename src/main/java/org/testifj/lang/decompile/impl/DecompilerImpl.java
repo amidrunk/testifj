@@ -129,14 +129,16 @@ public final class DecompilerImpl implements Decompiler {
 
             boolean handled = false;
 
-            if (userExtension != null && userExtension.decompile(context, codeStream, byteCode)) {
+            if (userExtension != null) {
+                userExtension.decompile(context, codeStream, byteCode);
                 handled = true;
             }
 
             if (!handled) {
                 final DecompilerExtension coreExtension = coreConfiguration.getDecompilerExtension(context, byteCode);
 
-                if (coreExtension != null && coreExtension.decompile(context, codeStream, byteCode)) {
+                if (coreExtension != null) {
+                    coreExtension.decompile(context, codeStream, byteCode);
                     handled = true;
                 }
             }

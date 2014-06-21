@@ -7,6 +7,7 @@ import org.testifj.lang.model.Cast;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.impl.CastImpl;
+import org.testifj.util.Priority;
 
 import java.lang.reflect.Type;
 
@@ -15,7 +16,11 @@ public final class TypeCheckDecompilerExtensions {
     public static void configure(DecompilerConfiguration.Builder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";
 
-        configurationBuilder.on(ByteCode.pop).then(discardImplicitCast());
+        configurationBuilder.on(ByteCode.pop)
+                .withPriority(Priority.HIGH)
+                .when((context, byteCode) -> context.peek().getElementType() == ElementType.CAST)
+                .then(discardImplicitCast());
+
         configurationBuilder.on(ByteCode.checkcast).then(checkcast());
     }
 
@@ -29,15 +34,9 @@ public final class TypeCheckDecompilerExtensions {
      */
     public static DecompilerExtension discardImplicitCast() {
         return (context,codeStream,byteCode) -> {
-            if (context.peek().getElementType() != ElementType.CAST) {
-                return false;
-            }
-
             final Cast cast = (Cast) context.pop();
 
             context.push(cast.getValue());
-
-            return true;
         };
     }
 
@@ -48,8 +47,6 @@ public final class TypeCheckDecompilerExtensions {
             final Expression castExpression = context.pop();
 
             context.push(new CastImpl(castExpression, targetType));
-
-            return true;
         };
     }
 

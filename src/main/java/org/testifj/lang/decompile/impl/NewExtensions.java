@@ -39,9 +39,8 @@ public final class NewExtensions {
                 throw new ClassFileFormatException("New byte code should always be dup:ed");
             }
 
-            // Would like to install a listener on the stack here... like this
+            // TODO Would like to install a listener on the stack here... like this
 
-            return true;
         };
     }
 

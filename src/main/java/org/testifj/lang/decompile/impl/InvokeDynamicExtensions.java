@@ -105,8 +105,6 @@ public final class InvokeDynamicExtensions {
                     backingMethodSignature,
                     Arrays.asList(enclosedVariables)
             ));
-
-            return true;
         };
     }
 

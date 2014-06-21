@@ -34,84 +34,72 @@ public final class VariableDecompilerExtensions {
     public static DecompilerExtension load() {
         return (context,codeStream,byteCode) -> {
             load(context, codeStream.nextByte());
-            return true;
         };
     }
 
     public static DecompilerExtension store() {
         return (context,codeStream,byteCode) -> {
             store(context, codeStream.nextByte());
-            return true;
         };
     }
 
     public static DecompilerExtension istoren() {
         return (context,codeStream,byteCode) -> {
             store(context, byteCode - ByteCode.istore_0);
-            return true;
         };
     }
 
     public static DecompilerExtension fstoren() {
         return (context,codeStream,byteCode) -> {
             store(context, byteCode - ByteCode.fstore_0);
-            return true;
         };
     }
 
     public static DecompilerExtension dstoren() {
         return (context,codeStream,byteCode) -> {
             store(context, byteCode - ByteCode.dstore_0);
-            return true;
         };
     }
 
     public static DecompilerExtension lstoren() {
         return (context,codeStream,byteCode) -> {
             store(context, byteCode - ByteCode.lstore_0);
-            return true;
         };
     }
 
     public static DecompilerExtension astoren() {
         return (context,codeStream,byteCode) -> {
             store(context, byteCode - ByteCode.astore_0);
-            return true;
         };
     }
 
     public static DecompilerExtension iloadn() {
         return (context,codeStream,byteCode) -> {
             load(context, byteCode - ByteCode.iload_0);
-            return true;
         };
     }
 
     public static DecompilerExtension floadn() {
         return (context,codeStream,byteCode) -> {
             load(context, byteCode - ByteCode.fload_0);
-            return true;
         };
     }
 
     public static DecompilerExtension dloadn() {
         return (context,codeStream,byteCode) -> {
             load(context, byteCode - ByteCode.dload_0);
-            return true;
         };
     }
 
     public static DecompilerExtension lloadn() {
         return (context,codeStream,byteCode) -> {
             load(context, byteCode - ByteCode.lload_0);
-            return true;
         };
     }
 
     public static DecompilerExtension aloadn() {
         return (context,codeStream,byteCode) -> {
             load(context, byteCode - ByteCode.aload_0);
-            return true;
         };
     }
 

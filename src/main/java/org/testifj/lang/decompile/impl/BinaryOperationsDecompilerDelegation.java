@@ -39,13 +39,11 @@ public final class BinaryOperationsDecompilerDelegation implements DecompilerDel
     private static DecompilerExtension binaryOperator(final OperatorType operatorType, final Class<Integer> resultType) {
         return new DecompilerExtension() {
             @Override
-            public boolean decompile(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
+            public void decompile(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
                 final Expression right = context.pop();
                 final Expression left = context.pop();
 
                 context.push(new BinaryOperatorImpl(left, operatorType, right, resultType));
-
-                return true;
             }
         };
     }

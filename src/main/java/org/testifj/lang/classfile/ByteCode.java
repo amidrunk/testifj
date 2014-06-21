@@ -23,8 +23,8 @@ public final class ByteCode {
     public static final int dconst_1 = 15;
     public static final int bipush = 16;
     public static final int sipush = 17;
-    public static final int ldc1 = 18;
-    public static final int ldc2 = 19;
+    public static final int ldc = 18;
+    public static final int ldcw = 19;
     public static final int ldc2w = 20;
     public static final int iload = 21;
     public static final int lload = 22;

@@ -3,16 +3,17 @@ package org.testifj.lang.decompile.impl;
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.classfile.ClassFileFormatException;
 import org.testifj.lang.decompile.DecompilerConfiguration;
-import org.testifj.lang.decompile.DecompilerExtension;
+import org.testifj.lang.decompile.DecompilerDelegate;
+import org.testifj.lang.decompile.DecompilerDelegation;
 import org.testifj.lang.model.AllocateInstance;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.MethodCall;
 import org.testifj.lang.model.impl.AllocateInstanceImpl;
 import org.testifj.lang.model.impl.NewInstanceImpl;
 
-public final class NewExtensions {
+public final class NewDecompilerDelegation implements DecompilerDelegation {
 
-    public static void configure(DecompilerConfiguration.Builder configurationBuilder) {
+    public void configure(DecompilerConfiguration.Builder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";
 
         configurationBuilder.on(ByteCode.new_).then(newInstance());
@@ -28,7 +29,7 @@ public final class NewExtensions {
         });
     }
 
-    public static DecompilerExtension newInstance() {
+    public static DecompilerDelegate newInstance() {
         return (context, code, byteCode) -> {
             final String className = context.getMethod().getClassFile().getConstantPool().getClassName(code.nextUnsignedShort());
 

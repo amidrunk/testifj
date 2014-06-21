@@ -1,11 +1,11 @@
 package org.testifj.lang.decompile.impl;
 
-import org.testifj.lang.*;
+import org.testifj.lang.TypeResolver;
+import org.testifj.lang.Types;
 import org.testifj.lang.classfile.Method;
 import org.testifj.lang.decompile.DecompilationContext;
 import org.testifj.lang.decompile.Decompiler;
 import org.testifj.lang.decompile.LineNumberCounter;
-import org.testifj.lang.decompile.impl.ProgramCounter;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.ElementMetaData;
 import org.testifj.lang.model.Expression;
@@ -13,6 +13,7 @@ import org.testifj.lang.model.Statement;
 
 import java.lang.reflect.Type;
 import java.util.*;
+import org.testifj.util.Stack;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -72,6 +73,35 @@ public final class DecompilationContextImpl implements DecompilationContext {
     }
 
     @Override
+    public int getStackSize() {
+        return stack.size();
+    }
+
+    public boolean isStackCompliantWithComputationalCategories(int... computationalCategories) {
+        assert computationalCategories != null : "Computational categories can't be null";
+
+        if (computationalCategories.length > stack.size()) {
+            return false;
+        }
+
+        final List<ExpressionWithPC> subStack = (stack.size() == computationalCategories.length
+                ? stack
+                : stack.subList(stack.size() - computationalCategories.length, stack.size()));
+
+        int index = 0;
+
+        for (ExpressionWithPC expressionWithPC : subStack) {
+            final int actualComputationalCategory = Types.getComputationalCategory(expressionWithPC.expression.getType());
+
+            if (computationalCategories[index++] != actualComputationalCategory) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    @Override
     public List<Expression> getStackedExpressions() {
         return Arrays.asList(stack.stream().map(ExpressionWithPC::expression).toArray(Expression[]::new));
     }
@@ -124,7 +154,7 @@ public final class DecompilationContextImpl implements DecompilationContext {
 
     @Override
     public void insert(int offset, Expression expression) {
-        stack.insertElementAt(new ExpressionWithPC(expression, programCounter.get(), contextVersion.incrementAndGet()), stack.size() + offset);
+        stack.add(stack.size() + offset, new ExpressionWithPC(expression, programCounter.get(), contextVersion.incrementAndGet()));
         configureContextMetaData(expression);
     }
 

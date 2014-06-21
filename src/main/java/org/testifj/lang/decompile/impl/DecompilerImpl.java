@@ -45,15 +45,16 @@ public final class DecompilerImpl implements Decompiler {
     private static DecompilerConfiguration createCoreConfiguration() {
         final DecompilerConfigurationImpl.Builder builder = new DecompilerConfigurationImpl.Builder();
 
-        VariableDecompilerExtensions.configure(builder);
-        ArrayDecompilerExtensions.configure(builder);
-        NewExtensions.configure(builder);
-        InvokeDynamicExtensions.configure(builder);
-        MethodCallExtensions.configure(builder);
-        FieldDecompilationExtensions.configure(builder);
-        TypeCheckDecompilerExtensions.configure(builder);
-
+        new VariableDecompilerDelegation().configure(builder);
+        new ArrayDecompilerDelegation().configure(builder);
+        new NewDecompilerDelegation().configure(builder);
+        new InvokeDynamicDecompilerDelegation().configure(builder);
+        new MethodCallDecompilerDelegation().configure(builder);
+        new FieldDecompilationDelegation().configure(builder);
+        new TypeCheckDecompilerDelegation().configure(builder);
         new BinaryOperationsDecompilerDelegation().configure(builder);
+        new ConstantDecompilerDelegation().configure(builder);
+        new StackInstructions().configure(builder);
 
         return builder.build();
     }
@@ -72,14 +73,14 @@ public final class DecompilerImpl implements Decompiler {
     }
 
     private void advice(DecompilerConfiguration configuration, DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
-        for (Iterator<DecompilerEnhancement> iterator = configuration.getAdvisoryDecompilerEnhancements(context, byteCode); iterator.hasNext(); ) {
-            iterator.next().enhance(context, codeStream, byteCode);
+        for (Iterator<DecompilerDelegate> iterator = configuration.getAdvisoryDecompilerEnhancements(context, byteCode); iterator.hasNext(); ) {
+            iterator.next().apply(context, codeStream, byteCode);
         }
     }
 
     private void correct(DecompilerConfiguration configuration, DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
-        for (Iterator<DecompilerEnhancement> iterator = configuration.getCorrectionalDecompilerEnhancements(context, byteCode); iterator.hasNext(); ) {
-            iterator.next().enhance(context, codeStream, byteCode);
+        for (Iterator<DecompilerDelegate> iterator = configuration.getCorrectionalDecompilerEnhancements(context, byteCode); iterator.hasNext(); ) {
+            iterator.next().apply(context, codeStream, byteCode);
         }
     }
 
@@ -125,20 +126,20 @@ public final class DecompilerImpl implements Decompiler {
             advice(configuration, context, codeStream, byteCode);
             advice(coreConfiguration, context, codeStream, byteCode);
 
-            final DecompilerExtension userExtension = configuration.getDecompilerExtension(context, byteCode);
+            final DecompilerDelegate userExtension = configuration.getDecompilerExtension(context, byteCode);
 
             boolean handled = false;
 
             if (userExtension != null) {
-                userExtension.decompile(context, codeStream, byteCode);
+                userExtension.apply(context, codeStream, byteCode);
                 handled = true;
             }
 
             if (!handled) {
-                final DecompilerExtension coreExtension = coreConfiguration.getDecompilerExtension(context, byteCode);
+                final DecompilerDelegate coreExtension = coreConfiguration.getDecompilerExtension(context, byteCode);
 
                 if (coreExtension != null) {
-                    coreExtension.decompile(context, codeStream, byteCode);
+                    coreExtension.apply(context, codeStream, byteCode);
                     handled = true;
                 }
             }
@@ -149,126 +150,8 @@ public final class DecompilerImpl implements Decompiler {
 
                     case ByteCode.nop:
                         break;
-                    case ByteCode.pop2:
-                        if (context.reduce()) {
-                            context.reduce();
-                        }
-
-                        break;
-                    case ByteCode.pop:
-                        context.reduce();
-                        break;
-                    case ByteCode.dup: {
-                        final List<Expression> stackedExpressions = context.getStackedExpressions();
-                        context.push(stackedExpressions.get(stackedExpressions.size() - 1));
-                        break;
-                    }
-                    case ByteCode.dup_x1: {
-                        context.insert(-2, context.peek());
-                        break;
-                    }
-
-                    // Operators
-
-                    case ByteCode.iadd: {
-                        final Expression rightOperand = context.pop();
-                        final Expression leftOperand = context.pop();
-
-                        context.push(new BinaryOperatorImpl(leftOperand, OperatorType.PLUS, rightOperand, int.class));
-
-                        break;
-                    }
-                    case ByteCode.isub: {
-                        final Expression rightOperand = context.pop();
-                        final Expression leftOperand = context.pop();
-
-                        context.push(new BinaryOperatorImpl(leftOperand, OperatorType.MINUS, rightOperand, int.class));
-
-                        break;
-                    }
                     case ByteCode.iinc: {
                         context.push(new IncrementImpl(context.pop()));
-                        break;
-                    }
-
-                    // Push constants onto stack
-
-                    case ByteCode.bipush:
-                        context.push(new ConstantImpl(codeStream.nextByte(), int.class));
-                        break;
-
-                    // Constants
-
-                    case ByteCode.ldc2w: {
-                        final int index = codeStream.nextUnsignedShort();
-                        final ConstantPoolEntry entry = constantPool.getEntry(index);
-
-                        switch (entry.getTag()) {
-                            case LONG:
-                                context.push(new ConstantImpl(((LongEntry) entry).getValue(), long.class));
-                                break;
-                            case DOUBLE:
-                                context.push(new ConstantImpl(((DoubleEntry) entry).getValue(), double.class));
-                                break;
-                            default:
-                                throw new ClassFileFormatException("Invalid constant pool entry at "
-                                        + index + ". Expected long or double, but was " + entry);
-                        }
-
-                        break;
-                    }
-                    case ByteCode.aconst_null:
-                        context.push(new ConstantImpl(null, Object.class));
-                        break;
-                    case ByteCode.dconst_0:
-                        context.push(new ConstantImpl(0.0D, double.class));
-                        break;
-                    case ByteCode.dconst_1:
-                        context.push(new ConstantImpl(1.0D, double.class));
-                        break;
-                    case ByteCode.iconst_m1:
-                    case ByteCode.iconst_0:
-                    case ByteCode.iconst_1:
-                    case ByteCode.iconst_2:
-                    case ByteCode.iconst_3:
-                    case ByteCode.iconst_4:
-                    case ByteCode.iconst_5:
-                        context.push(new ConstantImpl(byteCode - ByteCode.iconst_0, int.class));
-                        break;
-                    case ByteCode.lconst_0:
-                    case ByteCode.lconst_1:
-                        context.push(new ConstantImpl((long) (byteCode - ByteCode.lconst_0), long.class));
-                        break;
-                    case ByteCode.fconst_0:
-                    case ByteCode.fconst_1:
-                    case ByteCode.fconst_2:
-                        context.push(new ConstantImpl((float) (byteCode - ByteCode.fconst_0), float.class));
-                        break;
-                    case ByteCode.sipush:
-                        context.push(new ConstantImpl(codeStream.nextUnsignedShort(), int.class));
-                        break;
-
-                    case ByteCode.ldc1: {
-                        final ConstantPoolEntry entry = constantPool.getEntry(codeStream.nextUnsignedByte());
-
-                        switch (entry.getTag()) {
-                            case INTEGER:
-                                context.push(new ConstantImpl(((IntegerEntry) entry).getValue(), int.class));
-                                break;
-                            case FLOAT:
-                                context.push(new ConstantImpl(((FloatEntry) entry).getValue(), float.class));
-                                break;
-                            case STRING:
-                                context.push(new ConstantImpl(constantPool.getString(((StringEntry) entry).getStringIndex()), String.class));
-                                break;
-                            case CLASS:
-                                final Type type = resolveType(constantPool.getString(((ClassEntry) entry).getNameIndex()));
-                                context.push(new ConstantImpl(type, Class.class));
-                                break;
-                            default:
-                                throw new ClassFileFormatException("Unsupported constant pool entry: " + entry);
-                        }
-
                         break;
                     }
 

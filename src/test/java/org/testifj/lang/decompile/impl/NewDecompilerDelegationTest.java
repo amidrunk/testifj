@@ -10,10 +10,6 @@ import org.testifj.lang.classfile.ClassFile;
 import org.testifj.lang.decompile.ConstantPoolEntry;
 import org.testifj.lang.decompile.DecompilationContext;
 import org.testifj.lang.decompile.DecompilerConfiguration;
-import org.testifj.lang.decompile.impl.DecompilerConfigurationImpl;
-import org.testifj.lang.decompile.impl.InputStreamCodeStream;
-import org.testifj.lang.decompile.impl.NewExtensions;
-import org.testifj.lang.decompile.impl.ProgramCounter;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.NewInstance;
@@ -32,20 +28,16 @@ import static org.testifj.Given.given;
 import static org.testifj.lang.ClassModelTestUtils.code;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
-public class NewExtensionsTest {
+public class NewDecompilerDelegationTest {
 
     @Test
     public void configureShouldNotAcceptNullConfigurationBuilder() {
-        expect(() -> NewExtensions.configure(null)).toThrow(AssertionError.class);
+        expect(() -> new NewDecompilerDelegation().configure(null)).toThrow(AssertionError.class);
     }
 
     @Test
     public void configureShouldConfigureSupportForNewByteCode() {
-        final DecompilerConfiguration.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
-
-        NewExtensions.configure(configurationBuilder);
-
-        given(configurationBuilder.build()).then(it -> {
+        given(configuration()).then(it -> {
             expect(it.getDecompilerExtension(mock(DecompilationContext.class), ByteCode.new_)).not().toBe(equalTo(null));
         });
     }
@@ -66,7 +58,7 @@ public class NewExtensionsTest {
         when(context.getMethod()).thenReturn(method);
         when(context.resolveType(eq("java/lang/String"))).thenReturn(String.class);
 
-        NewExtensions.newInstance().decompile(context, codeStream, ByteCode.new_);
+        NewDecompilerDelegation.newInstance().apply(context, codeStream, ByteCode.new_);
 
         verify(context).push(eq(new AllocateInstanceImpl(String.class)));
         verify(context).resolveType(eq("java/lang/String"));
@@ -90,6 +82,14 @@ public class NewExtensionsTest {
 
         expect(newInstance.getType()).toBe(String.class);
         expect(newInstance.getParameters().toArray()).toBe(new Object[]{new ConstantImpl("str", String.class)});
+    }
+
+    private DecompilerConfiguration configuration() {
+        final DecompilerConfiguration.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
+
+        new NewDecompilerDelegation().configure(configurationBuilder);
+
+        return configurationBuilder.build();
     }
 
 }

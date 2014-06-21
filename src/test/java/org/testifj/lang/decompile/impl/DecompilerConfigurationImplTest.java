@@ -4,8 +4,6 @@ import org.junit.Test;
 import org.testifj.lang.*;
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.decompile.*;
-import org.testifj.lang.decompile.impl.DecompilerConfigurationImpl;
-import org.testifj.util.Iterators;
 import org.testifj.util.Priority;
 
 import java.io.IOException;
@@ -29,11 +27,11 @@ public class DecompilerConfigurationImplTest {
     private final DecompilerConfigurationImpl.Builder builder = new DecompilerConfigurationImpl.Builder();
     private final DecompilerConfiguration emptyConfiguration = builder.build();
     private final DecompilationContext decompilationContext = mock(DecompilationContext.class);
-    private final DecompilerExtension extension1 = mock(DecompilerExtension.class, "extension1");
+    private final DecompilerDelegate extension1 = mock(DecompilerDelegate.class, "extension1");
     private final CodeStream codeStream = mock(CodeStream.class);
-    private final DecompilerExtension extension2 = mock(DecompilerExtension.class, "extension2");
-    private final DecompilerEnhancement enhancement1 = mock(DecompilerEnhancement.class, "enhancement1");
-    private final DecompilerEnhancement enhancement2 = mock(DecompilerEnhancement.class, "enhancement2");
+    private final DecompilerDelegate extension2 = mock(DecompilerDelegate.class, "extension2");
+    private final DecompilerDelegate enhancement1 = mock(DecompilerDelegate.class, "enhancement1");
+    private final DecompilerDelegate enhancement2 = mock(DecompilerDelegate.class, "enhancement2");
 
     @Test
     public void getDecompilerExtensionShouldFailForInvalidArguments() {
@@ -55,11 +53,11 @@ public class DecompilerConfigurationImplTest {
                 .on(ByteCode.nop).then(extension1)
                 .build();
 
-        final DecompilerExtension extension = configuration.getDecompilerExtension(decompilationContext, ByteCode.nop);
+        final DecompilerDelegate extension = configuration.getDecompilerExtension(decompilationContext, ByteCode.nop);
 
-        extension.decompile(decompilationContext, codeStream, ByteCode.nop);
+        extension.apply(decompilationContext, codeStream, ByteCode.nop);
 
-        verify(extension1).decompile(eq(decompilationContext), eq(codeStream), eq(ByteCode.nop));
+        verify(extension1).apply(eq(decompilationContext), eq(codeStream), eq(ByteCode.nop));
     }
 
     @Test
@@ -97,7 +95,7 @@ public class DecompilerConfigurationImplTest {
 
     @Test
     public void byteCodeRangeCanBeExtended() throws IOException {
-        final DecompilerExtension extension = mock(DecompilerExtension.class);
+        final DecompilerDelegate extension = mock(DecompilerDelegate.class);
         final DecompilerConfiguration configuration = builder
                 .on(ByteCode.iconst_0, ByteCode.iconst_5).then(extension)
                 .build();
@@ -111,7 +109,7 @@ public class DecompilerConfigurationImplTest {
                 ByteCode.iconst_5);
 
         for (Integer byteCode : byteCodes) {
-            final DecompilerExtension actualExtension = configuration.getDecompilerExtension(decompilationContext, byteCode);
+            final DecompilerDelegate actualExtension = configuration.getDecompilerExtension(decompilationContext, byteCode);
 
             expect(actualExtension).toBe(extension);
         }
@@ -183,15 +181,12 @@ public class DecompilerConfigurationImplTest {
 
     @Test
     public void getAdvisoryDecompilerEnhancementsShouldReturnConfiguredEnhancementsInPriorityOrder() {
-        final DecompilerEnhancement enhancement1 = mock(DecompilerEnhancement.class, "enhancement1");
-        final DecompilerEnhancement enhancement2 = mock(DecompilerEnhancement.class, "enhancement2");
-
         final DecompilerConfiguration configuration = builder
                 .before(ByteCode.nop).withPriority(Priority.DEFAULT).then(enhancement1)
                 .before(ByteCode.nop).withPriority(Priority.HIGH).then(enhancement2)
                 .build();
 
-        final Iterator<DecompilerEnhancement> iterator = configuration.getAdvisoryDecompilerEnhancements(decompilationContext, ByteCode.nop);
+        final Iterator<DecompilerDelegate> iterator = configuration.getAdvisoryDecompilerEnhancements(decompilationContext, ByteCode.nop);
 
         expect(iterator).toBe(iteratorOf(enhancement2, enhancement1));
     }
@@ -211,14 +206,12 @@ public class DecompilerConfigurationImplTest {
 
     @Test
     public void getCorrectionalDecompilerEnhancementsShouldReturnMatchingCorrectors() {
-        final DecompilerEnhancement enhancement1 = mock(DecompilerEnhancement.class, "enhancement1");
-        final DecompilerEnhancement enhancement2 = mock(DecompilerEnhancement.class, "enhancement2");
         final DecompilerConfiguration configuration = builder
                 .after(ByteCode.nop).withPriority(Priority.DEFAULT).then(enhancement1)
                 .after(ByteCode.nop).withPriority(Priority.HIGH).then(enhancement2)
                 .build();
 
-        final Iterator<DecompilerEnhancement> iterator = configuration.getCorrectionalDecompilerEnhancements(decompilationContext, ByteCode.nop);
+        final Iterator<DecompilerDelegate> iterator = configuration.getCorrectionalDecompilerEnhancements(decompilationContext, ByteCode.nop);
 
         expect(iterator).toBe(iteratorOf(enhancement2, enhancement1));
     }

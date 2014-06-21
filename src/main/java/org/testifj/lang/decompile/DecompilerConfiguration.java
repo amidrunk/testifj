@@ -6,25 +6,25 @@ import java.util.Iterator;
 
 public interface DecompilerConfiguration {
 
-    DecompilerExtension getDecompilerExtension(DecompilationContext context, int byteCode);
+    DecompilerDelegate getDecompilerExtension(DecompilationContext context, int byteCode);
 
-    Iterator<DecompilerEnhancement> getAdvisoryDecompilerEnhancements(DecompilationContext context, int byteCode);
+    Iterator<DecompilerDelegate> getAdvisoryDecompilerEnhancements(DecompilationContext context, int byteCode);
 
-    Iterator<DecompilerEnhancement> getCorrectionalDecompilerEnhancements(DecompilationContext context, int byteCode);
+    Iterator<DecompilerDelegate> getCorrectionalDecompilerEnhancements(DecompilationContext context, int byteCode);
 
     DecompilerConfiguration merge(DecompilerConfiguration other);
 
     public interface Builder {
 
-        ExtendContinuation<DecompilerEnhancement> before(int byteCode);
+        ExtendContinuation<DecompilerDelegate> before(int byteCode);
 
-        ExtendContinuation<DecompilerEnhancement> after(int byteCode);
+        ExtendContinuation<DecompilerDelegate> after(int byteCode);
 
-        ExtendContinuation<DecompilerExtension> on(int byteCode);
+        ExtendContinuation<DecompilerDelegate> on(int byteCode);
 
-        ExtendContinuation<DecompilerExtension> on(int ... byteCodes);
+        ExtendContinuation<DecompilerDelegate> on(int ... byteCodes);
 
-        ExtendContinuation<DecompilerExtension> on(int startByteCode, int endByteCode);
+        ExtendContinuation<DecompilerDelegate> on(int startByteCode, int endByteCode);
 
         interface ExtendContinuation<T> extends WithPriorityContinuation<T> {
 

@@ -5,8 +5,7 @@ import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.decompile.CodeStream;
 import org.testifj.lang.decompile.DecompilationContext;
 import org.testifj.lang.decompile.DecompilerConfiguration;
-import org.testifj.lang.decompile.DecompilerExtension;
-import org.testifj.lang.model.AST;
+import org.testifj.lang.decompile.DecompilerDelegate;
 
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -42,7 +41,7 @@ public class BinaryOperationsDecompilerDelegationTest {
         given(extension(ByteCode.iadd)).then(it -> {
             when(decompilationContext.pop()).thenReturn(constant(2), constant(1));
 
-            it.decompile(decompilationContext, mock(CodeStream.class), ByteCode.iadd);
+            it.apply(decompilationContext, mock(CodeStream.class), ByteCode.iadd);
 
             verify(decompilationContext).push(eq(add(constant(1), constant(2), int.class)));
         });
@@ -53,7 +52,7 @@ public class BinaryOperationsDecompilerDelegationTest {
         given(extension(ByteCode.isub)).then(it -> {
             when(decompilationContext.pop()).thenReturn(constant(2), constant(1));
 
-            it.decompile(decompilationContext, mock(CodeStream.class), ByteCode.iadd);
+            it.apply(decompilationContext, mock(CodeStream.class), ByteCode.iadd);
 
             verify(decompilationContext).push(eq(sub(constant(1), constant(2), int.class)));
         });
@@ -64,7 +63,7 @@ public class BinaryOperationsDecompilerDelegationTest {
         given(extension(ByteCode.imul)).then(it -> {
             when(decompilationContext.pop()).thenReturn(constant(2), constant(1));
 
-            it.decompile(decompilationContext, mock(CodeStream.class), ByteCode.imul);
+            it.apply(decompilationContext, mock(CodeStream.class), ByteCode.imul);
 
             verify(decompilationContext).push(eq(mul(constant(1), constant(2), int.class)));
         });
@@ -75,13 +74,13 @@ public class BinaryOperationsDecompilerDelegationTest {
         given(extension(ByteCode.idiv)).then(it -> {
             when(decompilationContext.pop()).thenReturn(constant(2), constant(1));
 
-            it.decompile(decompilationContext, mock(CodeStream.class), ByteCode.idiv);
+            it.apply(decompilationContext, mock(CodeStream.class), ByteCode.idiv);
 
             verify(decompilationContext).push(eq(div(constant(1), constant(2), int.class)));
         });
     }
 
-    private DecompilerExtension extension(int instruction) {
+    private DecompilerDelegate extension(int instruction) {
         return configuration().getDecompilerExtension(decompilationContext, instruction);
     }
 

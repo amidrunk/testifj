@@ -10,11 +10,7 @@ import org.testifj.lang.classfile.Method;
 import org.testifj.lang.classfile.impl.LocalVariableImpl;
 import org.testifj.lang.decompile.DecompilationContext;
 import org.testifj.lang.decompile.DecompilerConfiguration;
-import org.testifj.lang.decompile.DecompilerExtension;
-import org.testifj.lang.decompile.impl.DecompilerConfigurationImpl;
-import org.testifj.lang.decompile.impl.InputStreamCodeStream;
-import org.testifj.lang.decompile.impl.ProgramCounterImpl;
-import org.testifj.lang.decompile.impl.VariableDecompilerExtensions;
+import org.testifj.lang.decompile.DecompilerDelegate;
 import org.testifj.lang.model.AST;
 
 import java.io.ByteArrayInputStream;
@@ -29,7 +25,7 @@ import static org.testifj.Describe.describe;
 import static org.testifj.Expect.expect;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
-public class VariableDecompilerExtensionsTest {
+public class VariableDecompilerDelegationTest {
 
     private final DecompilationContext context = mock(DecompilationContext.class);
     private final Method method = mock(Method.class);
@@ -42,7 +38,7 @@ public class VariableDecompilerExtensionsTest {
     public void setup() {
         final DecompilerConfiguration.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
 
-        VariableDecompilerExtensions.configure(configurationBuilder);
+        new VariableDecompilerDelegation().configure(configurationBuilder);
 
         configuration = configurationBuilder.build();
 
@@ -54,7 +50,7 @@ public class VariableDecompilerExtensionsTest {
 
     @Test
     public void configureShouldNotAcceptInvalidArgument() {
-        expect(() -> VariableDecompilerExtensions.configure(null)).toThrow(AssertionError.class);
+        expect(() -> new VariableDecompilerDelegation().configure(null)).toThrow(AssertionError.class);
     }
 
     @Test
@@ -199,11 +195,11 @@ public class VariableDecompilerExtensionsTest {
         }
 
         try {
-            final DecompilerExtension extension = configuration.getDecompilerExtension(context, instruction);
+            final DecompilerDelegate extension = configuration.getDecompilerExtension(context, instruction);
 
             expect(extension).not().toBe(equalTo(null));
 
-            extension.decompile(context, new InputStreamCodeStream(new ByteArrayInputStream(codeBuffer)), instruction);
+            extension.apply(context, new InputStreamCodeStream(new ByteArrayInputStream(codeBuffer)), instruction);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

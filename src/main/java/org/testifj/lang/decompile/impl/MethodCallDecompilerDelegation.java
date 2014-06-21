@@ -6,7 +6,8 @@ import org.testifj.lang.classfile.InterfaceMethodRefDescriptor;
 import org.testifj.lang.classfile.MethodRefDescriptor;
 import org.testifj.lang.decompile.DecompilationContext;
 import org.testifj.lang.decompile.DecompilerConfiguration;
-import org.testifj.lang.decompile.DecompilerExtension;
+import org.testifj.lang.decompile.DecompilerDelegate;
+import org.testifj.lang.decompile.DecompilerDelegation;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.Signature;
 import org.testifj.lang.model.impl.MethodCallImpl;
@@ -14,16 +15,16 @@ import org.testifj.lang.model.impl.MethodSignature;
 
 import java.lang.reflect.Type;
 
-public final class MethodCallExtensions {
+public final class MethodCallDecompilerDelegation implements DecompilerDelegation {
 
-    public static void configure(DecompilerConfiguration.Builder configurationBuilder) {
+    public void configure(DecompilerConfiguration.Builder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";
 
         configurationBuilder.on(ByteCode.invokeinterface).then(invokeinterface());
         configurationBuilder.on(ByteCode.invokespecial).then(invokespecial());
     }
 
-    public static DecompilerExtension invokeinterface() {
+    public static DecompilerDelegate invokeinterface() {
         return (context, code, instruction) -> {
             final InterfaceMethodRefDescriptor interfaceMethodRefDescriptor = context
                     .getMethod()
@@ -39,7 +40,7 @@ public final class MethodCallExtensions {
         };
     }
 
-    public static DecompilerExtension invokespecial() {
+    public static DecompilerDelegate invokespecial() {
         return (context, code, instruction) -> {
             final MethodRefDescriptor methodRefDescriptor = context
                     .getMethod()
@@ -52,12 +53,12 @@ public final class MethodCallExtensions {
     }
 
     // TODO Implement
-    public static DecompilerExtension invokevirtual() {
+    public static DecompilerDelegate invokevirtual() {
         return (dc, cs, bc) -> {};
     }
 
     // TODO Implement
-    public static DecompilerExtension invokestatic() {
+    public static DecompilerDelegate invokestatic() {
         return (dc, cs, bc) -> {};
     }
 

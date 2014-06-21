@@ -2,9 +2,7 @@ package org.testifj.lang.decompile.impl;
 
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.classfile.ClassFileFormatException;
-import org.testifj.lang.decompile.DecompilationContext;
-import org.testifj.lang.decompile.DecompilerConfiguration;
-import org.testifj.lang.decompile.DecompilerExtension;
+import org.testifj.lang.decompile.*;
 import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.*;
 import org.testifj.util.Priority;
@@ -13,15 +11,15 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public final class ArrayDecompilerExtensions {
+public final class ArrayDecompilerDelegation implements DecompilerDelegation {
 
-    public static void configure(DecompilerConfiguration.Builder configurationBuilder) {
+    public void configure(DecompilerConfiguration.Builder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";
 
         configurationBuilder.on(ByteCode.dup)
                 .withPriority(Priority.HIGH)
                 .when((context, byteCode) -> context.peek().getElementType() == ElementType.NEW_ARRAY)
-                .then(DecompilerExtension.NOP);
+                .then(DecompilerDelegate.NOP);
 
         configurationBuilder.on(ByteCode.aaload).then(aaload());
         configurationBuilder.on(ByteCode.anewarray).then(anewarray());
@@ -38,7 +36,7 @@ public final class ArrayDecompilerExtensions {
         configurationBuilder.on(ByteCode.saload).then(saload());
     }
 
-    public static DecompilerExtension aaload() {
+    public static DecompilerDelegate aaload() {
         return (context,codeStream,byteCode) -> {
             final Expression index = context.pop();
             final Expression array = context.pop();
@@ -65,7 +63,7 @@ public final class ArrayDecompilerExtensions {
         };
     }
 
-    public static DecompilerExtension anewarray() {
+    public static DecompilerDelegate anewarray() {
         return (context, code, byteCode) -> {
             final String componentTypeName = context.getMethod().getClassFile().getConstantPool().getClassName(code.nextUnsignedShort());
             final Type componentType = context.resolveType(componentTypeName);
@@ -81,11 +79,11 @@ public final class ArrayDecompilerExtensions {
         };
     }
 
-    public static DecompilerExtension aastore() {
+    public static DecompilerDelegate aastore() {
         return (context, code, byteCode) -> arrayStore(context);
     }
 
-    public static DecompilerExtension newarray() {
+    public static DecompilerDelegate newarray() {
         return (context,codeStream,byteCode) -> {
             final int type = codeStream.nextUnsignedByte();
             final Class arrayType;
@@ -125,11 +123,11 @@ public final class ArrayDecompilerExtensions {
         };
     }
 
-    public static DecompilerExtension iastore() {
+    public static DecompilerDelegate iastore() {
         return (context,codeStream,byteCode) -> arrayStore(context);
     }
 
-    public static DecompilerExtension arraylength() {
+    public static DecompilerDelegate arraylength() {
         return (context,codeStream,byteCode) -> {
             final Expression array = context.pop();
 
@@ -137,43 +135,43 @@ public final class ArrayDecompilerExtensions {
         };
     }
 
-    public static DecompilerExtension iaload() {
+    public static DecompilerDelegate iaload() {
         return (context,codeStream,byteCode) -> {
             arrayLoad(context, int.class);
         };
     }
 
-    public static DecompilerExtension laload() {
+    public static DecompilerDelegate laload() {
         return (context,codeStream,byteCode) -> {
             arrayLoad(context, long.class);
         };
     }
 
-    public static DecompilerExtension faload() {
+    public static DecompilerDelegate faload() {
         return (context,codeStream,byteCode) -> {
             arrayLoad(context, float.class);
         };
     }
 
-    public static DecompilerExtension daload() {
+    public static DecompilerDelegate daload() {
         return (context,codeStream,byteCode) -> {
             arrayLoad(context, double.class);
         };
     }
 
-    public static DecompilerExtension baload() {
+    public static DecompilerDelegate baload() {
         return (context,codeStream,byteCode) -> {
             arrayLoad(context, boolean.class);
         };
     }
 
-    public static DecompilerExtension caload() {
+    public static DecompilerDelegate caload() {
         return (context,codeStream,byteCode) -> {
             arrayLoad(context, char.class);
         };
     }
 
-    public static DecompilerExtension saload() {
+    public static DecompilerDelegate saload() {
         return (context,codeStream,byteCode) -> {
             arrayLoad(context, short.class);
         };

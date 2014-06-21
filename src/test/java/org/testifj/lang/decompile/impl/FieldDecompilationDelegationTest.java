@@ -11,8 +11,6 @@ import org.testifj.lang.decompile.CodeStream;
 import org.testifj.lang.decompile.ConstantPool;
 import org.testifj.lang.decompile.DecompilationContext;
 import org.testifj.lang.decompile.DecompilerConfiguration;
-import org.testifj.lang.decompile.impl.DecompilerConfigurationImpl;
-import org.testifj.lang.decompile.impl.FieldDecompilationExtensions;
 import org.testifj.lang.model.AST;
 import org.testifj.lang.model.Constant;
 import org.testifj.lang.model.Expression;
@@ -26,11 +24,11 @@ import static org.mockito.Mockito.*;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
 import static org.testifj.lang.CodeStreamTestUtils.codeStream;
-import static org.testifj.lang.decompile.impl.FieldDecompilationExtensions.putfield;
-import static org.testifj.lang.decompile.impl.FieldDecompilationExtensions.putstatic;
+import static org.testifj.lang.decompile.impl.FieldDecompilationDelegation.putfield;
+import static org.testifj.lang.decompile.impl.FieldDecompilationDelegation.putstatic;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
-public class FieldDecompilationExtensionsTest {
+public class FieldDecompilationDelegationTest {
 
     private final DecompilationContext context = mock(DecompilationContext.class);
     private final CodeStream codeStream = mock(CodeStream.class);
@@ -50,16 +48,12 @@ public class FieldDecompilationExtensionsTest {
 
     @Test
     public void configureShouldNotAcceptNullConfigurationBuilder() {
-        expect(() -> FieldDecompilationExtensions.configure(null)).toThrow(AssertionError.class);
+        expect(() -> new FieldDecompilationDelegation().configure(null)).toThrow(AssertionError.class);
     }
 
     @Test
     public void configureShouldConfigureSupportForByteCodes() {
-        final DecompilerConfiguration.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
-
-        FieldDecompilationExtensions.configure(configurationBuilder);
-
-        given(configurationBuilder.build()).then(it -> {
+        given(configuration()).then(it -> {
             expect(it.getDecompilerExtension(mock(DecompilationContext.class), ByteCode.putfield)).not().toBe(equalTo(null));
             expect(it.getDecompilerExtension(mock(DecompilationContext.class), ByteCode.putstatic)).not().toBe(equalTo(null));
         });
@@ -73,7 +67,7 @@ public class FieldDecompilationExtensionsTest {
         when(constantPool.getFieldRefDescriptor(eq(1))).thenReturn(new FieldRefDescriptorImpl("java/lang/Integer", "Ljava/lang/String;", "foo"));
         when(context.pop()).thenReturn(assignedFieldValue, declaringInstance);
 
-        putfield().decompile(context, codeStream(0, 1), ByteCode.putfield);
+        putfield().apply(context, codeStream(0, 1), ByteCode.putfield);
 
         verify(context).enlist(eq(new FieldAssignmentImpl(
                 new FieldReferenceImpl(declaringInstance, Integer.class, String.class, "foo"),
@@ -88,12 +82,20 @@ public class FieldDecompilationExtensionsTest {
         when(constantPool.getFieldRefDescriptor(eq(1))).thenReturn(new FieldRefDescriptorImpl("java/lang/Integer", "Ljava/lang/String;", "foo"));
         when(context.pop()).thenReturn(value);
 
-        putstatic().decompile(context, codeStream(0, 1), ByteCode.putstatic);
+        putstatic().apply(context, codeStream(0, 1), ByteCode.putstatic);
 
         verify(context).enlist(eq(new FieldAssignmentImpl(
                 new FieldReferenceImpl(null, Integer.class, String.class, "foo"),
                 value
         )));
+    }
+
+    private DecompilerConfiguration configuration() {
+        final DecompilerConfiguration.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
+
+        new FieldDecompilationDelegation().configure(configurationBuilder);
+
+        return configurationBuilder.build();
     }
 
 }

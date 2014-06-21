@@ -10,7 +10,6 @@ import org.testifj.lang.classfile.Method;
 import org.testifj.lang.classfile.impl.DefaultConstantPool;
 import org.testifj.lang.classfile.impl.SimpleTypeResolver;
 import org.testifj.lang.decompile.*;
-import org.testifj.lang.decompile.impl.*;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.impl.ConstantImpl;
 import org.testifj.lang.model.impl.LocalVariableReferenceImpl;
@@ -28,7 +27,7 @@ import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
-public class MethodCallExtensionsTest {
+public class MethodCallDecompilerDelegationTest {
 
     private final Decompiler decompiler = mock(Decompiler.class);
     private final Method method = mock(Method.class);
@@ -45,16 +44,12 @@ public class MethodCallExtensionsTest {
 
     @Test
     public void configureShouldNotAcceptNullConfigurationBuilder() {
-        expect(() -> MethodCallExtensions.configure(null)).toThrow(AssertionError.class);
+        expect(() -> new MethodCallDecompilerDelegation().configure(null)).toThrow(AssertionError.class);
     }
 
     @Test
     public void configureShouldConfigureSupportForMethodCalls() {
-        final DecompilerConfiguration.Builder builder = new DecompilerConfigurationImpl.Builder();
-
-        MethodCallExtensions.configure(builder);
-
-        given(builder.build()).then(it -> {
+        given(configuration()).then(it -> {
             expect(it.getDecompilerExtension(context, ByteCode.invokeinterface)).not().toBe(equalTo(null));
             expect(it.getDecompilerExtension(context, ByteCode.invokespecial)).not().toBe(equalTo(null));
         });
@@ -67,7 +62,7 @@ public class MethodCallExtensionsTest {
 
         context.push(instance);
 
-        decompile(constantPool, in(ByteCode.invokeinterface, 0, 1, 1), MethodCallExtensions.invokeinterface());
+        decompile(constantPool, in(ByteCode.invokeinterface, 0, 1, 1), MethodCallDecompilerDelegation.invokeinterface());
 
         expect(context.getStackedExpressions().toArray()).toBe(new Object[]{
                 new MethodCallImpl(
@@ -86,7 +81,7 @@ public class MethodCallExtensionsTest {
         context.push(new ConstantImpl("foo", String.class));
 
         expect(() -> {
-            decompile(constantPool, in(ByteCode.invokeinterface, 0, 1, 0), MethodCallExtensions.invokeinterface());
+            decompile(constantPool, in(ByteCode.invokeinterface, 0, 1, 0), MethodCallDecompilerDelegation.invokeinterface());
         }).toThrow(ClassFileFormatException.class);
     }
 
@@ -100,7 +95,7 @@ public class MethodCallExtensionsTest {
         context.push(instance);
         context.push(arg1);
 
-        decompile(constantPool, in(ByteCode.invokeinterface, 0, 1, 1), MethodCallExtensions.invokeinterface());
+        decompile(constantPool, in(ByteCode.invokeinterface, 0, 1, 1), MethodCallDecompilerDelegation.invokeinterface());
 
         expect(context.getStackedExpressions().toArray()).toBe(new Object[]{
                 new MethodCallImpl(
@@ -123,13 +118,13 @@ public class MethodCallExtensionsTest {
                 .create();
     }
 
-    private DecompilationContext decompile(ConstantPool constantPool, InputStream in, DecompilerExtension extension) {
+    private DecompilationContext decompile(ConstantPool constantPool, InputStream in, DecompilerDelegate extension) {
         when(classFile.getConstantPool()).thenReturn(constantPool);
 
         final InputStreamCodeStream cs = new InputStreamCodeStream(in, pc);
 
         try {
-            extension.decompile(context, cs, cs.nextInstruction());
+            extension.apply(context, cs, cs.nextInstruction());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -145,5 +140,13 @@ public class MethodCallExtensionsTest {
         }
 
         return new ByteArrayInputStream(buf);
+    }
+
+    private DecompilerConfiguration configuration() {
+        final DecompilerConfiguration.Builder builder = new DecompilerConfigurationImpl.Builder();
+
+        new MethodCallDecompilerDelegation().configure(builder);
+
+        return builder.build();
     }
 }

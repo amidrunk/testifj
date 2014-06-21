@@ -20,6 +20,16 @@ public interface DecompilationContext {
 
     Type resolveType(String internalName);
 
+    int getStackSize();
+
+    boolean isStackCompliantWithComputationalCategories(int... computationalCategories);
+
+    /**
+     * Returns the expressions currently available on the stack. The last pushed element will be the last element
+     * in the list.
+     *
+     * @return A list of the currently stacked expressions.
+     */
     List<Expression> getStackedExpressions();
 
     /**

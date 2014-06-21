@@ -5,9 +5,6 @@ import org.testifj.lang.decompile.Decompiler;
 import org.testifj.lang.decompile.LineNumberCounter;
 import org.testifj.lang.classfile.Method;
 import org.testifj.lang.TypeResolver;
-import org.testifj.lang.decompile.impl.DecompilationContextImpl;
-import org.testifj.lang.decompile.impl.ProgramCounter;
-import org.testifj.lang.decompile.impl.ProgramCounterImpl;
 import org.testifj.lang.model.*;
 
 import static org.mockito.Matchers.eq;
@@ -299,4 +296,63 @@ public class DecompilationContextImplTest {
 
         expect(context.isAborted()).toBe(true);
     }
+
+    @Test
+    public void getStackSizeShouldReturn0ForEmptyStack() {
+        expect(context.getStackSize()).toBe(0);
+    }
+
+    @Test
+    public void getStackSizeShouldReturnNumberOfElements() {
+        context.push(AST.constant(1));
+        expect(context.getStackSize()).toBe(1);
+
+        context.push(AST.constant(1));
+        expect(context.getStackSize()).toBe(2);
+    }
+
+    @Test
+    public void isStackCompliantWithComputationalTypesShouldReturnFalseIfStackContainsFewerElements() {
+        context.push(AST.constant(1));
+        expect(context.isStackCompliantWithComputationalCategories(1, 2)).toBe(false);
+    }
+
+    @Test
+    public void isStackCompliantWithComputationalTypesShouldReturnFalseIfTypesAreNotOfMatchingType() {
+        context.push(AST.constant(1));
+        context.push(AST.constant(2));
+        context.push(AST.constant(3));
+
+        expect(context.isStackCompliantWithComputationalCategories(1, 2));
+        expect(context.isStackCompliantWithComputationalCategories(2, 1));
+        expect(context.isStackCompliantWithComputationalCategories(1, 2, 1));
+    }
+
+    @Test
+    public void isStackCompliantWithComputationalTypesShouldReturnTrueIfStackComplies() {
+        context.push(AST.constant(1));
+        context.push(AST.constant(2L));
+        context.push(AST.constant(3));
+
+        expect(context.isStackCompliantWithComputationalCategories(1, 2, 1)).toBe(true);
+        expect(context.isStackCompliantWithComputationalCategories(2, 1)).toBe(true);
+        expect(context.isStackCompliantWithComputationalCategories(1)).toBe(true);
+    }
+
+    @Test
+    public void isStackCompliantWithComputationalTypesShouldReturnTrueIfStackCompliesNonSymmetric() {
+        context.push(AST.constant(1L));
+        context.push(AST.constant(2));
+        context.push(AST.constant(3));
+
+        expect(context.isStackCompliantWithComputationalCategories(2, 1, 1)).toBe(true);
+        expect(context.isStackCompliantWithComputationalCategories(1, 1)).toBe(true);
+        expect(context.isStackCompliantWithComputationalCategories(1)).toBe(true);
+    }
+
+    @Test
+    public void isStackCompliantWithComputationalTypesShouldNotAcceptNullTypes() {
+        expect(() -> context.isStackCompliantWithComputationalCategories((int[]) null)).toThrow(AssertionError.class);
+    }
+
 }

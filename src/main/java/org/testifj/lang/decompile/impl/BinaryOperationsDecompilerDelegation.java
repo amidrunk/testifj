@@ -8,6 +8,10 @@ import org.testifj.lang.model.impl.BinaryOperatorImpl;
 
 import java.io.IOException;
 
+/**
+ * The <code>BinaryOperationsDecompilerDelegation</code> provides handing of all binary operations
+ * during decompilation, from iadd=96 to lxor=131.
+ */
 public final class BinaryOperationsDecompilerDelegation implements DecompilerDelegation {
 
     @Override
@@ -20,26 +24,26 @@ public final class BinaryOperationsDecompilerDelegation implements DecompilerDel
         decompilerConfigurationBuilder.on(ByteCode.idiv).then(idiv());
     }
 
-    public static DecompilerExtension iadd() {
+    public static DecompilerDelegate iadd() {
         return binaryOperator(OperatorType.PLUS, int.class);
     }
 
-    public static DecompilerExtension isub() {
+    public static DecompilerDelegate isub() {
         return binaryOperator(OperatorType.MINUS, int.class);
     }
 
-    public static DecompilerExtension imul() {
+    public static DecompilerDelegate imul() {
         return binaryOperator(OperatorType.MULTIPLY, int.class);
     }
 
-    public static DecompilerExtension idiv() {
+    public static DecompilerDelegate idiv() {
         return binaryOperator(OperatorType.DIVIDE, int.class);
     }
 
-    private static DecompilerExtension binaryOperator(final OperatorType operatorType, final Class<Integer> resultType) {
-        return new DecompilerExtension() {
+    private static DecompilerDelegate binaryOperator(final OperatorType operatorType, final Class<Integer> resultType) {
+        return new DecompilerDelegate() {
             @Override
-            public void decompile(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
+            public void apply(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
                 final Expression right = context.pop();
                 final Expression left = context.pop();
 

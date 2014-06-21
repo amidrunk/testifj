@@ -5,16 +5,17 @@ import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.classfile.LocalVariable;
 import org.testifj.lang.decompile.DecompilationContext;
 import org.testifj.lang.decompile.DecompilerConfiguration;
-import org.testifj.lang.decompile.DecompilerExtension;
+import org.testifj.lang.decompile.DecompilerDelegate;
+import org.testifj.lang.decompile.DecompilerDelegation;
 import org.testifj.lang.model.AST;
 
 import java.util.Optional;
 
 import static org.testifj.lang.classfile.ByteCode.*;
 
-public final class VariableDecompilerExtensions {
+public final class VariableDecompilerDelegation implements DecompilerDelegation {
 
-    public static void configure(DecompilerConfiguration.Builder configurationBuilder) {
+    public void configure(DecompilerConfiguration.Builder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";
 
         configurationBuilder.on(iload, lload, fload, dload, aload).then(load());
@@ -31,73 +32,73 @@ public final class VariableDecompilerExtensions {
         configurationBuilder.on(astore_0, astore_3).then(astoren());
     }
 
-    public static DecompilerExtension load() {
+    public static DecompilerDelegate load() {
         return (context,codeStream,byteCode) -> {
             load(context, codeStream.nextByte());
         };
     }
 
-    public static DecompilerExtension store() {
+    public static DecompilerDelegate store() {
         return (context,codeStream,byteCode) -> {
             store(context, codeStream.nextByte());
         };
     }
 
-    public static DecompilerExtension istoren() {
+    public static DecompilerDelegate istoren() {
         return (context,codeStream,byteCode) -> {
             store(context, byteCode - ByteCode.istore_0);
         };
     }
 
-    public static DecompilerExtension fstoren() {
+    public static DecompilerDelegate fstoren() {
         return (context,codeStream,byteCode) -> {
             store(context, byteCode - ByteCode.fstore_0);
         };
     }
 
-    public static DecompilerExtension dstoren() {
+    public static DecompilerDelegate dstoren() {
         return (context,codeStream,byteCode) -> {
             store(context, byteCode - ByteCode.dstore_0);
         };
     }
 
-    public static DecompilerExtension lstoren() {
+    public static DecompilerDelegate lstoren() {
         return (context,codeStream,byteCode) -> {
             store(context, byteCode - ByteCode.lstore_0);
         };
     }
 
-    public static DecompilerExtension astoren() {
+    public static DecompilerDelegate astoren() {
         return (context,codeStream,byteCode) -> {
             store(context, byteCode - ByteCode.astore_0);
         };
     }
 
-    public static DecompilerExtension iloadn() {
+    public static DecompilerDelegate iloadn() {
         return (context,codeStream,byteCode) -> {
             load(context, byteCode - ByteCode.iload_0);
         };
     }
 
-    public static DecompilerExtension floadn() {
+    public static DecompilerDelegate floadn() {
         return (context,codeStream,byteCode) -> {
             load(context, byteCode - ByteCode.fload_0);
         };
     }
 
-    public static DecompilerExtension dloadn() {
+    public static DecompilerDelegate dloadn() {
         return (context,codeStream,byteCode) -> {
             load(context, byteCode - ByteCode.dload_0);
         };
     }
 
-    public static DecompilerExtension lloadn() {
+    public static DecompilerDelegate lloadn() {
         return (context,codeStream,byteCode) -> {
             load(context, byteCode - ByteCode.lload_0);
         };
     }
 
-    public static DecompilerExtension aloadn() {
+    public static DecompilerDelegate aloadn() {
         return (context,codeStream,byteCode) -> {
             load(context, byteCode - ByteCode.aload_0);
         };

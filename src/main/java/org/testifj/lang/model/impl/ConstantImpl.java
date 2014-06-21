@@ -3,6 +3,7 @@ package org.testifj.lang.model.impl;
 import org.testifj.lang.model.Constant;
 
 import java.lang.reflect.Type;
+import java.util.Objects;
 
 public final class ConstantImpl extends AbstractElement implements Constant {
 
@@ -35,7 +36,7 @@ public final class ConstantImpl extends AbstractElement implements Constant {
 
         ConstantImpl that = (ConstantImpl) o;
 
-        if (!constant.equals(that.constant)) return false;
+        if (!Objects.equals(constant, that.constant)) return false;
 
         return true;
     }

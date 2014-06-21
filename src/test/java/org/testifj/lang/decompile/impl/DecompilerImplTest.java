@@ -60,8 +60,8 @@ public class DecompilerImplTest {
 
     @Test
     public void advisoryDecompilerEnhancementShouldBeCalledBeforeInstructionIsProcessed() throws IOException {
-        final DecompilerEnhancement enhancement = mock(DecompilerEnhancement.class);
-        final DecompilerExtension extension = mock(DecompilerExtension.class);
+        final DecompilerDelegate enhancement = mock(DecompilerDelegate.class);
+        final DecompilerDelegate extension = mock(DecompilerDelegate.class);
 
         final DecompilerConfiguration configuration = new DecompilerConfigurationImpl.Builder()
                 .before(ByteCode.nop).then(enhancement)
@@ -74,14 +74,14 @@ public class DecompilerImplTest {
 
         final InOrder inOrder = Mockito.inOrder(extension, enhancement);
 
-        inOrder.verify(enhancement).enhance(any(DecompilationContext.class), any(CodeStream.class), eq(ByteCode.nop));
-        inOrder.verify(extension).decompile(any(DecompilationContext.class), any(CodeStream.class), eq(ByteCode.nop));
+        inOrder.verify(enhancement).apply(any(DecompilationContext.class), any(CodeStream.class), eq(ByteCode.nop));
+        inOrder.verify(extension).apply(any(DecompilationContext.class), any(CodeStream.class), eq(ByteCode.nop));
     }
 
     @Test
     public void correctionalDecompilerEnhancementShouldBeCalledAfterInstructionIsProcessed() throws IOException {
-        final DecompilerExtension extension = mock(DecompilerExtension.class);
-        final DecompilerEnhancement enhancement = mock(DecompilerEnhancement.class);
+        final DecompilerDelegate extension = mock(DecompilerDelegate.class, "delegate");
+        final DecompilerDelegate enhancement = mock(DecompilerDelegate.class, "enhancement");
         final DecompilerConfiguration configuration = new DecompilerConfigurationImpl.Builder()
                 .on(ByteCode.nop).then(extension)
                 .after(ByteCode.nop).then(enhancement)
@@ -91,13 +91,13 @@ public class DecompilerImplTest {
 
         final InOrder inOrder = Mockito.inOrder(extension, enhancement);
 
-        inOrder.verify(extension).decompile(any(DecompilationContext.class), any(CodeStream.class), eq(ByteCode.nop));
-        inOrder.verify(enhancement).enhance(any(DecompilationContext.class), any(CodeStream.class), eq(ByteCode.nop));
+        inOrder.verify(extension).apply(any(DecompilationContext.class), any(CodeStream.class), eq(ByteCode.nop));
+        inOrder.verify(enhancement).apply(any(DecompilationContext.class), any(CodeStream.class), eq(ByteCode.nop));
     }
 
     @Test
     public void configuredDecompilerEnhancementShouldBeCalledAfterInstruction() throws IOException {
-        final DecompilerEnhancement enhancement = mock(DecompilerEnhancement.class);
+        final DecompilerDelegate enhancement = mock(DecompilerDelegate.class, "enhancement");
         final DecompilerConfiguration configuration = new DecompilerConfigurationImpl.Builder()
                 .after(ByteCode.istore_1).then(enhancement)
                 .build();
@@ -110,12 +110,12 @@ public class DecompilerImplTest {
 
         decompiler.parse(exampleMethod, new InputStreamCodeStream(new ByteArrayInputStream(new byte[]{(byte) ByteCode.iconst_0, ByteCode.istore_1})));
 
-        verify(enhancement).enhance(any(DecompilationContext.class), any(CodeStream.class), eq(ByteCode.istore_1));
+        verify(enhancement).apply(any(DecompilationContext.class), any(CodeStream.class), eq(ByteCode.istore_1));
     }
 
     @Test
     public void compilerExtensionCanOverrideByteCodeHandling() throws IOException {
-        final DecompilerExtension extension = mock(DecompilerExtension.class);
+        final DecompilerDelegate extension = mock(DecompilerDelegate.class);
         final DecompilerConfiguration configuration = new DecompilerConfigurationImpl.Builder()
                 .on(ByteCode.iconst_0).then(extension)
                 .build();
@@ -125,7 +125,7 @@ public class DecompilerImplTest {
 
         expect(elements.length).toBe(0);
 
-        verify(extension).decompile(any(DecompilationContext.class), any(CodeStream.class), anyInt());
+        verify(extension).apply(any(DecompilationContext.class), any(CodeStream.class), anyInt());
     }
 
     @Test

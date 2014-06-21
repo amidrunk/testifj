@@ -11,7 +11,7 @@ import org.testifj.lang.model.impl.MethodSignature;
 
 import java.io.IOException;
 
-public final class FieldDecompilationExtensions {
+public final class FieldDecompilationDelegation implements DecompilerDelegation {
 
     /**
      * Configures the provided configuration builder with support for byte codes related to field
@@ -19,7 +19,7 @@ public final class FieldDecompilationExtensions {
      *
      * @param configurationBuilder The configuration builder to configure.
      */
-    public static void configure(DecompilerConfiguration.Builder configurationBuilder) {
+    public void configure(DecompilerConfiguration.Builder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";
 
         configurationBuilder.on(ByteCode.putfield).then(putfield());
@@ -33,7 +33,7 @@ public final class FieldDecompilationExtensions {
      *
      * @return A <code>DecompilerExtension</code> that handles the <code>putfield</code> byte code.
      */
-    public static DecompilerExtension putfield() {
+    public static DecompilerDelegate putfield() {
         return (context, codeStream, byteCode) -> {
             handlePutField(context, codeStream, false);
         };
@@ -46,7 +46,7 @@ public final class FieldDecompilationExtensions {
      *
      * @return A <code>DecompilerExtension</code> that handles the <code>putstatic</code> byte code.
      */
-    public static DecompilerExtension putstatic() {
+    public static DecompilerDelegate putstatic() {
         return (context,codeStream,byteCode) -> {
             handlePutField(context, codeStream, true);
         };

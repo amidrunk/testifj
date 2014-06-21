@@ -11,9 +11,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
 
-public final class InvokeDynamicExtensions {
+public final class InvokeDynamicDecompilerDelegation implements DecompilerDelegation {
 
-    public static void configure(DecompilerConfiguration.Builder configurationBuilder) {
+    public void configure(DecompilerConfiguration.Builder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";
 
         configurationBuilder.on(ByteCode.invokedynamic).then(invokedynamic());
@@ -43,7 +43,7 @@ public final class InvokeDynamicExtensions {
         });
     }
 
-    public static DecompilerExtension invokedynamic() {
+    public static DecompilerDelegate invokedynamic() {
         return (context, stream, byteCode) -> {
             final ClassFile classFile = context.getMethod().getClassFile();
             final ConstantPool constantPool = classFile.getConstantPool();

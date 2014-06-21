@@ -6,9 +6,7 @@ import org.testifj.lang.classfile.ClassFileFormatException;
 import org.testifj.lang.decompile.CodeStream;
 import org.testifj.lang.decompile.DecompilationContext;
 import org.testifj.lang.decompile.DecompilerConfiguration;
-import org.testifj.lang.decompile.DecompilerExtension;
-import org.testifj.lang.decompile.impl.ArrayDecompilerExtensions;
-import org.testifj.lang.decompile.impl.DecompilerConfigurationImpl;
+import org.testifj.lang.decompile.DecompilerDelegate;
 import org.testifj.lang.model.AST;
 import org.testifj.lang.model.Constant;
 import org.testifj.lang.model.Expression;
@@ -24,7 +22,7 @@ import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
-public class ArrayDecompilerExtensionsTest {
+public class ArrayDecompilerDelegationTest {
 
     private final DecompilationContext context = mock(DecompilationContext.class);
 
@@ -32,16 +30,12 @@ public class ArrayDecompilerExtensionsTest {
 
     @Test
     public void configureShouldNotAcceptNullConfigurationBuilder() {
-        expect(() -> ArrayDecompilerExtensions.configure(null)).toThrow(AssertionError.class);
+        expect(() -> new ArrayDecompilerDelegation().configure(null)).toThrow(AssertionError.class);
     }
 
     @Test
     public void configureShouldConfigureSupportForArrayInstructions() {
-        final DecompilerConfiguration.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
-
-        ArrayDecompilerExtensions.configure(configurationBuilder);
-
-        given(configurationBuilder.build()).then(it -> {
+        given(configuration()).then(it -> {
             expect(it.getDecompilerExtension(context, ByteCode.anewarray)).not().toBe(equalTo(null));
             expect(it.getDecompilerExtension(context, ByteCode.aaload)).not().toBe(equalTo(null));
             expect(it.getDecompilerExtension(context, ByteCode.aastore)).not().toBe(equalTo(null));
@@ -58,7 +52,7 @@ public class ArrayDecompilerExtensionsTest {
 
         when(context.pop()).thenReturn(value, index, array);
 
-        ArrayDecompilerExtensions.aastore().decompile(context, code, ByteCode.aastore);
+        ArrayDecompilerDelegation.aastore().apply(context, code, ByteCode.aastore);
 
         verify(context).enlist(eq(new ArrayStoreImpl(array, index, value)));
     }
@@ -70,7 +64,7 @@ public class ArrayDecompilerExtensionsTest {
 
         when(context.pop()).thenReturn(index, array);
 
-        ArrayDecompilerExtensions.aaload().decompile(context, code, ByteCode.aaload);
+        ArrayDecompilerDelegation.aaload().apply(context, code, ByteCode.aaload);
 
         verify(context).push(eq(new ArrayLoadImpl(array, index, String.class)));
     }
@@ -79,7 +73,7 @@ public class ArrayDecompilerExtensionsTest {
     public void newarrayShouldFailIfTypeCodeIsInvalid() throws IOException {
         when(code.nextUnsignedByte()).thenReturn(123);
 
-        expect(() -> ArrayDecompilerExtensions.newarray().decompile(context, code, ByteCode.newarray)).toThrow(ClassFileFormatException.class);
+        expect(() -> ArrayDecompilerDelegation.newarray().apply(context, code, ByteCode.newarray)).toThrow(ClassFileFormatException.class);
     }
 
     @Test
@@ -87,7 +81,7 @@ public class ArrayDecompilerExtensionsTest {
         when(context.pop()).thenReturn(AST.constant(1));
         when(code.nextUnsignedByte()).thenReturn(4);
 
-        ArrayDecompilerExtensions.newarray().decompile(context, code, ByteCode.newarray);
+        ArrayDecompilerDelegation.newarray().apply(context, code, ByteCode.newarray);
 
         verify(context).push(eq(new NewArrayImpl(boolean[].class, boolean.class, AST.constant(1), Collections.emptyList())));
     }
@@ -97,7 +91,7 @@ public class ArrayDecompilerExtensionsTest {
         when(context.pop()).thenReturn(AST.constant(1));
         when(code.nextUnsignedByte()).thenReturn(5);
 
-        ArrayDecompilerExtensions.newarray().decompile(context, code, ByteCode.newarray);
+        ArrayDecompilerDelegation.newarray().apply(context, code, ByteCode.newarray);
 
         verify(context).push(eq(new NewArrayImpl(char[].class, char.class, AST.constant(1), Collections.emptyList())));
     }
@@ -107,7 +101,7 @@ public class ArrayDecompilerExtensionsTest {
         when(context.pop()).thenReturn(AST.constant(1));
         when(code.nextUnsignedByte()).thenReturn(6);
 
-        ArrayDecompilerExtensions.newarray().decompile(context, code, ByteCode.newarray);
+        ArrayDecompilerDelegation.newarray().apply(context, code, ByteCode.newarray);
 
         verify(context).push(eq(new NewArrayImpl(float[].class, float.class, AST.constant(1), Collections.emptyList())));
     }
@@ -117,7 +111,7 @@ public class ArrayDecompilerExtensionsTest {
         when(context.pop()).thenReturn(AST.constant(1));
         when(code.nextUnsignedByte()).thenReturn(7);
 
-        ArrayDecompilerExtensions.newarray().decompile(context, code, ByteCode.newarray);
+        ArrayDecompilerDelegation.newarray().apply(context, code, ByteCode.newarray);
 
         verify(context).push(eq(new NewArrayImpl(double[].class, double.class, AST.constant(1), Collections.emptyList())));
     }
@@ -127,7 +121,7 @@ public class ArrayDecompilerExtensionsTest {
         when(context.pop()).thenReturn(AST.constant(1));
         when(code.nextUnsignedByte()).thenReturn(8);
 
-        ArrayDecompilerExtensions.newarray().decompile(context, code, ByteCode.newarray);
+        ArrayDecompilerDelegation.newarray().apply(context, code, ByteCode.newarray);
 
         verify(context).push(eq(new NewArrayImpl(byte[].class, byte.class, AST.constant(1), Collections.emptyList())));
     }
@@ -137,7 +131,7 @@ public class ArrayDecompilerExtensionsTest {
         when(context.pop()).thenReturn(AST.constant(1));
         when(code.nextUnsignedByte()).thenReturn(9);
 
-        ArrayDecompilerExtensions.newarray().decompile(context, code, ByteCode.newarray);
+        ArrayDecompilerDelegation.newarray().apply(context, code, ByteCode.newarray);
 
         verify(context).push(eq(new NewArrayImpl(short[].class, short.class, AST.constant(1), Collections.emptyList())));
     }
@@ -147,7 +141,7 @@ public class ArrayDecompilerExtensionsTest {
         when(context.pop()).thenReturn(AST.constant(1));
         when(code.nextUnsignedByte()).thenReturn(10);
 
-        ArrayDecompilerExtensions.newarray().decompile(context, code, ByteCode.newarray);
+        ArrayDecompilerDelegation.newarray().apply(context, code, ByteCode.newarray);
 
         verify(context).push(eq(new NewArrayImpl(int[].class, int.class, AST.constant(1), Collections.emptyList())));
     }
@@ -157,7 +151,7 @@ public class ArrayDecompilerExtensionsTest {
         when(context.pop()).thenReturn(AST.constant(1));
         when(code.nextUnsignedByte()).thenReturn(11);
 
-        ArrayDecompilerExtensions.newarray().decompile(context, code, ByteCode.newarray);
+        ArrayDecompilerDelegation.newarray().apply(context, code, ByteCode.newarray);
 
         verify(context).push(eq(new NewArrayImpl(long[].class, long.class, AST.constant(1), Collections.emptyList())));
     }
@@ -170,7 +164,7 @@ public class ArrayDecompilerExtensionsTest {
 
         when(context.pop()).thenReturn(value, index, array);
 
-        ArrayDecompilerExtensions.iastore().decompile(context, code, ByteCode.iastore);
+        ArrayDecompilerDelegation.iastore().apply(context, code, ByteCode.iastore);
 
         verify(context).enlist(eq(new ArrayStoreImpl(array, index, value)));
     }
@@ -181,34 +175,34 @@ public class ArrayDecompilerExtensionsTest {
 
         when(context.pop()).thenReturn(array);
 
-        ArrayDecompilerExtensions.arraylength().decompile(context, code, ByteCode.arraylength);
+        ArrayDecompilerDelegation.arraylength().apply(context, code, ByteCode.arraylength);
 
         verify(context).push(new FieldReferenceImpl(array, String[].class, int.class, "length"));
     }
 
     @Test
     public void integerArrayElementCanBeRetrieved() throws IOException {
-        final DecompilerExtension iaload = ArrayDecompilerExtensions.iaload();
+        final DecompilerDelegate iaload = ArrayDecompilerDelegation.iaload();
 
         when(context.pop()).thenReturn(
                 AST.constant(1),
                 AST.local("myArray", int[].class, 1));
 
-        iaload.decompile(context, mock(CodeStream.class), ByteCode.iaload);
+        iaload.apply(context, mock(CodeStream.class), ByteCode.iaload);
 
         verify(context).push(eq(new ArrayLoadImpl(AST.local("myArray", int[].class, 1), AST.constant(1), int.class)));
     }
 
     @Test
     public void laloadShouldLoadElementFromArray() throws IOException {
-        final DecompilerExtension extension = ArrayDecompilerExtensions.laload();
+        final DecompilerDelegate extension = ArrayDecompilerDelegation.laload();
 
         final Expression index = mock(Expression.class);
         final Expression array = mock(LocalVariableReference.class);
 
         when(context.pop()).thenReturn(index, array);
 
-        extension.decompile(context, code, ByteCode.laload);
+        extension.apply(context, code, ByteCode.laload);
 
         verify(context).push(eq(new ArrayLoadImpl(array, index, long.class)));
     }
@@ -220,7 +214,7 @@ public class ArrayDecompilerExtensionsTest {
 
         when(context.pop()).thenReturn(index, array);
 
-        ArrayDecompilerExtensions.faload().decompile(context, code, ByteCode.faload);
+        ArrayDecompilerDelegation.faload().apply(context, code, ByteCode.faload);
 
         verify(context).push(eq(new ArrayLoadImpl(array, index, float.class)));
     }
@@ -232,7 +226,7 @@ public class ArrayDecompilerExtensionsTest {
 
         when(context.pop()).thenReturn(index, array);
 
-        ArrayDecompilerExtensions.daload().decompile(context, code, ByteCode.daload);
+        ArrayDecompilerDelegation.daload().apply(context, code, ByteCode.daload);
 
         verify(context).push(eq(new ArrayLoadImpl(array, index, double.class)));
     }
@@ -244,7 +238,7 @@ public class ArrayDecompilerExtensionsTest {
 
         when(context.pop()).thenReturn(index, array);
 
-        ArrayDecompilerExtensions.baload().decompile(context, code, ByteCode.baload);
+        ArrayDecompilerDelegation.baload().apply(context, code, ByteCode.baload);
 
         verify(context).push(eq(new ArrayLoadImpl(array, index, boolean.class)));
     }
@@ -256,7 +250,7 @@ public class ArrayDecompilerExtensionsTest {
 
         when(context.pop()).thenReturn(index, array);
 
-        ArrayDecompilerExtensions.caload().decompile(context, code, ByteCode.caload);
+        ArrayDecompilerDelegation.caload().apply(context, code, ByteCode.caload);
 
         verify(context).push(eq(new ArrayLoadImpl(array, index, char.class)));
     }
@@ -268,8 +262,16 @@ public class ArrayDecompilerExtensionsTest {
 
         when(context.pop()).thenReturn(index, array);
 
-        ArrayDecompilerExtensions.saload().decompile(context, code, ByteCode.saload);
+        ArrayDecompilerDelegation.saload().apply(context, code, ByteCode.saload);
 
         verify(context).push(eq(new ArrayLoadImpl(array, index, short.class)));
+    }
+
+    private DecompilerConfiguration configuration() {
+        final DecompilerConfiguration.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
+
+        new ArrayDecompilerDelegation().configure(configurationBuilder);
+
+        return configurationBuilder.build();
     }
 }

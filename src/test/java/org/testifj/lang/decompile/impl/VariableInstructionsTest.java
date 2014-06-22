@@ -25,7 +25,7 @@ import static org.testifj.Describe.describe;
 import static org.testifj.Expect.expect;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
-public class VariableDecompilerDelegationTest {
+public class VariableInstructionsTest {
 
     private final DecompilationContext context = mock(DecompilationContext.class);
     private final Method method = mock(Method.class);
@@ -38,7 +38,7 @@ public class VariableDecompilerDelegationTest {
     public void setup() {
         final DecompilerConfiguration.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
 
-        new VariableDecompilerDelegation().configure(configurationBuilder);
+        new VariableInstructions().configure(configurationBuilder);
 
         configuration = configurationBuilder.build();
 
@@ -50,7 +50,7 @@ public class VariableDecompilerDelegationTest {
 
     @Test
     public void configureShouldNotAcceptInvalidArgument() {
-        expect(() -> new VariableDecompilerDelegation().configure(null)).toThrow(AssertionError.class);
+        expect(() -> new VariableInstructions().configure(null)).toThrow(AssertionError.class);
     }
 
     @Test

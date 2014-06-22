@@ -15,7 +15,7 @@ import org.testifj.lang.model.impl.MethodSignature;
 
 import java.lang.reflect.Type;
 
-public final class MethodCallDecompilerDelegation implements DecompilerDelegation {
+public final class MethodCallInstructions implements DecompilerDelegation {
 
     public void configure(DecompilerConfiguration.Builder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";

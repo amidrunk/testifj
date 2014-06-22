@@ -13,7 +13,7 @@ import java.util.Optional;
 
 import static org.testifj.lang.classfile.ByteCode.*;
 
-public final class VariableDecompilerDelegation implements DecompilerDelegation {
+public final class VariableInstructions implements DecompilerDelegation {
 
     public void configure(DecompilerConfiguration.Builder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";

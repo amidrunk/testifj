@@ -27,7 +27,7 @@ import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
-public class MethodCallDecompilerDelegationTest {
+public class MethodCallInstructionsTest {
 
     private final Decompiler decompiler = mock(Decompiler.class);
     private final Method method = mock(Method.class);
@@ -44,7 +44,7 @@ public class MethodCallDecompilerDelegationTest {
 
     @Test
     public void configureShouldNotAcceptNullConfigurationBuilder() {
-        expect(() -> new MethodCallDecompilerDelegation().configure(null)).toThrow(AssertionError.class);
+        expect(() -> new MethodCallInstructions().configure(null)).toThrow(AssertionError.class);
     }
 
     @Test
@@ -62,7 +62,7 @@ public class MethodCallDecompilerDelegationTest {
 
         context.push(instance);
 
-        decompile(constantPool, in(ByteCode.invokeinterface, 0, 1, 1), MethodCallDecompilerDelegation.invokeinterface());
+        decompile(constantPool, in(ByteCode.invokeinterface, 0, 1, 1), MethodCallInstructions.invokeinterface());
 
         expect(context.getStackedExpressions().toArray()).toBe(new Object[]{
                 new MethodCallImpl(
@@ -81,7 +81,7 @@ public class MethodCallDecompilerDelegationTest {
         context.push(new ConstantImpl("foo", String.class));
 
         expect(() -> {
-            decompile(constantPool, in(ByteCode.invokeinterface, 0, 1, 0), MethodCallDecompilerDelegation.invokeinterface());
+            decompile(constantPool, in(ByteCode.invokeinterface, 0, 1, 0), MethodCallInstructions.invokeinterface());
         }).toThrow(ClassFileFormatException.class);
     }
 
@@ -95,7 +95,7 @@ public class MethodCallDecompilerDelegationTest {
         context.push(instance);
         context.push(arg1);
 
-        decompile(constantPool, in(ByteCode.invokeinterface, 0, 1, 1), MethodCallDecompilerDelegation.invokeinterface());
+        decompile(constantPool, in(ByteCode.invokeinterface, 0, 1, 1), MethodCallInstructions.invokeinterface());
 
         expect(context.getStackedExpressions().toArray()).toBe(new Object[]{
                 new MethodCallImpl(
@@ -145,7 +145,7 @@ public class MethodCallDecompilerDelegationTest {
     private DecompilerConfiguration configuration() {
         final DecompilerConfiguration.Builder builder = new DecompilerConfigurationImpl.Builder();
 
-        new MethodCallDecompilerDelegation().configure(builder);
+        new MethodCallInstructions().configure(builder);
 
         return builder.build();
     }

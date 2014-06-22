@@ -24,9 +24,9 @@ import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
-public class ConstantDecompilerDelegationTest {
+public class ConstantInstructionsTest {
 
-    private final ConstantDecompilerDelegation delegation = new ConstantDecompilerDelegation();
+    private final ConstantInstructions delegation = new ConstantInstructions();
     private final DecompilationContext decompilationContext = mock(DecompilationContext.class);
     private final Method method = mock(Method.class);
     private final ClassFile classFile = mock(ClassFile.class);

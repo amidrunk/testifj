@@ -8,7 +8,7 @@ import org.testifj.lang.model.impl.ConstantImpl;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
-public final class ConstantDecompilerDelegation implements DecompilerDelegation {
+public final class ConstantInstructions implements DecompilerDelegation {
 
     @Override
     public void configure(DecompilerConfiguration.Builder decompilerConfigurationBuilder) {
@@ -118,7 +118,7 @@ public final class ConstantDecompilerDelegation implements DecompilerDelegation 
         return new DecompilerDelegate() {
             @Override
             public void apply(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
-                ConstantDecompilerDelegation.ldc(context, codeStream.nextUnsignedByte());
+                ConstantInstructions.ldc(context, codeStream.nextUnsignedByte());
             }
         };
     }
@@ -127,7 +127,7 @@ public final class ConstantDecompilerDelegation implements DecompilerDelegation 
         return new DecompilerDelegate() {
             @Override
             public void apply(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
-                ConstantDecompilerDelegation.ldc(context, codeStream.nextUnsignedShort());
+                ConstantInstructions.ldc(context, codeStream.nextUnsignedShort());
             }
         };
     }

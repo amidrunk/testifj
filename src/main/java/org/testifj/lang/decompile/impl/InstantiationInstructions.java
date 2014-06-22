@@ -11,7 +11,7 @@ import org.testifj.lang.model.MethodCall;
 import org.testifj.lang.model.impl.AllocateInstanceImpl;
 import org.testifj.lang.model.impl.NewInstanceImpl;
 
-public final class NewDecompilerDelegation implements DecompilerDelegation {
+public final class InstantiationInstructions implements DecompilerDelegation {
 
     public void configure(DecompilerConfiguration.Builder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";

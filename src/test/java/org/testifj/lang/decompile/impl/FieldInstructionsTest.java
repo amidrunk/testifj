@@ -24,11 +24,11 @@ import static org.mockito.Mockito.*;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
 import static org.testifj.lang.CodeStreamTestUtils.codeStream;
-import static org.testifj.lang.decompile.impl.FieldDecompilationDelegation.putfield;
-import static org.testifj.lang.decompile.impl.FieldDecompilationDelegation.putstatic;
+import static org.testifj.lang.decompile.impl.FieldInstructions.putfield;
+import static org.testifj.lang.decompile.impl.FieldInstructions.putstatic;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
-public class FieldDecompilationDelegationTest {
+public class FieldInstructionsTest {
 
     private final DecompilationContext context = mock(DecompilationContext.class);
     private final CodeStream codeStream = mock(CodeStream.class);
@@ -48,7 +48,7 @@ public class FieldDecompilationDelegationTest {
 
     @Test
     public void configureShouldNotAcceptNullConfigurationBuilder() {
-        expect(() -> new FieldDecompilationDelegation().configure(null)).toThrow(AssertionError.class);
+        expect(() -> new FieldInstructions().configure(null)).toThrow(AssertionError.class);
     }
 
     @Test
@@ -93,7 +93,7 @@ public class FieldDecompilationDelegationTest {
     private DecompilerConfiguration configuration() {
         final DecompilerConfiguration.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
 
-        new FieldDecompilationDelegation().configure(configurationBuilder);
+        new FieldInstructions().configure(configurationBuilder);
 
         return configurationBuilder.build();
     }

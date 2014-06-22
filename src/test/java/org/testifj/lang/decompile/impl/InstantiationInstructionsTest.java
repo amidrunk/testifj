@@ -28,11 +28,11 @@ import static org.testifj.Given.given;
 import static org.testifj.lang.ClassModelTestUtils.code;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
-public class NewDecompilerDelegationTest {
+public class InstantiationInstructionsTest {
 
     @Test
     public void configureShouldNotAcceptNullConfigurationBuilder() {
-        expect(() -> new NewDecompilerDelegation().configure(null)).toThrow(AssertionError.class);
+        expect(() -> new InstantiationInstructions().configure(null)).toThrow(AssertionError.class);
     }
 
     @Test
@@ -58,7 +58,7 @@ public class NewDecompilerDelegationTest {
         when(context.getMethod()).thenReturn(method);
         when(context.resolveType(eq("java/lang/String"))).thenReturn(String.class);
 
-        NewDecompilerDelegation.newInstance().apply(context, codeStream, ByteCode.new_);
+        InstantiationInstructions.newInstance().apply(context, codeStream, ByteCode.new_);
 
         verify(context).push(eq(new AllocateInstanceImpl(String.class)));
         verify(context).resolveType(eq("java/lang/String"));
@@ -87,7 +87,7 @@ public class NewDecompilerDelegationTest {
     private DecompilerConfiguration configuration() {
         final DecompilerConfiguration.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
 
-        new NewDecompilerDelegation().configure(configurationBuilder);
+        new InstantiationInstructions().configure(configurationBuilder);
 
         return configurationBuilder.build();
     }

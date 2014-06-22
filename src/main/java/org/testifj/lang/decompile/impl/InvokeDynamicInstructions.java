@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
 
-public final class InvokeDynamicDecompilerDelegation implements DecompilerDelegation {
+public final class InvokeDynamicInstructions implements DecompilerDelegation {
 
     public void configure(DecompilerConfiguration.Builder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";

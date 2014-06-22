@@ -18,45 +18,21 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
-// TODO Introduce reduce points. E.g. prior to static void method
-
 public final class DecompilerImpl implements Decompiler {
 
     private final DecompilerConfiguration configuration;
 
-    private final DecompilerConfiguration coreConfiguration;
-
     private final CodePointerCodeGenerator debugCodeGenerator;
 
     public DecompilerImpl() {
-        this(new DecompilerConfigurationImpl.Builder().build());
+        this(CoreDecompilerDelegation.configuration());
     }
 
     public DecompilerImpl(DecompilerConfiguration configuration) {
         assert configuration != null : "Configuration can't be null";
 
         this.configuration = configuration;
-        this.coreConfiguration = createCoreConfiguration();
         this.debugCodeGenerator = new CodePointerCodeGenerator(this);
-    }
-
-    private static DecompilerConfiguration createCoreConfiguration() {
-        final DecompilerConfigurationImpl.Builder builder = new DecompilerConfigurationImpl.Builder();
-
-        new VariableDecompilerDelegation().configure(builder);
-        new ArrayDecompilerDelegation().configure(builder);
-        new NewDecompilerDelegation().configure(builder);
-        new InvokeDynamicDecompilerDelegation().configure(builder);
-        new MethodCallDecompilerDelegation().configure(builder);
-        new FieldDecompilationDelegation().configure(builder);
-        new CastInstructions().configure(builder);
-        new BinaryOperations().configure(builder);
-        new ConstantDecompilerDelegation().configure(builder);
-        new StackInstructions().configure(builder);
-        new VariousInstructions().configure(builder);
-        new UnaryOperations().configure(builder);
-
-        return builder.build();
     }
 
     private void debug(DecompilationContext context, int lineNumber, int byteCode) {
@@ -124,41 +100,19 @@ public final class DecompilerImpl implements Decompiler {
             }
 
             advice(configuration, context, codeStream, byteCode);
-            advice(coreConfiguration, context, codeStream, byteCode);
 
-            final DecompilerDelegate userExtension = configuration.getDecompilerExtension(context, byteCode);
+            final DecompilerDelegate delegate = configuration.getDecompilerExtension(context, byteCode);
 
             boolean handled = false;
 
-            if (userExtension != null) {
-                userExtension.apply(context, codeStream, byteCode);
+            if (delegate != null) {
+                delegate.apply(context, codeStream, byteCode);
                 handled = true;
-            }
-
-            if (!handled) {
-                final DecompilerDelegate coreExtension = coreConfiguration.getDecompilerExtension(context, byteCode);
-
-                if (coreExtension != null) {
-                    coreExtension.apply(context, codeStream, byteCode);
-                    handled = true;
-                }
             }
 
             if (!handled) {
                 switch (byteCode) {
                     // Various
-
-                    // Method return
-
-                    case ByteCode.return_:
-                        // Expecting empty stack; stacked expressions are statements
-                        context.reduceAll();
-                        context.enlist(new ReturnImpl());
-                        break;
-                    case ByteCode.areturn:
-                    case ByteCode.ireturn:
-                        context.enlist(new ReturnValueImpl(context.pop()));
-                        break;
 
                     // Field access
                     case ByteCode.getstatic:
@@ -233,33 +187,10 @@ public final class DecompilerImpl implements Decompiler {
 
                         break;
                     }
-
-                    // Method invocation
-
-                    //case ByteCode.invokeinterface: {
-                    case -2: {
-                        invokeMethod(context, codeStream, constantPool, false, true);
-
-                        final int count = codeStream.nextByte();
-
-                        if (count == 0) {
-                            throw new ClassFileFormatException("Count field subsequent to interface method invocation must not be zero");
-                        }
-
-                        if (codeStream.nextByte() != 0) {
-                            throw new ClassFileFormatException("Interface method calls must be followed by <count:byte>, 0");
-                        }
-
-                        break;
-                    }
                     case ByteCode.invokevirtual: {
                         invokeMethod(context, codeStream, constantPool, false, false);
                         break;
                     }
-                    // case ByteCode.invokespecial:
-                    case -3:
-                        invokeMethod(context, codeStream, constantPool, false, false);
-                        break;
                     case ByteCode.invokestatic:
                         invokeMethod(context, codeStream, constantPool, true, false);
                         break;
@@ -271,9 +202,7 @@ public final class DecompilerImpl implements Decompiler {
                 }
             }
 
-            // TODO: Merge configurations instead
             correct(configuration, context, codeStream, byteCode);
-            correct(coreConfiguration, context, codeStream, byteCode);
 
             callback.afterInstruction(context);
         }

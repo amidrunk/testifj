@@ -11,7 +11,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public final class ArrayDecompilerDelegation implements DecompilerDelegation {
+public final class ArrayInstructions implements DecompilerDelegation {
 
     public void configure(DecompilerConfiguration.Builder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";

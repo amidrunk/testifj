@@ -102,7 +102,7 @@ public class DecompilerImplTest {
                 .after(ByteCode.istore_1).then(enhancement)
                 .build();
 
-        final DecompilerImpl decompiler = new DecompilerImpl(configuration);
+        final DecompilerImpl decompiler = new DecompilerImpl(configuration.merge(CoreDecompilerDelegation.configuration()));
 
         when(exampleMethod.getLocalVariableTable()).thenReturn(Optional.of(new LocalVariableTableImpl(new LocalVariable[]{
                 new LocalVariableImpl(-1, -1, "test", String.class, 1)

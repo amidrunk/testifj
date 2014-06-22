@@ -11,7 +11,7 @@ import org.testifj.lang.model.impl.MethodSignature;
 
 import java.io.IOException;
 
-public final class FieldDecompilationDelegation implements DecompilerDelegation {
+public final class FieldInstructions implements DecompilerDelegation {
 
     /**
      * Configures the provided configuration builder with support for byte codes related to field

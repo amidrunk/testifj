@@ -18,7 +18,11 @@ public interface DecompilerConfiguration {
 
         ExtendContinuation<DecompilerDelegate> before(int byteCode);
 
+        ExtendContinuation<DecompilerDelegate> before(int ... byteCodes);
+
         ExtendContinuation<DecompilerDelegate> after(int byteCode);
+
+        ExtendContinuation<DecompilerDelegate> after(int ... byteCodes);
 
         ExtendContinuation<DecompilerDelegate> on(int byteCode);
 

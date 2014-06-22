@@ -159,7 +159,7 @@ public class DecompilerImplTest {
             }
 
             return null;
-        }).when(callback).onDecompilationProgressed(any());
+        }).when(callback).afterInstruction(any());
 
         decompileCallerWithCallback(caller, new CompositeDecompilationProgressCallback(new DecompilationProgressCallback[]{callback, history}));
 

@@ -143,8 +143,18 @@ public final class DecompilerConfigurationImpl implements DecompilerConfiguratio
         }
 
         @Override
+        public ExtendContinuation<DecompilerDelegate> before(int... byteCodes) {
+            return new DecompilerExtensionBuilder<>(this, byteCodes, advisoryDecompilerEnhancements);
+        }
+
+        @Override
         public ExtendContinuation<DecompilerDelegate> after(int byteCode) {
             return new DecompilerExtensionBuilder<>(this, new int[]{byteCode}, correctionalDecompilerEnhancements);
+        }
+
+        @Override
+        public ExtendContinuation<DecompilerDelegate> after(int... byteCodes) {
+            return new DecompilerExtensionBuilder<>(this, byteCodes, correctionalDecompilerEnhancements);
         }
 
         @Override

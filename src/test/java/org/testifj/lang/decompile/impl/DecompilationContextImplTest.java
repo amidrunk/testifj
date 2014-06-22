@@ -355,4 +355,15 @@ public class DecompilationContextImplTest {
         expect(() -> context.isStackCompliantWithComputationalCategories((int[]) null)).toThrow(AssertionError.class);
     }
 
+    @Test
+    public void elementPushedToStackShouldGetMetaDataConfigured() {
+        final Constant expression = AST.constant(1);
+
+        when(lineNumberCounter.get()).thenReturn(50);
+
+        context.getStack().push(expression);
+
+        expect(expression.getMetaData().getAttribute(ElementMetaData.LINE_NUMBER)).toBe(50);
+    }
+
 }

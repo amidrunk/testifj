@@ -1,13 +1,11 @@
 package org.testifj.lang.decompile.impl;
 
-import org.testifj.lang.Types;
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.classfile.ClassFileFormatException;
 import org.testifj.lang.decompile.*;
 import org.testifj.lang.model.Expression;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
 public final class StackInstructions implements DecompilerDelegation {

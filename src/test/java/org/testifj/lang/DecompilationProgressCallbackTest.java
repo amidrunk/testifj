@@ -14,7 +14,7 @@ public class DecompilationProgressCallbackTest {
     public void nullCallbackShouldIgnoreCall() {
         final DecompilationContext context = mock(DecompilationContext.class);
 
-        expect(() -> DecompilationProgressCallback.NULL.onDecompilationProgressed(context)).not().toThrow();
+        expect(() -> DecompilationProgressCallback.NULL.afterInstruction(context)).not().toThrow();
 
         verifyZeroInteractions(context);
     }

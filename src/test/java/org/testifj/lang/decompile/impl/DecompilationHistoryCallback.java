@@ -2,6 +2,7 @@ package org.testifj.lang.decompile.impl;
 
 import org.testifj.lang.decompile.DecompilationContext;
 import org.testifj.lang.decompile.DecompilationProgressCallback;
+import org.testifj.lang.decompile.DecompilationProgressCallbackAdapter;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.Statement;
 
@@ -9,12 +10,12 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-public final class DecompilationHistoryCallback implements DecompilationProgressCallback {
+public final class DecompilationHistoryCallback extends DecompilationProgressCallbackAdapter {
 
     private final List<DecompilerState> decompilerStates = new LinkedList<>();
 
     @Override
-    public void onDecompilationProgressed(DecompilationContext context) {
+    public void afterInstruction(DecompilationContext context) {
         decompilerStates.add(new DecompilerState(new ArrayList<>(context.getStackedExpressions()), new ArrayList<>(context.getStatements())));
     }
 

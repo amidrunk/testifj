@@ -1,10 +1,8 @@
 package org.testifj.lang.model;
 
 import org.junit.Test;
-import org.testifj.lang.model.impl.ConstantImpl;
-import org.testifj.lang.model.impl.MethodCallImpl;
-import org.testifj.lang.model.impl.MethodSignature;
-import org.testifj.lang.model.impl.NewInstanceImpl;
+import org.testifj.lang.model.impl.*;
+import org.testifj.matchers.core.ObjectThatIs;
 
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -353,6 +351,28 @@ public class ASTTest {
             expect(it.getType()).toBe(Integer.class);
             expect(it.getOperatorType()).toBe(OperatorType.DIVIDE);
         });
+    }
+
+    @Test
+    public void setLocalShouldNotAcceptNullVariable() {
+        expect(() -> AST.set(null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void setLocalShouldNotAcceptNullValue() {
+        expect(() -> AST.set(mock(LocalVariableReference.class)).to(null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void setLocalShouldCreateVariableAssignment() {
+        final LocalVariableReference local = new LocalVariableReferenceImpl("foo", String.class, 1234);
+        final Expression expression = mock(Expression.class);
+        final VariableAssignment variableAssignment = AST.set(local).to(expression);
+
+        expect(variableAssignment.getValue()).toBe(expression);
+        expect(variableAssignment.getVariableIndex()).toBe(1234);
+        expect(variableAssignment.getVariableName()).toBe("foo");
+        expect(variableAssignment.getVariableType()).toBe(String.class);
     }
 
 }

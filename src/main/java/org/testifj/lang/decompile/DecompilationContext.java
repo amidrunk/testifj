@@ -4,6 +4,7 @@ import org.testifj.lang.classfile.Method;
 import org.testifj.lang.decompile.impl.ProgramCounter;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.Statement;
+import org.testifj.util.Stack;
 
 import java.lang.reflect.Type;
 import java.util.List;
@@ -23,6 +24,8 @@ public interface DecompilationContext {
     int getStackSize();
 
     boolean isStackCompliantWithComputationalCategories(int... computationalCategories);
+
+    Stack<Expression> getStack();
 
     /**
      * Returns the expressions currently available on the stack. The last pushed element will be the last element

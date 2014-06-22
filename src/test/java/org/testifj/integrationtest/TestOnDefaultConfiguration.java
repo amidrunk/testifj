@@ -10,10 +10,13 @@ import org.testifj.lang.decompile.impl.CallerDecompilerImpl;
 import org.testifj.lang.classfile.impl.ClassFileReaderImpl;
 import org.testifj.lang.decompile.impl.CodePointerCodeGenerator;
 import org.testifj.lang.decompile.impl.DecompilerImpl;
+import org.testifj.matchers.core.ArrayThatIs;
 
 import java.io.IOException;
 
+import static org.junit.Assert.fail;
 import static org.testifj.Expect.expect;
+import static org.testifj.matchers.core.ArrayThatIs.ofLength;
 
 public abstract class TestOnDefaultConfiguration {
 
@@ -34,7 +37,25 @@ public abstract class TestOnDefaultConfiguration {
             throw new RuntimeException("Failed to decompile caller", e);
         }
 
-        expect(codePointers.length).toBe(1);
+        if (codePointers.length > 1) {
+            final StringBuilder buffer = new StringBuilder();
+
+            boolean first = true;
+
+            for (CodePointer codePointer : codePointers) {
+                if (first) {
+                    first = false;
+                } else {
+                    buffer.append("\n");
+                }
+
+                buffer.append(codeGenerator.describe(codePointer));
+            }
+
+            fail("One code pointer expected, was: \n" + buffer.toString());
+        }
+
+        expect(codePointers).toBe(ofLength(1));
 
         return codeGenerator.describe(codePointers[0]).toString();
     }

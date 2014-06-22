@@ -52,6 +52,19 @@ public final class AST {
         return new NewInstanceImpl(type, signature, Arrays.asList(arguments));
     }
 
+    public static SetLocalContinuation set(LocalVariableReference local) {
+        assert local != null : "Local can't be null";
+
+        return value -> {
+            assert value != null : "Value can't be null";
+            return new VariableAssignmentImpl(value, local.getIndex(), local.getName(), local.getType());
+        };
+    }
+
+    public interface SetLocalContinuation {
+        VariableAssignment to(Expression value);
+    }
+
     public static VariableAssignment set(int index, String variableName, Expression value) {
         assert value != null : "Value can't be null";
 

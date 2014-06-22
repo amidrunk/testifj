@@ -331,4 +331,24 @@ public class DecompilerConfigurationImplTest {
         });
     }
 
+    @Test
+    public void advisoryDecompilerEnhancementCanBeConfiguredForMultipleInstructions() {
+        final DecompilerConfiguration configuration = new DecompilerConfigurationImpl.Builder()
+                .before(ByteCode.nop, ByteCode.dup).then(enhancement1)
+                .build();
+
+        expect(configuration.getAdvisoryDecompilerEnhancements(decompilationContext, ByteCode.nop)).toBe(iteratorOf(enhancement1));
+        expect(configuration.getAdvisoryDecompilerEnhancements(decompilationContext, ByteCode.dup)).toBe(iteratorOf(enhancement1));
+    }
+
+    @Test
+    public void correctionalDecompilerEnhancementsCanBeConfiguredForMultipleInstructions() {
+        final DecompilerConfiguration configuration = new DecompilerConfigurationImpl.Builder()
+                .after(ByteCode.nop, ByteCode.dup).then(enhancement1)
+                .build();
+
+        expect(configuration.getCorrectionalDecompilerEnhancements(decompilationContext, ByteCode.nop)).toBe(iteratorOf(enhancement1));
+        expect(configuration.getCorrectionalDecompilerEnhancements(decompilationContext, ByteCode.dup)).toBe(iteratorOf(enhancement1));
+    }
+
 }

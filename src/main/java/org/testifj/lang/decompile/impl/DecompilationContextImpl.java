@@ -13,9 +13,14 @@ import org.testifj.lang.model.Statement;
 
 import java.lang.reflect.Type;
 import java.util.*;
+
+import org.testifj.util.SingleThreadedStack;
 import org.testifj.util.Stack;
+import org.testifj.util.TransformedStack;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 public final class DecompilationContextImpl implements DecompilationContext {
 
@@ -27,7 +32,7 @@ public final class DecompilationContextImpl implements DecompilationContext {
 
     private final LineNumberCounter lineNumberCounter;
 
-    private final Stack<ExpressionWithPC> stack = new Stack<>();
+    private final SingleThreadedStack<ExpressionWithPC> stack = new SingleThreadedStack<>();
 
     private final Set<StatementWithPC> statements = new TreeSet<>();
 
@@ -36,6 +41,11 @@ public final class DecompilationContextImpl implements DecompilationContext {
     private final AtomicInteger contextVersion = new AtomicInteger();
 
     private final AtomicBoolean aborted = new AtomicBoolean(false);
+
+    private final Stack<Expression> visibleStack = new TransformedStack<>(stack, expression -> {
+        configureContextMetaData(expression);
+        return new ExpressionWithPC(expression, getProgramCounter().get(), contextVersion.incrementAndGet());
+    }, ExpressionWithPC::expression);
 
     public DecompilationContextImpl(Decompiler decompiler,
                                     Method method,
@@ -84,9 +94,9 @@ public final class DecompilationContextImpl implements DecompilationContext {
             return false;
         }
 
-        final List<ExpressionWithPC> subStack = (stack.size() == computationalCategories.length
+        final Iterable<ExpressionWithPC> subStack = (stack.size() == computationalCategories.length
                 ? stack
-                : stack.subList(stack.size() - computationalCategories.length, stack.size()));
+                : stack.tail(stack.size() - computationalCategories.length));
 
         int index = 0;
 
@@ -99,6 +109,10 @@ public final class DecompilationContextImpl implements DecompilationContext {
         }
 
         return true;
+    }
+
+    public Stack<Expression> getStack() {
+        return visibleStack;
     }
 
     @Override
@@ -154,7 +168,7 @@ public final class DecompilationContextImpl implements DecompilationContext {
 
     @Override
     public void insert(int offset, Expression expression) {
-        stack.add(stack.size() + offset, new ExpressionWithPC(expression, programCounter.get(), contextVersion.incrementAndGet()));
+        stack.insert(stack.size() + offset, new ExpressionWithPC(expression, programCounter.get(), contextVersion.incrementAndGet()));
         configureContextMetaData(expression);
     }
 

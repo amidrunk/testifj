@@ -150,9 +150,9 @@ public final class ByteCode {
     public static final int d2i = 142;
     public static final int d2l = 143;
     public static final int d2f = 144;
-    public static final int int2byte = 145;
-    public static final int int2char = 146;
-    public static final int int2short = 147;
+    public static final int i2b = 145;
+    public static final int i2c = 146;
+    public static final int i2s = 147;
     public static final int lcmp = 148;
     public static final int fcmpl = 149;
     public static final int fcmpg = 150;
@@ -234,6 +234,87 @@ public final class ByteCode {
     public static final int shortcode = 7;
     public static final int voidcode = 8;
     public static final int typecodecount = 9;
+
+    public static boolean isLoadInstruction(int byteCode) {
+        return false;
+    }
+
+    public static int[] integerLoadInstructions() {
+        return new int[] {
+            iload,
+            iload_0,
+            iload_1,
+            iload_2,
+            iload_3
+        };
+    }
+
+    public static int[] integerStoreInstructions() {
+        return new int[] {
+                istore,
+                istore_0,
+                istore_1,
+                istore_2,
+                istore_3,
+        };
+    }
+
+    public static int[] primitiveLoadInstructions() {
+        return new int[] {
+                iload,
+                iload_0,
+                iload_1,
+                iload_1,
+                iload_2,
+                iload_3,
+                lload,
+                lload_0,
+                lload_1,
+                lload_2,
+                lload_3,
+                fload,
+                fload_0,
+                fload_1,
+                fload_2,
+                fload_3,
+                dload,
+                dload_0,
+                dload_1,
+                dload_2,
+                dload_3
+        };
+    }
+
+    public static int[] loadInstructions() {
+        return new int[] {
+                iload,
+                iload_0,
+                iload_1,
+                iload_1,
+                iload_2,
+                iload_3,
+                lload,
+                lload_0,
+                lload_1,
+                lload_2,
+                lload_3,
+                fload,
+                fload_0,
+                fload_1,
+                fload_2,
+                fload_3,
+                dload,
+                dload_0,
+                dload_1,
+                dload_2,
+                dload_3,
+                aload,
+                aload_0,
+                aload_1,
+                aload_2,
+                aload_3
+        };
+    }
 
     public static String toString(int byteCode) {
         return Arrays.asList(ByteCode.class.getFields()).stream().filter(f -> {

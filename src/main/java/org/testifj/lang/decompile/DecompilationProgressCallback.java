@@ -2,8 +2,12 @@ package org.testifj.lang.decompile;
 
 public interface DecompilationProgressCallback {
 
-    DecompilationProgressCallback NULL = context -> {};
+    DecompilationProgressCallback NULL = new DecompilationProgressCallbackAdapter();
 
-    void onDecompilationProgressed(DecompilationContext context);
+    void beforeInstruction(DecompilationContext context);
+
+    void preparingInstruction(DecompilationContext context, int instruction);
+
+    void afterInstruction(DecompilationContext context);
 
 }

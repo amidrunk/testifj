@@ -43,8 +43,19 @@ public final class CoreCodeGenerationExtensions {
 
     public static CodeGeneratorExtension<Increment> increment() {
         return (context,codePointer,out) -> {
-            context.delegate(codePointer.forElement(codePointer.getElement().getOperand()));
-            out.append("++");
+            final Increment increment = codePointer.getElement();
+            final Affix affix = increment.getAffix();
+            final boolean positive = (((Number) increment.getValue().as(Constant.class).getConstant()).doubleValue() > 0);
+
+            if (affix == Affix.PREFIX) {
+                out.append(positive ? "++" : "--");
+            }
+
+            context.delegate(codePointer.forElement(codePointer.getElement().getLocalVariable()));
+
+            if (affix == Affix.POSTFIX) {
+                out.append(positive ? "++" : "--");
+            }
         };
     }
 

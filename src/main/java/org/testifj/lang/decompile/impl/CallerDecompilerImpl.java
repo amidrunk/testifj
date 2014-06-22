@@ -6,10 +6,7 @@ import org.testifj.lang.classfile.ClassFile;
 import org.testifj.lang.classfile.ClassFileReader;
 import org.testifj.lang.classfile.Method;
 import org.testifj.lang.classfile.impl.ClassFileReaderImpl;
-import org.testifj.lang.decompile.CallerDecompiler;
-import org.testifj.lang.decompile.CodePointer;
-import org.testifj.lang.decompile.CodeStream;
-import org.testifj.lang.decompile.Decompiler;
+import org.testifj.lang.decompile.*;
 import org.testifj.lang.classfile.impl.Lambdas;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.Expression;
@@ -60,30 +57,33 @@ public final class CallerDecompilerImpl implements CallerDecompiler {
             final AtomicReference<Expression> lingeringExpression = new AtomicReference<>();
             final AtomicInteger exitStackSize = new AtomicInteger(-1);
 
-            final Element[] elements = decompiler.parse(method, code, context -> {
-                // Abort as soon as (a) we've exceeded the PC and (b) the stack is empty
-                if (context.getProgramCounter().get() >= codeRange.getTo()) {
-                    final List<Expression> stackedExpressions = context.getStackedExpressions();
+            final Element[] elements = decompiler.parse(method, code, new DecompilationProgressCallbackAdapter() {
+                @Override
+                public void afterInstruction(DecompilationContext context) {
+                    // Abort as soon as (a) we've exceeded the PC and (b) the stack is empty
+                    if (context.getProgramCounter().get() >= codeRange.getTo()) {
+                        final List<Expression> stackedExpressions = context.getStackedExpressions();
 
-                    exitStackSize.compareAndSet(-1, stackedExpressions.size());
+                        exitStackSize.compareAndSet(-1, stackedExpressions.size());
 
-                    if (stackedExpressions.isEmpty()) {
-                        context.abort();
-                    } else {
-                        if (lingeringExpression.get() == null) {
-                            if (stackedExpressions.size() == 1) {
-                                lingeringExpression.set(stackedExpressions.get(0));
-                            }
+                        if (stackedExpressions.isEmpty()) {
+                            context.abort();
                         } else {
-                            if (stackedExpressions.size() > exitStackSize.get()) {
-                                context.pop();
-                                context.abort();
+                            if (lingeringExpression.get() == null) {
+                                if (stackedExpressions.size() == 1) {
+                                    lingeringExpression.set(stackedExpressions.get(0));
+                                }
                             } else {
-                                final List<Statement> statements = context.getStatements();
-
-                                if (statements.size() > 0 && statements.get(statements.size() - 1).equals(lingeringExpression.get())) {
+                                if (stackedExpressions.size() > exitStackSize.get()) {
                                     context.pop();
                                     context.abort();
+                                } else {
+                                    final List<Statement> statements = context.getStatements();
+
+                                    if (statements.size() > 0 && statements.get(statements.size() - 1).equals(lingeringExpression.get())) {
+                                        context.pop();
+                                        context.abort();
+                                    }
                                 }
                             }
                         }

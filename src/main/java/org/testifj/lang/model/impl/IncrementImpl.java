@@ -1,28 +1,52 @@
 package org.testifj.lang.model.impl;
 
+import org.testifj.lang.model.Affix;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.Increment;
+import org.testifj.lang.model.LocalVariableReference;
 
 import java.lang.reflect.Type;
 
 public class IncrementImpl extends AbstractElement implements Increment {
 
-    private final Expression operand;
+    private final LocalVariableReference localVariableReference;
 
-    public IncrementImpl(Expression operand) {
-        assert operand != null : "Operand can't be null";
+    private final Expression value;
 
-        this.operand = operand;
+    private final Type resultType;
+
+    private final Affix affix;
+
+    public IncrementImpl(LocalVariableReference localVariableReference, Expression value, Type resultType, Affix affix) {
+        assert localVariableReference != null : "Local variable reference can't be null";
+        assert value != null : "Value can't be null";
+        assert resultType != null : "Result type can't be null";
+        assert affix != null : "Affix can't be null";
+
+        this.localVariableReference = localVariableReference;
+        this.value = value;
+        this.resultType = resultType;
+        this.affix = affix;
     }
 
     @Override
-    public Expression getOperand() {
-        return operand;
+    public LocalVariableReference getLocalVariable() {
+        return localVariableReference;
+    }
+
+    @Override
+    public Expression getValue() {
+        return value;
+    }
+
+    @Override
+    public Affix getAffix() {
+        return affix;
     }
 
     @Override
     public Type getType() {
-        return operand.getType();
+        return resultType;
     }
 
     @Override
@@ -32,20 +56,27 @@ public class IncrementImpl extends AbstractElement implements Increment {
 
         IncrementImpl increment = (IncrementImpl) o;
 
-        if (!operand.equals(increment.operand)) return false;
+        if (!localVariableReference.equals(increment.localVariableReference)) return false;
+        if (!value.equals(increment.value)) return false;
+        if (!affix.equals(increment.affix)) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        return operand.hashCode();
+        int result = localVariableReference.hashCode();
+        result = 31 * result + value.hashCode();
+        result = 31 * result + affix.hashCode();
+        return result;
     }
 
     @Override
     public String toString() {
         return "IncrementImpl{" +
-                "operand=" + operand +
+                "localVariableReference=" + localVariableReference +
+                ", value=" + value +
+                ", affix=" + affix +
                 '}';
     }
 }

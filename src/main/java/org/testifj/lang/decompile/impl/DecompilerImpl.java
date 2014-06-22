@@ -18,8 +18,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
-import static org.testifj.lang.decompile.ConstantPoolEntry.*;
-
 // TODO Introduce reduce points. E.g. prior to static void method
 
 public final class DecompilerImpl implements Decompiler {
@@ -51,10 +49,12 @@ public final class DecompilerImpl implements Decompiler {
         new InvokeDynamicDecompilerDelegation().configure(builder);
         new MethodCallDecompilerDelegation().configure(builder);
         new FieldDecompilationDelegation().configure(builder);
-        new TypeCheckDecompilerDelegation().configure(builder);
+        new CastInstructions().configure(builder);
         new BinaryOperationsDecompilerDelegation().configure(builder);
         new ConstantDecompilerDelegation().configure(builder);
         new StackInstructions().configure(builder);
+        new VariousInstructions().configure(builder);
+        new UnaryOperations().configure(builder);
 
         return builder.build();
     }
@@ -147,13 +147,6 @@ public final class DecompilerImpl implements Decompiler {
             if (!handled) {
                 switch (byteCode) {
                     // Various
-
-                    case ByteCode.nop:
-                        break;
-                    case ByteCode.iinc: {
-                        context.push(new IncrementImpl(context.pop()));
-                        break;
-                    }
 
                     // Method return
 
@@ -282,7 +275,7 @@ public final class DecompilerImpl implements Decompiler {
             correct(configuration, context, codeStream, byteCode);
             correct(coreConfiguration, context, codeStream, byteCode);
 
-            callback.onDecompilationProgressed(context);
+            callback.afterInstruction(context);
         }
 
         //debug(context, -1, ByteCode.nop);

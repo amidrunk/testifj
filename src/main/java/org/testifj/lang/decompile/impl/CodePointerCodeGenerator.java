@@ -239,9 +239,13 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
             }
 
             case INVOKE_VIRTUAL: {
-                out.append(simpleTypeName(lambda.getDeclaringClass()))
-                        .append("::")
-                        .append(lambda.getBackingMethodName());
+                if (lambda.getSelf().isPresent()) {
+                    context.delegate(codePointer.forElement(lambda.getSelf().get()));
+                } else {
+                    out.append(simpleTypeName(lambda.getDeclaringClass()));
+                }
+
+                out.append("::").append(lambda.getBackingMethodName());
                 return;
             }
             case INVOKE_INTERFACE: {

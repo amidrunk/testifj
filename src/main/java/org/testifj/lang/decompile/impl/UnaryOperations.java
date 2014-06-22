@@ -23,8 +23,31 @@ public final class UnaryOperations implements DecompilerDelegation {
     public void configure(DecompilerConfiguration.Builder decompilerConfigurationBuilder) {
         assert decompilerConfigurationBuilder != null : "Decompilation configuration builder can't be null";
 
+        decompilerConfigurationBuilder.after(ByteCode.longStoreInstructions())
+                .when(atLeastOneStatement().and(elementIsStacked(ElementType.BINARY_OPERATOR)))
+                .then(correctPrefixFloatingPointIncrement(constant(-1L), constant(1L)));
 
-        decompilerConfigurationBuilder.after(ByteCode.primitiveLoadInstructions())
+        decompilerConfigurationBuilder.after(ByteCode.longStoreInstructions())
+                .when(atLeastOneStatement().and(elementIsStacked(ElementType.VARIABLE_REFERENCE)))
+                .then(correctPostfixFloatingPointIncrement(constant(-1L), constant(1L)));
+
+        decompilerConfigurationBuilder.after(ByteCode.doubleStoreInstructions())
+                .when(atLeastOneStatement().and(elementIsStacked(ElementType.VARIABLE_REFERENCE)))
+                .then(correctDoublePostfixIncrement());
+
+        decompilerConfigurationBuilder.after(ByteCode.doubleStoreInstructions())
+                .when(atLeastOneStatement().and(elementIsStacked(ElementType.BINARY_OPERATOR)))
+                .then(correctDoublePrefixIncrement());
+
+        decompilerConfigurationBuilder.after(ByteCode.floatStoreInstructions())
+                .when(atLeastOneStatement().and(elementIsStacked(ElementType.VARIABLE_REFERENCE)))
+                .then(correctFloatPostfixIncrement());
+
+        decompilerConfigurationBuilder.after(ByteCode.floatStoreInstructions())
+                .when(atLeastOneStatement().and(elementIsStacked(ElementType.BINARY_OPERATOR)))
+                .then(correctFloatPrefixIncrement());
+
+        decompilerConfigurationBuilder.after(ByteCode.integerLoadInstructions())
                 .when(stackContainsPrefixIncrementOfVariable())
                 .then(correctPrefixIncrement());
 
@@ -48,10 +71,10 @@ public final class UnaryOperations implements DecompilerDelegation {
      * leaving anything on the stack. Further, it does not state whether the increment is prefix or postfix. To fully
      * implement the increment, the stack will need to be corrected afterwards.
      *
+     * @return A decompiler delegate that handles the <code>iinc=132</code> instruction.
      * @see UnaryOperations#correctPostfixIncrement()
      * @see UnaryOperations#correctPrefixIncrement()
      * @see UnaryOperations#correctPrefixByteIncrement()
-     * @return A decompiler delegate that handles the <code>iinc=132</code> instruction.
      */
     public static DecompilerDelegate iinc() {
         return new DecompilerDelegate() {
@@ -94,7 +117,6 @@ public final class UnaryOperations implements DecompilerDelegation {
     /**
      * Returns a decompiler delegate that corrects a prefix increment s.t. the stack is transformed according to
      * <code>[increment(var=X, affix=undefined), X] => [increment(var=X, affix=PREFIX)]</code>.
-     *
      *
      * @return A decompiler delegate that corrects a prefix increment.
      */
@@ -166,7 +188,7 @@ public final class UnaryOperations implements DecompilerDelegation {
 
             final Optional<BinaryOperator> increment = lastDecompiledStatement().as(VariableAssignment.class)
                     .where(isAssignmentTo(loadedVariable))
-                    .get(assignedValue()).as(Cast.class).where(isCastTo(byte.class))
+                    .get(assignedValue()).as(Cast.class)
                     .get(castValue()).as(BinaryOperator.class)
                     .where(leftOperand().is(equalTo(loadedVariable)))
                     .and(rightOperand().as(Constant.class).is(equalTo(constant(1))))
@@ -179,7 +201,10 @@ public final class UnaryOperations implements DecompilerDelegation {
             context.removeStatement(context.getStatements().size() - 1);
             context.pop();
 
-            context.push(new IncrementImpl(loadedVariable, constant(increment.get().getOperatorType() == OperatorType.MINUS ? -1 : 1), byte.class, Affix.PREFIX));
+            context.push(new IncrementImpl(
+                    loadedVariable,
+                    constant(increment.get().getOperatorType() == OperatorType.MINUS ? -1 : 1),
+                    loadedVariable.getType(), Affix.PREFIX));
         };
     }
 
@@ -201,7 +226,7 @@ public final class UnaryOperations implements DecompilerDelegation {
     private DecompilerDelegate correctPostfixByteCodeIncrement() {
         return (context, codeStream, byteCode) -> {
             final Optional<BinaryOperator> result = lastDecompiledStatement().as(VariableAssignment.class)
-                    .get(assignedValue()).as(Cast.class).where(isCastTo(byte.class))
+                    .get(assignedValue()).as(Cast.class)
                     .get(castValue()).as(BinaryOperator.class)
                     .where(leftOperand().is(equalTo(context.getStack().peek())))
                     .and(rightOperand().is(equalTo(constant(1))))
@@ -211,13 +236,138 @@ public final class UnaryOperations implements DecompilerDelegation {
                 return;
             }
 
+            final LocalVariableReference local = context.getStack().pop().as(LocalVariableReference.class);
+
             context.removeStatement(context.getStatements().size() - 1);
             context.getStack().push(new IncrementImpl(
-                    context.getStack().pop().as(LocalVariableReference.class),
+                    local,
                     constant(result.get().getOperatorType() == OperatorType.MINUS ? -1 : 1),
-                    byte.class,
+                    local.getType(),
                     Affix.POSTFIX
             ));
+        };
+    }
+
+    /**
+     * Corrects prefix float increment. E.g. a prefix decrement is implemented by the compiler as:
+     * <pre>{@code
+     * fload_1      [var]
+     * fconst_1     [var, 1]
+     * fsub         [var - 1]
+     * dup          [var - 1, var - 1]
+     * fstore_1     [var - 1]
+     * }</pre>
+     *
+     * This is transformed into a single <code>--var</code>.
+     *
+     * @return A decompiler delegate that corrects float prefix increment.
+     */
+    private static DecompilerDelegate correctFloatPrefixIncrement() {
+        return correctPrefixFloatingPointIncrement(constant(-1f), constant(1f));
+    }
+
+    /**
+     * Corrects double prefix increment. See also {@link UnaryOperations#correctFloatPrefixIncrement()}.
+     *
+     * @return A decompiler delegate that corrects prefix double increment.
+     */
+    private static DecompilerDelegate correctDoublePrefixIncrement() {
+        return correctPrefixFloatingPointIncrement(constant(-1d), constant(1d));
+    }
+
+    private static DecompilerDelegate correctPrefixFloatingPointIncrement(Constant decrementConstant, Constant incrementConstant) {
+        final ModelQuery<DecompilationContext, VariableAssignment> query = lastDecompiledStatement().as(VariableAssignment.class)
+                .join(assignedValue().as(BinaryOperator.class)
+                        .where(leftOperand().is(ofType(LocalVariableReference.class)))
+                        .and(rightOperand().is(equalTo(incrementConstant))));
+
+        return new DecompilerDelegate() {
+            @Override
+            public void apply(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
+                final Optional<VariableAssignment> variableAssignmentOptional = query.from(context);
+
+                if (!variableAssignmentOptional.isPresent()) {
+                    return;
+                }
+
+                final VariableAssignment variableAssignment = variableAssignmentOptional.get();
+
+                if (!context.getStack().peek().equals(variableAssignment.getValue())) {
+                    return;
+                }
+
+                final OperatorType operatorType = variableAssignment.getValue().as(BinaryOperator.class).getOperatorType();
+
+                context.removeStatement(context.getStatements().size() - 1);
+                context.getStack().swap(new IncrementImpl(
+                        new LocalVariableReferenceImpl(
+                                variableAssignment.getVariableName(),
+                                variableAssignment.getVariableType(),
+                                variableAssignment.getVariableIndex()),
+                        operatorType == OperatorType.MINUS ? decrementConstant : incrementConstant,
+                        incrementConstant.getType(),
+                        Affix.PREFIX
+                ));
+            }
+        };
+    }
+
+    /**
+     * Corrects a float postfix increment/decrement. The compiler implements postfix increment of as:
+     * <pre>{@code
+     * fload_1      [var]
+     * dup          [var, var]
+     * fconst_1     [var, var, 1]
+     * fadd         [var, var + 1]
+     * fstore_1     [var]
+     * }</pre>
+     *
+     * @return A decompiler delegate that corrects the stack for float postfix increment.
+     */
+    private static DecompilerDelegate correctFloatPostfixIncrement() {
+        return correctPostfixFloatingPointIncrement(constant(-1f), constant(1f));
+    }
+
+    private static DecompilerDelegate correctDoublePostfixIncrement() {
+        return correctPostfixFloatingPointIncrement(constant(-1d), constant(1d));
+    }
+
+    private static DecompilerDelegate correctPostfixFloatingPointIncrement(Constant decrementConstant, Constant incrementConstant) {
+        final ModelQuery<DecompilationContext, VariableAssignment> query = lastDecompiledStatement().as(VariableAssignment.class)
+                .join(assignedValue().as(BinaryOperator.class)
+                        .where(leftOperand().is(ofType(LocalVariableReference.class)))
+                        .and(rightOperand().is(equalTo(incrementConstant))));
+
+        return new DecompilerDelegate() {
+            @Override
+            public void apply(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
+                final Optional<VariableAssignment> variableAssignmentOptional = query.from(context);
+
+                if (!variableAssignmentOptional.isPresent()) {
+                    return;
+                }
+
+                final VariableAssignment variableAssignment = variableAssignmentOptional.get();
+                final LocalVariableReferenceImpl local = new LocalVariableReferenceImpl(
+                        variableAssignment.getVariableName(),
+                        variableAssignment.getVariableType(),
+                        variableAssignment.getVariableIndex()
+                );
+
+                if (!context.getStack().peek().equals(local)) {
+                    return;
+                }
+
+                final BinaryOperator binaryOperator = variableAssignment.getValue().as(BinaryOperator.class);
+
+                context.removeStatement(context.getStatements().size() - 1);
+                context.getStack().swap(new IncrementImpl(
+                        local,
+                        binaryOperator.getOperatorType() == OperatorType.MINUS ? decrementConstant : incrementConstant,
+                        incrementConstant.getType(),
+                        Affix.POSTFIX
+                ));
+            }
         };
     }
 }

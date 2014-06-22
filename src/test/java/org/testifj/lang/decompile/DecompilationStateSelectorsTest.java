@@ -78,4 +78,27 @@ public class DecompilationStateSelectorsTest {
 
         expect(DecompilationStateSelectors.elementIsStacked(ElementType.CONSTANT).select(decompilationContext, ByteCode.nop)).toBe(true);
     }
+
+    @Test
+    public void stackSizeIsAtLeastShouldNotAcceptZeroOrNegativeCount() {
+        expect(() -> DecompilationStateSelectors.stackSizeIsAtLeast(-1)).toThrow(AssertionError.class);
+        expect(() -> DecompilationStateSelectors.stackSizeIsAtLeast(0)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void stackSizeIsAtLeastShouldNotMatchStackWithFewerElements() {
+        final DecompilationStateSelector selector = DecompilationStateSelectors.stackSizeIsAtLeast(2);
+
+        when(stack.size()).thenReturn(0);
+        expect(selector.select(decompilationContext, ByteCode.nop)).toBe(false);
+
+        when(stack.size()).thenReturn(1);
+        expect(selector.select(decompilationContext, ByteCode.nop)).toBe(false);
+
+        when(stack.size()).thenReturn(2);
+        expect(selector.select(decompilationContext, ByteCode.nop)).toBe(true);
+
+        when(stack.size()).thenReturn(3);
+        expect(selector.select(decompilationContext, ByteCode.nop)).toBe(true);
+    }
 }

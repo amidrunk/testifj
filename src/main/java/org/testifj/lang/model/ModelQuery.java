@@ -37,6 +37,24 @@ public interface ModelQuery<S, R> {
         };
     }
 
+    default <E> ModelQuery<S, R> join(ModelQuery<R, E> query) {
+        assert query != null : "Query can't be null";
+
+        return from -> {
+            final Optional<R> result = ModelQuery.this.from(from);
+
+            if (!result.isPresent()) {
+                return Optional.empty();
+            }
+
+            if (!query.from(result.get()).isPresent()) {
+                return Optional.empty();
+            }
+
+            return result;
+        };
+    }
+
     interface WhereContinuation<S, R> extends ModelQuery<S, R> {
 
         default WhereContinuation<S, R> and(Predicate<R> predicate) {

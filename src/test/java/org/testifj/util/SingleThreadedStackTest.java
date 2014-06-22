@@ -15,6 +15,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 import static org.testifj.Expect.expect;
 import static org.testifj.matchers.core.ArrayThatIs.arrayOf;
+import static org.testifj.matchers.core.CollectionThatIs.collectionOf;
 import static org.testifj.matchers.core.IterableThatIs.emptyIterable;
 import static org.testifj.matchers.core.IterableThatIs.iterableOf;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
@@ -178,7 +179,6 @@ public class SingleThreadedStackTest {
 
     @Test
     public void tailShouldFailForInvalidIndex() {
-        expect(() -> stack.tail(-1)).toThrow(AssertionError.class);
         expect(() -> stack.tail(1)).toThrow(IllegalArgumentException.class);
     }
 
@@ -230,6 +230,17 @@ public class SingleThreadedStackTest {
         stack.swap("bar");
 
         verify(stackListener).onElementSwapped(eq(stack), eq("foo"), eq("bar"));
+    }
+
+    @Test
+    public void tailWithNegativeValueShouldReturnValuesFromEnd() {
+        stack.push("baz");
+        stack.push("bar");
+        stack.push("foo");
+
+        expect(stack.tail(-1)).toBe(collectionOf("foo"));
+        expect(stack.tail(-2)).toBe(collectionOf("bar", "foo"));
+        expect(stack.tail(-3)).toBe(collectionOf("baz", "bar", "foo"));
     }
 
 }

@@ -44,4 +44,40 @@ public class BinaryOperationsTest extends TestOnDefaultConfiguration {
         expect(regenerate(Caller.adjacent(-2))).toBe("int n = op1 / op2");
     }
 
+    @Test
+    public void additionOfFloatsCanBeRegenerated() {
+        float f1 = Float.valueOf(1f).floatValue();
+        float f2 = Float.valueOf(2f).floatValue();
+        float f3 = f1 + f2;
+
+        expect(regenerate(Caller.adjacent(-2))).toBe("float f3 = f1 + f2");
+    }
+
+    @Test
+    public void subtractionOfFloatsCanBeRegenerated() {
+        float f1 = Float.valueOf(1f).floatValue();
+        float f2 = Float.valueOf(2f).floatValue();
+        float f3 = f1 - f2;
+
+        expect(regenerate(Caller.adjacent(-2))).toBe("float f3 = f1 - f2");
+    }
+
+    @Test
+    public void multiplicationOfFloatsCanBeRegenerated() {
+        float f1 = Float.valueOf(1f).floatValue();
+        float f2 = Float.valueOf(2f).floatValue();
+        float f3 = f1 * f2;
+
+        expect(regenerate(Caller.adjacent(-2))).toBe("float f3 = f1 * f2");
+    }
+
+    @Test
+    public void divisionOfFloatsCanBeRegenerated() {
+        float f1 = Float.valueOf(1f).floatValue();
+        float f2 = Float.valueOf(2f).floatValue();
+        float f3 = f1 / f2;
+
+        expect(regenerate(Caller.adjacent(-2))).toBe("float f3 = f1 / f2");
+    }
+
 }

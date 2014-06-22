@@ -259,6 +259,36 @@ public final class ByteCode {
         };
     }
 
+    public static int[] longStoreInstructions() {
+        return new int[] {
+                lstore,
+                lstore_0,
+                lstore_1,
+                lstore_2,
+                lstore_3
+        };
+    }
+
+    public static int[] doubleStoreInstructions() {
+        return new int[] {
+                dstore,
+                dstore_0,
+                dstore_1,
+                dstore_2,
+                dstore_3
+        };
+    }
+
+    public static int[] floatStoreInstructions() {
+        return new int[] {
+                fstore,
+                fstore_0,
+                fstore_1,
+                fstore_2,
+                fstore_3
+        };
+    }
+
     public static int[] primitiveLoadInstructions() {
         return new int[] {
                 iload,

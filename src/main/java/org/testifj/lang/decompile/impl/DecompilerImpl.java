@@ -50,7 +50,7 @@ public final class DecompilerImpl implements Decompiler {
         new MethodCallDecompilerDelegation().configure(builder);
         new FieldDecompilationDelegation().configure(builder);
         new CastInstructions().configure(builder);
-        new BinaryOperationsDecompilerDelegation().configure(builder);
+        new BinaryOperations().configure(builder);
         new ConstantDecompilerDelegation().configure(builder);
         new StackInstructions().configure(builder);
         new VariousInstructions().configure(builder);
@@ -64,7 +64,7 @@ public final class DecompilerImpl implements Decompiler {
                 .map(e -> debugCodeGenerator.describe(new CodePointerImpl<>(context.getMethod(), e)).toString())
                 .toArray(String[]::new);
 
-        System.out.println("\t[" + Strings.rightPad(String.valueOf(lineNumber), 3, ' ') + "] " + Strings.rightPad(ByteCode.toString(byteCode), 20, ' ') + Arrays.asList(stackedExpressions));
+        System.out.println("\t[" + Strings.rightPad(String.valueOf(lineNumber), 3, ' ') + "] " + Strings.rightPad(ByteCode.toString(byteCode), 20, ' ') + " <-- " + Arrays.asList(stackedExpressions));
     }
 
     @Override

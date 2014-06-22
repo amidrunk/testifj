@@ -50,8 +50,5 @@ public final class ModelQueries {
         return source -> source != null && source.getAffix() == Affix.UNDEFINED;
     }
 
-    public static ModelQuery<Increment, Expression> incrementedValue() {
-        return null;
-    }
 
 }

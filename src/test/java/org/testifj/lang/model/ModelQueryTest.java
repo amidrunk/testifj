@@ -12,6 +12,11 @@ import java.util.function.Predicate;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
+import static org.testifj.lang.model.AST.constant;
+import static org.testifj.lang.model.AST.local;
+import static org.testifj.lang.model.AST.set;
+import static org.testifj.lang.model.ModelQueries.assignedValue;
+import static org.testifj.lang.model.ModelQueries.equalTo;
 import static org.testifj.matchers.core.OptionalThatIs.optionalOf;
 import static org.testifj.matchers.core.OptionalThatIs.present;
 
@@ -127,6 +132,31 @@ public class ModelQueryTest {
 
         when(statement.getMetaData()).thenReturn(mock(ElementMetaData.class));
         expect(modelQuery.from(Arrays.asList(statement))).toBe(optionalOf(statement));
+    }
+
+    @Test
+    public void joinShouldNotAcceptNullSubQuery() {
+        expect(() -> firstInList.join(null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void joinShouldReturnIfSubQueryMatches() {
+        final VariableAssignment variableAssignment = set(local("foo", String.class, 1)).to(constant("bar"));
+        final Optional<VariableAssignment> result = firstInList.as(VariableAssignment.class)
+                .join(assignedValue().where(equalTo(constant("bar"))))
+                .from(Arrays.asList(variableAssignment));
+
+        expect(result).toBe(optionalOf(variableAssignment));
+    }
+
+    @Test
+    public void joinShouldReturnNonPresentInstanceIfSubQueryDoesNotMatch() {
+        final VariableAssignment variableAssignment = set(local("foo", String.class, 1)).to(constant("bar"));
+        final Optional<VariableAssignment> result = firstInList.as(VariableAssignment.class)
+                .join(assignedValue().where(equalTo(constant("baz"))))
+                .from(Arrays.asList(variableAssignment));
+
+        expect(result).not().toBe(present());
     }
 
 }

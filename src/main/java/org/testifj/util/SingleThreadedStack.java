@@ -99,9 +99,7 @@ public final class SingleThreadedStack<E> implements Stack<E> {
 
     @Override
     public List<E> tail(int fromIndex) {
-        assert fromIndex >= 0 : "From-index must be positive";
-
-        return targetList.subList(fromIndex, size());
+        return targetList.subList(fromIndex < 0 ? size() + fromIndex : fromIndex, size());
     }
 
     @Override

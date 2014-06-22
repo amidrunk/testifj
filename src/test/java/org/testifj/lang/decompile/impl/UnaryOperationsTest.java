@@ -13,6 +13,7 @@ import org.testifj.lang.model.impl.BinaryOperatorImpl;
 import org.testifj.lang.model.impl.CastImpl;
 import org.testifj.lang.model.impl.IncrementImpl;
 import org.testifj.lang.model.impl.LocalVariableReferenceImpl;
+import org.testifj.matchers.core.IterableThatIs;
 import org.testifj.matchers.core.IteratorThatIs;
 
 import java.io.IOException;
@@ -27,6 +28,7 @@ import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
 import static org.testifj.lang.model.AST.*;
 import static org.testifj.matchers.core.CollectionThatIs.collectionOf;
+import static org.testifj.matchers.core.IterableThatIs.iterableOf;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
 public class UnaryOperationsTest {
@@ -141,6 +143,79 @@ public class UnaryOperationsTest {
 
         expect(decompilationContext.getStackedExpressions()).toBe(collectionOf(new IncrementImpl(local, constant(1), byte.class, Affix.POSTFIX)));
     }
+
+    @Test
+    public void prefixFloatDecrementShouldBeCorrectedAfterStore() throws IOException {
+        final LocalVariableReference local = local("foo", float.class, 1);
+
+        decompilationContext.enlist(set(local).to(sub(local, constant(1f), float.class)));
+        decompilationContext.push(sub(local, constant(1f), float.class));
+
+        after(ByteCode.fstore_0);
+
+        expect(decompilationContext.getStack()).toBe(iterableOf(new IncrementImpl(local, constant(-1f), float.class, Affix.PREFIX)));
+    }
+
+    @Test
+    public void postfixFloatDecrementShouldBeCorrectedAfterStore() throws IOException {
+        final LocalVariableReference local = local("foo", float.class, 1);
+
+        decompilationContext.enlist(set(local).to(sub(local, constant(1f), float.class)));
+        decompilationContext.push(local);
+
+        after(ByteCode.fstore_0);
+
+        expect(decompilationContext.getStack()).toBe(iterableOf(new IncrementImpl(local, constant(-1f), float.class, Affix.POSTFIX)));
+    }
+
+    @Test
+    public void prefixDoubleDecrementShouldBeCorrectedAfterStore() throws IOException {
+        final LocalVariableReference local = local("foo", double.class, 1);
+
+        decompilationContext.enlist(set(local).to(sub(local, constant(1d), double.class)));
+        decompilationContext.push(sub(local, constant(1d), double.class));
+
+        after(ByteCode.dstore_0);
+
+        expect(decompilationContext.getStack()).toBe(iterableOf(new IncrementImpl(local, constant(-1d), double.class, Affix.PREFIX)));
+    }
+
+    @Test
+    public void postfixDoubleDecrementShouldBeCorrectedAfterStore() throws IOException {
+        final LocalVariableReference local = local("foo", double.class, 1);
+
+        decompilationContext.enlist(set(local).to(sub(local, constant(1d), double.class)));
+        decompilationContext.push(local);
+
+        after(ByteCode.dstore_0);
+
+        expect(decompilationContext.getStack()).toBe(iterableOf(new IncrementImpl(local, constant(-1d), double.class, Affix.POSTFIX)));
+    }
+
+    @Test
+    public void prefixLongDecrementShouldBeCorrectedAfterStore() throws IOException {
+        final LocalVariableReference local = local("foo", long.class, 1);
+
+        decompilationContext.enlist(set(local).to(sub(local, constant(1l), long.class)));
+        decompilationContext.push(sub(local, constant(1l), long.class));
+
+        after(ByteCode.lstore_0);
+
+        expect(decompilationContext.getStack()).toBe(iterableOf(new IncrementImpl(local, constant(-1l), long.class, Affix.PREFIX)));
+    }
+
+    @Test
+    public void postfixLongDecrementShouldBeCorrectedAfterStore() throws IOException {
+        final LocalVariableReference local = local("foo", long.class, 1);
+
+        decompilationContext.enlist(set(local).to(sub(local, constant(1l), long.class)));
+        decompilationContext.push(local);
+
+        after(ByteCode.lstore_0);
+
+        expect(decompilationContext.getStack()).toBe(iterableOf(new IncrementImpl(local, constant(-1l), long.class, Affix.POSTFIX)));
+    }
+
 
     private void after(int byteCode) throws IOException {
         final Iterator<DecompilerDelegate> iterator = configuration().getCorrectionalDecompilerEnhancements(decompilationContext, byteCode);

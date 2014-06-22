@@ -114,22 +114,6 @@ public final class DecompilerImpl implements Decompiler {
                 switch (byteCode) {
                     // Various
 
-                    // Field access
-                    case ByteCode.getstatic:
-                    case ByteCode.getfield: {
-                        final int fieldRefEntryIndex = codeStream.nextUnsignedShort();
-                        final FieldRefDescriptor fieldRefDescriptor = constantPool.getFieldRefDescriptor(fieldRefEntryIndex);
-
-                        ByteCodes.getField(
-                                context,
-                                resolveType(fieldRefDescriptor.getClassName()),
-                                MethodSignature.parseType(fieldRefDescriptor.getDescriptor()),
-                                fieldRefDescriptor.getName(),
-                                byteCode == ByteCode.getstatic);
-
-                        break;
-                    }
-
                     // Control flow
 
                     case ByteCode.if_acmpne:

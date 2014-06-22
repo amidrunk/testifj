@@ -24,6 +24,8 @@ public final class FieldInstructions implements DecompilerDelegation {
 
         configurationBuilder.on(ByteCode.putfield).then(putfield());
         configurationBuilder.on(ByteCode.putstatic).then(putstatic());
+        configurationBuilder.on(ByteCode.getfield).then(getfield());
+        configurationBuilder.on(ByteCode.getstatic).then(getstatic());
     }
 
     /**
@@ -49,6 +51,43 @@ public final class FieldInstructions implements DecompilerDelegation {
     public static DecompilerDelegate putstatic() {
         return (context,codeStream,byteCode) -> {
             handlePutField(context, codeStream, true);
+        };
+    }
+
+    public static DecompilerDelegate getfield() {
+        return new DecompilerDelegate() {
+            @Override
+            public void apply(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
+                final FieldRefDescriptor fieldRefDescriptor = context.getMethod()
+                        .getClassFile()
+                        .getConstantPool()
+                        .getFieldRefDescriptor(codeStream.nextUnsignedShort());
+
+                context.getStack().push(new FieldReferenceImpl(
+                        context.getStack().pop(),
+                        context.resolveType(fieldRefDescriptor.getClassName()),
+                        MethodSignature.parseType(fieldRefDescriptor.getDescriptor()),
+                        fieldRefDescriptor.getName()));
+            }
+        };
+    }
+
+    private DecompilerDelegate getstatic() {
+        return new DecompilerDelegate() {
+            @Override
+            public void apply(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
+                final FieldRefDescriptor fieldRefDescriptor = context
+                        .getMethod()
+                        .getClassFile()
+                        .getConstantPool()
+                        .getFieldRefDescriptor(codeStream.nextUnsignedShort());
+
+                context.getStack().push(new FieldReferenceImpl(
+                        null,
+                        context.resolveType(fieldRefDescriptor.getClassName()),
+                        MethodSignature.parseType(fieldRefDescriptor.getDescriptor()),
+                        fieldRefDescriptor.getName()));
+            }
         };
     }
 

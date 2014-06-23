@@ -2,7 +2,6 @@ package org.testifj.lang.decompile.impl;
 
 import org.testifj.lang.*;
 import org.testifj.lang.classfile.*;
-import org.testifj.lang.classfile.impl.ByteCodes;
 import org.testifj.lang.decompile.*;
 import org.testifj.lang.classfile.impl.SimpleTypeResolver;
 import org.testifj.lang.model.*;

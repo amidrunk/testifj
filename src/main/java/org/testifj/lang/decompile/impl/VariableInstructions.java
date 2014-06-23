@@ -3,15 +3,15 @@ package org.testifj.lang.decompile.impl;
 import org.testifj.lang.*;
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.classfile.LocalVariable;
-import org.testifj.lang.decompile.DecompilationContext;
-import org.testifj.lang.decompile.DecompilerConfiguration;
-import org.testifj.lang.decompile.DecompilerDelegate;
-import org.testifj.lang.decompile.DecompilerDelegation;
-import org.testifj.lang.model.AST;
+import org.testifj.lang.decompile.*;
+import org.testifj.lang.model.*;
 
 import java.util.Optional;
 
 import static org.testifj.lang.classfile.ByteCode.*;
+import static org.testifj.lang.decompile.DecompilationContextQueries.lastDecompiledStatement;
+import static org.testifj.lang.model.AST.constant;
+import static org.testifj.lang.model.ModelQueries.*;
 
 public final class VariableInstructions implements DecompilerDelegation {
 
@@ -30,6 +30,21 @@ public final class VariableInstructions implements DecompilerDelegation {
         configurationBuilder.on(dstore_0, dstore_3).then(dstoren());
         configurationBuilder.on(lstore_0, lstore_3).then(lstoren());
         configurationBuilder.on(astore_0, astore_3).then(astoren());
+
+        configurationBuilder.after(ByteCode.integerStoreInstructions())
+                .then((context, codeStream, byteCode) -> {
+                    final ModelQuery<DecompilationContext, VariableAssignment> query = lastDecompiledStatement().as(VariableAssignment.class)
+                            .where(assignedValue().is(equalTo(constant(0)).or(equalTo(constant(1)))))
+                            .and(assignedVariableTypeIs(boolean.class));
+
+                    final Optional<VariableAssignment> variableAssignmentOptional = query.from(context);
+
+                    if (!variableAssignmentOptional.isPresent()) {
+                        return;
+                    }
+
+                    System.out.println("ok");
+                });
     }
 
     public static DecompilerDelegate load() {

@@ -2,19 +2,15 @@ package org.testifj.lang.decompile;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
-import org.testifj.Given;
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.model.AST;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Statement;
 import org.testifj.util.Stack;
-import sun.jvm.hotspot.interpreter.Bytecode;
 
 import java.util.Arrays;
 import java.util.Collections;
 
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;

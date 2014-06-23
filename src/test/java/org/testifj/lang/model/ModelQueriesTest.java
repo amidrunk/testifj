@@ -19,6 +19,26 @@ import static org.testifj.matchers.core.OptionalThatIs.present;
 public class ModelQueriesTest {
 
     @Test
+    public void ofTypeShouldNotAcceptNullElementType() {
+        expect(() -> ModelQueries.ofType((ElementType) null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void ofTypeShouldNotMatchElementOfDifferentType() {
+        expect(ModelQueries.ofType(ElementType.METHOD_CALL).test(constant(1))).toBe(false);
+    }
+
+    @Test
+    public void ofTypeShouldMatchElementOfEqualType() {
+        expect(ModelQueries.ofType(ElementType.CONSTANT).test(constant(1))).toBe(true);
+    }
+
+    @Test
+    public void ofTypeShouldNotMatchNull() {
+        expect(ModelQueries.ofType(ElementType.CONSTANT).test(null)).toBe(false);
+    }
+
+    @Test
     public void isAssignmentToShouldNotAcceptNullLocalVariableReference() {
         expect(() -> ModelQueries.isAssignmentTo(null)).toThrow(AssertionError.class);
     }
@@ -90,8 +110,9 @@ public class ModelQueriesTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void ofTypeShouldNotAcceptNullType() {
-        expect(() -> ModelQueries.ofType(null)).toThrow(AssertionError.class);
+        expect(() -> ModelQueries.ofType((Class) null)).toThrow(AssertionError.class);
     }
 
     @Test
@@ -139,5 +160,29 @@ public class ModelQueriesTest {
     @Test
     public void affixIsUndefinedShouldMatchIncrementWithUndefinedAffix() {
         expect(affixIsUndefined().test(new IncrementImpl(local("foo", int.class, 1), constant(1), int.class, Affix.UNDEFINED))).toBe(true);
+    }
+
+    @Test
+    public void assignedVariableTypeIsShouldNotAcceptNullType() {
+        expect(() -> ModelQueries.assignedVariableTypeIs(null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void assignedVariableTypeIsShouldNotMatchNull() {
+        expect(ModelQueries.assignedVariableTypeIs(String.class).test(null)).toBe(false);
+    }
+
+    @Test
+    public void assignedVariableTypeShouldNotMatchAssignmentWithDifferentVariableType() {
+        final VariableAssignment variableAssignment = set(local("foo", String.class, 1)).to(constant("bar"));
+
+        expect(ModelQueries.assignedVariableTypeIs(int.class).test(variableAssignment)).toBe(false);
+    }
+
+    @Test
+    public void assignedVariableTypeShouldMatchAssignmentWithMatchingVariableType() {
+        final VariableAssignment variableAssignment = set(local("foo", String.class, 1)).to(constant("bar"));
+
+        expect(ModelQueries.assignedVariableTypeIs(String.class).test(variableAssignment)).toBe(true);
     }
 }

@@ -197,10 +197,17 @@ public final class MethodSignature implements Signature {
                 } else {
                     reader.skip(1);
 
+                    final String actualTypeName = typeName.get().replace('/', '.');
+
                     try {
-                        return Class.forName(typeName.get().replace('/', '.'));
+                        return Class.forName(actualTypeName);
                     } catch (ClassNotFoundException e) {
-                        throw new ClassFileFormatException("Invalid class reference: '" + typeName.get() + "'");
+                        return new Type() {
+                            @Override
+                            public String getTypeName() {
+                                return actualTypeName;
+                            }
+                        };
                     }
                 }
             }

@@ -1,10 +1,18 @@
 package org.testifj.lang.model;
 
+import com.sun.org.apache.xpath.internal.operations.Variable;
+
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 
 public final class ModelQueries {
+
+    public static Predicate<Expression> ofType(ElementType elementType) {
+        assert elementType != null : "Element type can't be null";
+
+        return expression -> expression != null && expression.getElementType() == elementType;
+    }
 
     public static <E> Predicate<E> ofType(Class<E> type) {
         assert type != null : "Type can't be null";
@@ -32,6 +40,17 @@ public final class ModelQueries {
 
     public static ModelQuery<VariableAssignment, Expression> assignedValue() {
         return from -> from == null ? Optional.<Expression>empty() : Optional.of(from.getValue());
+    }
+
+    public static Predicate<VariableAssignment> assignedVariableTypeIs(Class<?> type) {
+        assert type != null : "Type can't be null";
+
+        return new Predicate<VariableAssignment>() {
+            @Override
+            public boolean test(VariableAssignment variableAssignment) {
+                return variableAssignment != null && variableAssignment.getVariableType().equals(type);
+            }
+        };
     }
 
     public static ModelQuery<BinaryOperator, Expression> leftOperand() {

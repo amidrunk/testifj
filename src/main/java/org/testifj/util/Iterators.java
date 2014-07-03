@@ -73,4 +73,8 @@ public final class Iterators {
             return Optional.of(function.apply(iterator.next()));
         });
     }
+
+    public static <L, R> Iterator<Pair<L, R>> zip(Iterator<L> left, Iterator<R> right) {
+        return null;
+    }
 }

@@ -11,6 +11,8 @@ import java.util.Optional;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
+import static org.testifj.lang.model.Sequences.emptySeries;
+import static org.testifj.lang.model.Sequences.sequenceOf;
 import static org.testifj.matchers.core.OptionalThatIs.optionalOf;
 import static org.testifj.matchers.core.OptionalThatIs.present;
 
@@ -25,7 +27,7 @@ public class DecompilationContextQueriesTest {
 
     @Test
     public void lastStatementOfShouldReturnEmptyForEmptyStatementList() {
-        when(decompilationContext.getStatements()).thenReturn(Collections.emptyList());
+        when(decompilationContext.getStatements()).thenReturn(emptySeries());
 
         final Optional<Statement> result = DecompilationContextQueries.lastDecompiledStatement().from(decompilationContext);
 
@@ -37,7 +39,7 @@ public class DecompilationContextQueriesTest {
         final Statement statement1 = mock(Statement.class, "statement1");
         final Statement statement2 = mock(Statement.class, "statement2");
 
-        when(decompilationContext.getStatements()).thenReturn(Arrays.asList(statement1, statement2));
+        when(decompilationContext.getStatements()).thenReturn(sequenceOf(statement1, statement2));
 
         final Optional<Statement> result = DecompilationContextQueries.lastDecompiledStatement().from(decompilationContext);
 

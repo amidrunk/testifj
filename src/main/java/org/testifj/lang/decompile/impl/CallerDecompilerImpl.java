@@ -10,6 +10,7 @@ import org.testifj.lang.decompile.*;
 import org.testifj.lang.classfile.impl.Lambdas;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.Expression;
+import org.testifj.lang.model.Sequence;
 import org.testifj.lang.model.Statement;
 
 import java.io.IOException;
@@ -78,9 +79,9 @@ public final class CallerDecompilerImpl implements CallerDecompiler {
                                     context.pop();
                                     context.abort();
                                 } else {
-                                    final List<Statement> statements = context.getStatements();
+                                    final Sequence<Statement> statements = context.getStatements();
 
-                                    if (statements.size() > 0 && statements.get(statements.size() - 1).equals(lingeringExpression.get())) {
+                                    if (!statements.isEmpty() && statements.last().get().equals(lingeringExpression.get())) {
                                         context.pop();
                                         context.abort();
                                     }

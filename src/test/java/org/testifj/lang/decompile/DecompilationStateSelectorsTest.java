@@ -8,14 +8,13 @@ import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Statement;
 import org.testifj.util.Stack;
 
-import java.util.Arrays;
-import java.util.Collections;
-
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
 import static org.testifj.lang.model.AST.constant;
+import static org.testifj.lang.model.Sequences.emptySeries;
+import static org.testifj.lang.model.Sequences.sequenceOf;
 
 @SuppressWarnings("unchecked")
 public class DecompilationStateSelectorsTest {
@@ -30,7 +29,7 @@ public class DecompilationStateSelectorsTest {
 
     @Test
     public void atLeastOneStatementShouldNotMatchContextWithoutStatements() {
-        when(decompilationContext.getStatements()).thenReturn(Collections.emptyList());
+        when(decompilationContext.getStatements()).thenReturn(emptySeries());
 
         given(DecompilationStateSelectors.atLeastOneStatement()).then(selector -> {
             expect(selector.select(decompilationContext, ByteCode.nop)).toBe(false);
@@ -39,7 +38,7 @@ public class DecompilationStateSelectorsTest {
 
     @Test
     public void atLeastOneStatementShouldMatchContextWithNonEmptyStatements() {
-        when(decompilationContext.getStatements()).thenReturn(Arrays.asList(mock(Statement.class)));
+        when(decompilationContext.getStatements()).thenReturn(sequenceOf(mock(Statement.class)));
 
         given(DecompilationStateSelectors.atLeastOneStatement()).then(selector -> {
             expect(selector.select(decompilationContext, ByteCode.nop)).toBe(true);

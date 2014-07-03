@@ -18,6 +18,10 @@ public final class AST {
         return new ConstantImpl(constant, String.class);
     }
 
+    public static Constant constant(boolean value) {
+        return new ConstantImpl(value, boolean.class);
+    }
+
     public static Constant constant(int value) {
         return new ConstantImpl(value, int.class);
     }

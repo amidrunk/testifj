@@ -17,7 +17,8 @@ public final class CoreDecompilerDelegation implements DecompilerDelegation {
             new StackInstructions(),
             new VariousInstructions(),
             new UnaryOperations(),
-            new ControlFlowInstructions()
+            new ControlFlowInstructions(),
+            new BooleanOperations()
     };
 
     @Override

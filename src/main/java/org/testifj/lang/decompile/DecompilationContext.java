@@ -3,6 +3,7 @@ package org.testifj.lang.decompile;
 import org.testifj.lang.classfile.Method;
 import org.testifj.lang.decompile.impl.ProgramCounter;
 import org.testifj.lang.model.Expression;
+import org.testifj.lang.model.Sequence;
 import org.testifj.lang.model.Statement;
 import org.testifj.util.Stack;
 
@@ -93,7 +94,7 @@ public interface DecompilationContext {
      *
      * @return The enlisted statements.
      */
-    List<Statement> getStatements();
+    Sequence<Statement> getStatements();
 
     boolean hasStackedExpressions();
 

@@ -16,13 +16,7 @@ public final class DecompilationContextQueries {
                 return Optional.empty();
             }
 
-            final List<Statement> statements = context.getStatements();
-
-            if (statements.isEmpty()) {
-                return Optional.empty();
-            } else {
-                return Optional.of(statements.get(statements.size() - 1));
-            }
+            return context.getStatements().last().optional();
         }
     };
 

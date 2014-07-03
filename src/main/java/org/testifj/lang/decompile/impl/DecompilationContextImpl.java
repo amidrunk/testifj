@@ -6,10 +6,7 @@ import org.testifj.lang.classfile.Method;
 import org.testifj.lang.decompile.DecompilationContext;
 import org.testifj.lang.decompile.Decompiler;
 import org.testifj.lang.decompile.LineNumberCounter;
-import org.testifj.lang.model.Element;
-import org.testifj.lang.model.ElementMetaData;
-import org.testifj.lang.model.Expression;
-import org.testifj.lang.model.Statement;
+import org.testifj.lang.model.*;
 
 import java.lang.reflect.Type;
 import java.util.*;
@@ -20,7 +17,6 @@ import org.testifj.util.TransformedStack;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 
 public final class DecompilationContextImpl implements DecompilationContext {
 
@@ -34,7 +30,7 @@ public final class DecompilationContextImpl implements DecompilationContext {
 
     private final SingleThreadedStack<ExpressionWithPC> stack = new SingleThreadedStack<>();
 
-    private final Set<StatementWithPC> statements = new TreeSet<>();
+    private final Sequence<StatementWithPC> statements = new LinkedSequence<>();
 
     private final TypeResolver typeResolver;
 
@@ -46,6 +42,8 @@ public final class DecompilationContextImpl implements DecompilationContext {
         configureContextMetaData(expression);
         return new ExpressionWithPC(expression, getProgramCounter().get(), contextVersion.incrementAndGet());
     }, ExpressionWithPC::expression);
+
+    private final Sequence<Statement> visibleStatements;
 
     public DecompilationContextImpl(Decompiler decompiler,
                                     Method method,
@@ -63,6 +61,11 @@ public final class DecompilationContextImpl implements DecompilationContext {
         this.programCounter = programCounter;
         this.lineNumberCounter = lineNumberCounter;
         this.typeResolver = typeResolver;
+        this.visibleStatements = new TransformedSequence<>(statements, StatementWithPC::statement, statement -> {
+            final StatementWithPC statementWithPC = new StatementWithPC(statement, programCounter.get(), contextVersion.incrementAndGet());
+            configureContextMetaData(statement);
+            return statementWithPC;
+        });
     }
 
     @Override
@@ -188,12 +191,8 @@ public final class DecompilationContextImpl implements DecompilationContext {
     }
 
     @Override
-    public List<Statement> getStatements() {
-        final Statement[] statements = this.statements.stream()
-                .map(StatementWithPC::statement)
-                .toArray(Statement[]::new);
-
-        return Arrays.asList(statements);
+    public Sequence<Statement> getStatements() {
+        return visibleStatements;
     }
 
     @Override

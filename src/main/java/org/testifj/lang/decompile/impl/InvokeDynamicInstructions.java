@@ -7,7 +7,6 @@ import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.MethodSignature;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
 
@@ -27,15 +26,15 @@ public final class InvokeDynamicInstructions implements DecompilerDelegation {
             final Lambda lambda = context.peek().as(Lambda.class);
 
             if (lambda.getReferenceKind() == ReferenceKind.INVOKE_VIRTUAL) {
-                final List<Statement> statements = context.getStatements();
+                final Sequence<Statement> statements = context.getStatements();
 
                 if (!statements.isEmpty()) {
-                    final Statement statement = statements.get(statements.size() - 1);
+                    final Statement statement = statements.last().get();
 
                     if (statement.getElementType() == ElementType.METHOD_CALL) {
                         final MethodCall methodCall = statement.as(MethodCall.class);
                         if (Object.class.equals(methodCall.getTargetType()) && methodCall.getMethodName().equals("getClass")) {
-                            context.removeStatement(statements.size() - 1);
+                            context.getStatements().last().remove();
                         }
                     }
                 }

@@ -1,11 +1,14 @@
 package org.testifj.lang.model.impl;
 
+import org.testifj.lang.Types;
 import org.testifj.lang.model.Expression;
+import org.testifj.lang.model.IncompatibleTypeException;
 import org.testifj.lang.model.MethodCall;
 import org.testifj.lang.model.Signature;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 public final class MethodCallImpl extends AbstractElement implements MethodCall {
@@ -64,6 +67,38 @@ public final class MethodCallImpl extends AbstractElement implements MethodCall 
     @Override
     public List<Expression> getParameters() {
         return Arrays.asList(parameters);
+    }
+
+    @Override
+    public MethodCall withParameters(List<Expression> parameters) {
+        assert parameters != null : "Parameter can't be null";
+
+        final List<Type> parameterTypes = getSignature().getParameterTypes();
+
+        if (parameters.size() != parameterTypes.size()) {
+            throw new IncompatibleTypeException("Method call requires " + parameterTypes.size() + " parameters, got " + parameters);
+        }
+
+        final Iterator<Type> typeIterator = parameterTypes.iterator();
+        final Iterator<Expression> valueIterator = parameters.iterator();
+
+        int index = 0;
+
+        while (typeIterator.hasNext()) {
+            final Type type = typeIterator.next();
+            final Expression value = valueIterator.next();
+
+            if (!Types.isValueTypePotentiallyAssignableTo(value.getType(), type)) {
+                if (!type.getTypeName().equals(value.getType().getTypeName())) {
+                    throw new IncompatibleTypeException("Invalid parameter value at index " + index
+                            + "; expected " + type.getTypeName() + ", was " + value);
+                }
+            }
+
+            index++;
+        }
+
+        return new MethodCallImpl(targetType, methodName, signature, targetInstance, parameters.toArray(new Expression[parameters.size()]), expressionType);
     }
 
     @Override

@@ -1,6 +1,8 @@
 package org.testifj.lang.model.impl;
 
+import org.testifj.lang.Types;
 import org.testifj.lang.model.Expression;
+import org.testifj.lang.model.IncompatibleTypeException;
 import org.testifj.lang.model.VariableAssignment;
 
 import java.lang.reflect.Type;
@@ -45,6 +47,18 @@ public final class VariableAssignmentImpl extends AbstractElement implements Var
     @Override
     public Type getVariableType() {
         return variableType;
+    }
+
+    @Override
+    public VariableAssignment withValue(Expression value) {
+        assert value != null : "Value can't be null";
+
+        if (!Types.isValueTypePotentiallyAssignableTo(value.getType(), variableType)) {
+            throw new IncompatibleTypeException("Value can't be assigned to variable '"
+                    + variableName + ":" + variableType.getTypeName() + "': " + value);
+        }
+
+        return new VariableAssignmentImpl(value, variableIndex, variableName, variableType);
     }
 
     @Override

@@ -3,6 +3,7 @@ package org.testifj.util;
 import java.util.List;
 import java.util.stream.Stream;
 
+// TODO extend sequence?
 public interface Stack<E> extends Iterable<E> {
 
     void addStackListener(StackListener<E> stackListener);

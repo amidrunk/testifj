@@ -4,9 +4,14 @@ import org.junit.Test;
 import org.testifj.lang.model.*;
 
 import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.Collections;
 
 import static org.mockito.Mockito.mock;
 import static org.testifj.Expect.expect;
+import static org.testifj.lang.model.AST.call;
+import static org.testifj.lang.model.AST.constant;
+import static org.testifj.matchers.core.CollectionThatIs.collectionOf;
 
 public class MethodCallImplTest {
 
@@ -49,15 +54,41 @@ public class MethodCallImplTest {
 
     @Test
     public void isStaticShouldBeTrueForStaticMethodCall() {
-        final MethodCall methodCall = AST.call(String.class, "valueOf", String.class);
+        final MethodCall methodCall = call(String.class, "valueOf", String.class);
 
         expect(methodCall.isStatic()).toBe(true);
     }
 
     @Test
     public void isStaticCallShouldBeFalseForInstanceMethodCall() {
-        final MethodCall methodCall = AST.call(AST.constant("foo"), "toString", String.class);
+        final MethodCall methodCall = call(AST.constant("foo"), "toString", String.class);
 
         expect(methodCall.isStatic()).toBe(false);
+    }
+
+    @Test
+    public void withParameterTypesShouldNotAcceptNullArguments() {
+        final MethodCall exampleMethodCall = call(constant("foo"), "substring", String.class, constant(1));
+
+        expect(() -> exampleMethodCall.withParameters(null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void withParameterTypesShouldNotAcceptParametersWithIncorrectParameters() {
+        final MethodCall exampleMethodCall = call(constant("foo"), "substring", String.class, constant(1));
+
+        expect(() -> exampleMethodCall.withParameters(Arrays.asList(constant("foo")))).toThrow(IncompatibleTypeException.class);
+        expect(() -> exampleMethodCall.withParameters(Collections.emptyList())).toThrow(IncompatibleTypeException.class);
+        expect(() -> exampleMethodCall.withParameters(Arrays.asList(constant(1), constant(2)))).toThrow(IncompatibleTypeException.class);
+    }
+
+    @Test
+    public void withParameterTypesShouldReturnMethodWithNewParameterList() {
+        final MethodCall exampleMethodCall = call(constant("foo"), "substring", String.class, constant(1));
+        final MethodCall newMethodCall = exampleMethodCall.withParameters(Arrays.asList(constant(2)));
+
+        expect(exampleMethodCall.getParameters()).toBe(collectionOf(constant(1)));
+        expect(newMethodCall.getParameters()).toBe(collectionOf(constant(2)));
+        expect(newMethodCall.getSignature()).toBe(MethodSignature.parse("(I)Ljava/lang/String;"));
     }
 }

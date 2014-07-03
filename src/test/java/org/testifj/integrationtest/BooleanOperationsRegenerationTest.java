@@ -5,7 +5,7 @@ import org.testifj.Caller;
 
 import static org.testifj.Expect.expect;
 
-public class BooleanOperationsTest extends TestOnDefaultConfiguration {
+public class BooleanOperationsRegenerationTest extends TestOnDefaultConfiguration {
 
     private final ExampleClass exampleClass = new ExampleClass();
 

@@ -12,6 +12,8 @@ public interface VariableAssignment extends Statement {
 
     Type getVariableType();
 
+    VariableAssignment withValue(Expression value);
+
     default ElementType getElementType() {
         return ElementType.VARIABLE_ASSIGNMENT;
     }

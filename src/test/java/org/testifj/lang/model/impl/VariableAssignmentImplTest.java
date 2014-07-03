@@ -4,10 +4,13 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;
+import org.testifj.lang.model.IncompatibleTypeException;
+import org.testifj.lang.model.VariableAssignment;
 
 import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
+import static org.testifj.lang.model.AST.constant;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 import static org.testifj.matchers.core.StringShould.containString;
 
@@ -63,6 +66,27 @@ public class VariableAssignmentImplTest {
             expect(it).to(containString("foo"));
             expect(it).to(containString(String.class.toString()));
         });
+    }
+
+    @Test
+    public void withValueShouldNotAcceptInvalidArg() {
+        expect(() -> assignment.withValue(null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void withValueShouldFailIfValueIsNotAssignableToType() {
+        expect(() -> assignment.withValue(constant(1))).toThrow(IncompatibleTypeException.class);
+    }
+
+    @Test
+    public void withValueShouldReturnNewAssignmentWithNewValue() {
+        final VariableAssignment newAssignment = assignment.withValue(constant("foobar"));
+
+        expect(newAssignment.getVariableName()).toBe(assignment.getVariableName());
+        expect(newAssignment.getVariableIndex()).toBe(assignment.getVariableIndex());
+        expect(newAssignment.getVariableType()).toBe(assignment.getVariableType());
+        expect(newAssignment.getValue()).toBe(constant("foobar"));
+        expect(assignment.getValue()).toBe(exampleValue);
     }
 
 }

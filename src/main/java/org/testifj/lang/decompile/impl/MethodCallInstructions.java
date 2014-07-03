@@ -4,16 +4,26 @@ import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.classfile.ClassFileFormatException;
 import org.testifj.lang.classfile.InterfaceMethodRefDescriptor;
 import org.testifj.lang.classfile.MethodRefDescriptor;
-import org.testifj.lang.decompile.DecompilationContext;
-import org.testifj.lang.decompile.DecompilerConfiguration;
-import org.testifj.lang.decompile.DecompilerDelegate;
-import org.testifj.lang.decompile.DecompilerDelegation;
+import org.testifj.lang.decompile.*;
+import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;
+import org.testifj.lang.model.MethodCall;
 import org.testifj.lang.model.Signature;
 import org.testifj.lang.model.impl.MethodCallImpl;
 import org.testifj.lang.model.impl.MethodSignature;
+import org.testifj.util.Iterators;
+import org.testifj.util.Lists;
+import org.testifj.util.Pair;
 
 import java.lang.reflect.Type;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
+
+import static org.testifj.lang.decompile.DecompilationStateSelectors.elementIsStacked;
+import static org.testifj.lang.model.AST.constant;
+import static org.testifj.util.Lists.optionallyCollect;
+import static org.testifj.util.Lists.zip;
 
 public final class MethodCallInstructions implements DecompilerDelegation {
 

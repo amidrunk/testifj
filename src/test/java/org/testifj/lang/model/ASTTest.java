@@ -375,4 +375,10 @@ public class ASTTest {
         expect(variableAssignment.getVariableType()).toBe(String.class);
     }
 
+    @Test
+    public void booleanConstantCanBeCreated() {
+        expect(constant(true)).toBe(new ConstantImpl(true, boolean.class));
+        expect(constant(false)).toBe(new ConstantImpl(false, boolean.class));
+    }
+
 }

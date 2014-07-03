@@ -15,6 +15,8 @@ public interface MethodCall extends Expression, Statement {
 
     List<Expression> getParameters();
 
+    MethodCall withParameters(List<Expression> parameters);
+
     boolean isStatic();
 
     default ElementType getElementType() {

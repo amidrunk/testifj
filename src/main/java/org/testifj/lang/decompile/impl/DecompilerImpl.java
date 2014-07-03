@@ -147,8 +147,7 @@ public final class DecompilerImpl implements Decompiler {
                         }
 
                         if (context.hasStackedExpressions()) {
-                            final List<Statement> statements = context.getStatements();
-                            final Statement lastStatement = statements.get(statements.size() - 1);
+                            final Statement lastStatement = context.getStatements().last().get();
 
                             context.getProgramCounter().lookAhead(targetPC, () -> {
                                 final Expression leftBranch = context.pop();
@@ -194,7 +193,7 @@ public final class DecompilerImpl implements Decompiler {
 
         context.reduceAll();
 
-        return context.getStatements().stream().toArray(Element[]::new);
+        return context.getStatements().all().get().stream().toArray(Element[]::new);
     }
 
     private void invokeMethod(DecompilationContext context, CodeStream stream, ConstantPool constantPool, boolean invokeStatic, boolean isInterface) throws IOException {

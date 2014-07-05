@@ -132,8 +132,14 @@ public final class DecompilationContextImpl implements DecompilationContext {
         checkReducable(stack.peek());
 
         final ExpressionWithPC expressionWithPC = stack.pop();
+        final StatementWithPC newStatement = new StatementWithPC((Statement) expressionWithPC.expression(), expressionWithPC.pc(), expressionWithPC.version());
+        final Sequence.SingleElement<StatementWithPC> selector = statements.first(s -> s.pc() > expressionWithPC.pc());
 
-        statements.add(new StatementWithPC((Statement) expressionWithPC.expression(), expressionWithPC.pc(), expressionWithPC.version()));
+        if (selector.exists()) {
+            selector.insertBefore(newStatement);
+        } else {
+            statements.add(newStatement);
+        }
 
         return true;
     }
@@ -144,9 +150,13 @@ public final class DecompilationContextImpl implements DecompilationContext {
             return false;
         }
 
-        stack.forEach(this::checkReducable);
+        /*stack.forEach(this::checkReducable);
         stack.forEach(e -> statements.add(new StatementWithPC((Statement) e.expression(), e.pc(), e.version())));
-        stack.clear();
+        stack.clear();*/
+
+        while (!stack.isEmpty()) {
+            reduce();
+        }
 
         return true;
     }

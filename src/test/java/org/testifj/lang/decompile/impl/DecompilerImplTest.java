@@ -317,7 +317,7 @@ public class DecompilerImplTest {
         final Element[] elements = parseMethodBody("constantsOfAllTypes");
 
         expect(elements).toBe(new Element[]{
-                set(1, "z", boolean.class, constant(1)),
+                set(1, "z", boolean.class, constant(true)),
                 set(2, "b", byte.class, constant(100)),
                 set(3, "s", short.class, constant(200)),
                 set(4, "c", char.class, constant(300)),

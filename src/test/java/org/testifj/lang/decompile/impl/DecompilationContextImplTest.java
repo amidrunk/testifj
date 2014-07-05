@@ -89,12 +89,6 @@ public class DecompilationContextImplTest {
     }
 
     @Test
-    public void statementsFromContextCannotBeModified() {
-        expect(() -> context.getStatements().add(mock(Statement.class))).toThrow(UnsupportedOperationException.class);
-        expect(context.getStatements()).toBe(empty());
-    }
-
-    @Test
     public void enlistShouldNotAcceptNullArg() {
         expect(() -> context.enlist(null)).toThrow(AssertionError.class);
     }
@@ -153,6 +147,7 @@ public class DecompilationContextImplTest {
         final MethodCall statement2 = mock(MethodCall.class, "s2");
 
         context.push(statement1);
+        programCounter.advance();
         context.push(statement2);
 
         expect(context.reduceAll()).toBe(true);
@@ -199,6 +194,7 @@ public class DecompilationContextImplTest {
         final MethodCall methodCall2 = mock(MethodCall.class, "s2");
 
         context.push(methodCall1);
+        programCounter.advance();
         context.push(methodCall2);
 
         context.reduce();

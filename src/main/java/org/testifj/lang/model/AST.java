@@ -1,11 +1,13 @@
 package org.testifj.lang.model;
 
+import org.testifj.annotations.DSL;
 import org.testifj.lang.model.impl.*;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Objects;
 
+@DSL
 public final class AST {
 
     public static Constant constant(Class<?> clazz) {

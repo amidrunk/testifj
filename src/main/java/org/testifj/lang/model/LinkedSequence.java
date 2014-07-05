@@ -8,224 +8,6 @@ import java.util.function.Supplier;
 
 public final class LinkedSequence<T> extends AbstractCollection<T> implements Sequence<T> {
 
-    private final MultipleElements<T> ALL = new MultipleElements<T>() {
-        @Override
-        public List<T> get() {
-            final ArrayList<T> list = new ArrayList<>(size);
-
-            Link<T> link = first;
-
-            while (link != null) {
-                list.add(link.element());
-
-                link = link.next;
-            }
-
-            return list;
-        }
-
-        @Override
-        public void remove() {
-            clear();
-        }
-    };
-
-    private final SingleElement<T> FIRST = new SingleElement<T>() {
-        @Override
-        public void swap(T newElement) {
-            checkNotEmpty();
-            first.element(newElement);
-            version++;
-        }
-
-        @Override
-        public boolean exists() {
-            return first != null;
-        }
-
-        @Override
-        public T get() {
-            checkNotEmpty();
-            return first.element();
-        }
-
-        @Override
-        public void insertBefore(T element) {
-            assert element != null : "Element can't be null";
-
-            checkNotEmpty();
-
-            final Link<T> newLink = new Link<>(element);
-
-            newLink.next = first;
-            first.previous = newLink;
-            first = newLink;
-
-            size++;
-            version++;
-        }
-
-        @Override
-        public void remove() {
-            checkNotEmpty();
-
-            if (first.next == null) {
-                first = last = null;
-            } else {
-                first.next.previous(null);
-                first = first.next;
-            }
-
-            size--;
-            version++;
-        }
-    };
-
-    private final SingleElement<T> LAST = new SingleElement<T>() {
-        @Override
-        public void swap(T newElement) {
-            checkNotEmpty();
-            last.element(newElement);
-            version++;
-        }
-
-        @Override
-        public void insertBefore(T element) {
-            assert element != null : "Element can't be null";
-
-            checkNotEmpty();
-
-            final Link<T> newLink = new Link<>(element);
-
-            newLink.next = last;
-
-            if (last.previous == null) {
-                first = newLink;
-            } else {
-                last.previous.next = newLink;
-            }
-
-            last.previous = newLink;
-
-            size++;
-            version++;
-        }
-
-        @Override
-        public boolean exists() {
-            return last != null;
-        }
-
-        @Override
-        public T get() {
-            checkNotEmpty();
-            return last.element;
-        }
-
-        @Override
-        public void remove() {
-            checkNotEmpty();
-
-            if (last.previous == null) {
-                last = first = null;
-            } else {
-                last.previous.next = null;
-                last = last.previous;
-            }
-
-            size--;
-            version++;
-        }
-    };
-
-    private void insertBefore(Link<T> anchor, Link<T> newLink) {
-        newLink.next = anchor;
-        newLink.previous = anchor.previous;
-
-        if (anchor.previous == null) {
-            first = newLink;
-        } else {
-            anchor.previous.next = newLink;
-        }
-
-        anchor.previous = newLink;
-
-        size++;
-        version++;
-    }
-
-    private final class StatementAtIndex implements SingleElement<T> {
-
-        private final int index;
-
-        private StatementAtIndex(int index) {
-            this.index = index;
-        }
-
-        @Override
-        public void insertBefore(T element) {
-            assert element != null : "Element can't be null";
-
-            if (index == size - 1) {
-                LAST.insertBefore(element);
-            } else {
-                LinkedSequence.this.insertBefore(link(), new Link<T>(element));
-            }
-        }
-
-        @Override
-        public void swap(T newElement) {
-            assert newElement != null : "Element can't be null";
-
-            if (index == size - 1) {
-                LAST.swap(newElement);
-            } else {
-                link().element(newElement);
-            }
-
-            version++;
-        }
-
-        @Override
-        public boolean exists() {
-            return index < size;
-        }
-
-        @Override
-        public T get() {
-            if (index >= size) {
-                throw new NoSuchElementException("Index must be < " + size);
-            }
-
-            return link().element();
-        }
-
-        @Override
-        public void remove() {
-            if (index == size - 1) {
-                LAST.remove();
-            } else {
-                final Link link = link();
-
-                link.previous.next = link.next;
-                link.next.previous = link.previous;
-
-                size--;
-                version++;
-            }
-        }
-
-        private Link<T> link() {
-            Link<T> current = first;
-
-            for (int i = 0; i < index; i++) {
-                current = current.next();
-            }
-
-            return current;
-        }
-    }
-
     private Link<T> first;
 
     private Link<T> last;
@@ -256,70 +38,99 @@ public final class LinkedSequence<T> extends AbstractCollection<T> implements Se
 
     @Override
     public SingleElement<T> last() {
-        return LAST;
+        return new LinkSelector(last);
     }
 
     @Override
     public SingleElement<T> last(Predicate<T> predicate) {
         assert predicate != null : "Predicate can't be null";
 
-        final Supplier<Optional<Link<T>>> supplier = () -> {
-            Link<T> current = last;
+        Link<T> current = last;
 
-            while (current != null) {
-                if (predicate.test(current.element())) {
-                    return Optional.of(current);
-                }
-
-                current = current.previous();
+        while (current != null) {
+            if (predicate.test(current.element())) {
+                return new LinkSelector(current);
             }
 
-            return Optional.empty();
-        };
+            current = current.previous();
+        }
 
-        return suppliedSelector(supplier);
+        return new LinkSelector(null);
     }
 
     @Override
     public SingleElement<T> first() {
-        return FIRST;
+        return new LinkSelector(first);
     }
 
     @Override
     public SingleElement<T> first(Predicate<T> predicate) {
         assert predicate != null : "Predicate can't be null";
 
-        final Supplier<Optional<Link<T>>> supplier = () -> {
-            Link<T> current = first;
+        Link<T> current = first;
 
-            while (current != null) {
-                if (predicate.test(current.element())) {
-                    return Optional.of(current);
-                }
-
-                current = current.next();
+        while (current != null) {
+            if (predicate.test(current.element())) {
+                return new LinkSelector(current);
             }
 
-            return Optional.empty();
-        };
+            current = current.next();
+        }
 
-        return suppliedSelector(supplier);
+        return new LinkSelector(null);
     }
 
     @Override
     public SingleElement<T> at(int index) {
         assert index >= 0 : "Index must be positive";
 
-        if (index == 0) {
-            return FIRST;
+        Link<T> current = first;
+
+        while (index-- > 0 && current != null) {
+            current = current.next();
         }
 
-        return new StatementAtIndex(index);
+        return new LinkSelector(current);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public MultipleElements<T> all() {
-        return ALL;
+        final Link<T>[] links = new Link[size];
+
+        Link<T> current = first;
+
+        for (int i = 0; i < size; i++) {
+            links[i] = current;
+
+            current = current.next;
+        }
+
+        final int snapshotVersion = version;
+
+        return new MultipleElements<T>() {
+            @Override
+            public List<T> get() {
+                final ArrayList<T> copy = new ArrayList<>();
+
+                for (Link<T> link :links) {
+                    copy.add(link.element());
+                }
+
+                return copy;
+            }
+
+            @Override
+            public void remove() {
+                if (version == snapshotVersion) {
+                    clear();
+                } else {
+                    for (Link link : links) {
+                        removeLink(link);
+                    }
+                }
+            }
+        };
     }
 
     @Override
@@ -364,101 +175,6 @@ public final class LinkedSequence<T> extends AbstractCollection<T> implements Se
         });
     }
 
-    private SingleElement<T> suppliedSelector(final Supplier<Optional<Link<T>>> supplier) {
-        return new SingleElement<T>() {
-
-            private int expectedVersion = -1;
-
-            private Optional<Link<T>> link = null;
-
-            @Override
-            public void insertBefore(T element) {
-                assert element != null;
-
-                final Optional<Link<T>> optional = link();
-
-                if (!optional.isPresent()) {
-                    throw new NoSuchElementException();
-                }
-
-                final Link<T> link = optional.get();
-
-                if (link == first) {
-                    FIRST.insertBefore(element);
-                } else if (link == last) {
-                    LAST.insertBefore(element);
-                } else {
-                    LinkedSequence.this.insertBefore(link, new Link<T>(element));
-                    this.link = null;
-                }
-            }
-
-            @Override
-            public void swap(T newElement) {
-                assert newElement != null : "Element can't be null";
-
-                final Optional<Link<T>> optional = link();
-
-                if (!optional.isPresent()) {
-                    throw new NoSuchElementException();
-                }
-
-                optional.get().element(newElement);
-            }
-
-            @Override
-            public boolean exists() {
-                return link().isPresent();
-            }
-
-            @Override
-            public T get() {
-                return link().get().element();
-            }
-
-            @Override
-            public void remove() {
-                final Optional<Link<T>> optional = link();
-
-                if (!optional.isPresent()) {
-                    throw new NoSuchElementException();
-                }
-
-                final Link<T> link = optional.get();
-
-                if (link == first) {
-                    FIRST.remove();
-                } else if (link == last) {
-                    LAST.remove();
-                } else {
-                    link.previous.next = link.next;
-                    link.next.previous = link.previous;
-                    size--;
-                    version++;
-                }
-            }
-
-            private Optional<Link<T>> link() {
-                if (link == null) {
-                    this.expectedVersion = version;
-                    this.link = supplier.get();
-                } else {
-                    if (expectedVersion != version) {
-                        throw new ConcurrentModificationException();
-                    }
-                }
-
-                return this.link;
-            }
-        };
-    }
-
-    private void checkNotEmpty() {
-        if (isEmpty()) {
-            throw new NoSuchElementException("Empty sequence (size=" + size + ", first=" + first + ", last=" + last + ")");
-        }
-    }
-
     private static final class Link<T> {
 
         private T element;
@@ -497,4 +213,110 @@ public final class LinkedSequence<T> extends AbstractCollection<T> implements Se
         }
 
     }
+
+    private class LinkSelector implements SingleElement<T> {
+
+        private Link<T> link;
+
+        private int snapshotVersion;
+
+        private LinkSelector(Link<T> link) {
+            this.link = link;
+            this.snapshotVersion = version;
+        }
+
+        @Override
+        public void swap(T newElement) {
+            assert newElement != null : "Element can't be null";
+
+            checkExists();
+            checkVersion();
+
+            link.element(newElement);
+
+            upgrade();
+        }
+
+        @Override
+        public boolean exists() {
+            return (link != null);
+        }
+
+        @Override
+        public T get() {
+            checkExists();
+            checkVersion();
+
+            return link.element();
+        }
+
+        @Override
+        public void insertBefore(T element) {
+            assert element != null : "Element can't be null";
+
+            checkExists();
+            checkVersion();
+
+            final Link<T> newLink = new Link<>(element);
+
+            newLink.previous = link.previous;
+            newLink.next = link;
+
+            if (link.previous == null) {
+                first = newLink;
+            } else {
+                link.previous.next = newLink;
+            }
+
+            link.previous = newLink;
+
+            size++;
+
+            upgrade();
+        }
+
+        @Override
+        public void remove() {
+            checkExists();
+            checkVersion();
+
+            removeLink(link);
+
+            snapshotVersion = version;
+        }
+
+        private void upgrade() {
+            snapshotVersion = ++version;
+        }
+
+        private void checkExists() {
+            if (!exists()) {
+                throw new NoSuchElementException();
+            }
+        }
+
+        private void checkVersion() {
+            if (version != snapshotVersion) {
+                throw new ConcurrentModificationException();
+            }
+        }
+    }
+
+    private void removeLink(Link<T> link) {
+        if (link.previous == null) {
+            first = link.next;
+        } else {
+            link.previous.next = link.next;
+        }
+
+        if (link.next == null) {
+            last = link.previous;
+        } else {
+            link.next.previous = link.previous;
+        }
+
+        size--;
+        version++;
+    }
+
 }

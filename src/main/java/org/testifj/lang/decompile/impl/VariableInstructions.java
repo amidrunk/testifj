@@ -30,21 +30,6 @@ public final class VariableInstructions implements DecompilerDelegation {
         configurationBuilder.on(dstore_0, dstore_3).then(dstoren());
         configurationBuilder.on(lstore_0, lstore_3).then(lstoren());
         configurationBuilder.on(astore_0, astore_3).then(astoren());
-
-        configurationBuilder.after(ByteCode.integerStoreInstructions())
-                .then((context, codeStream, byteCode) -> {
-                    final ModelQuery<DecompilationContext, VariableAssignment> query = lastDecompiledStatement().as(VariableAssignment.class)
-                            .where(assignedValue().is(equalTo(constant(0)).or(equalTo(constant(1)))))
-                            .and(assignedVariableTypeIs(boolean.class));
-
-                    final Optional<VariableAssignment> variableAssignmentOptional = query.from(context);
-
-                    if (!variableAssignmentOptional.isPresent()) {
-                        return;
-                    }
-
-                    System.out.println("ok");
-                });
     }
 
     public static DecompilerDelegate load() {

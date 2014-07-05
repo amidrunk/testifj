@@ -16,19 +16,6 @@ public interface Sequence<T> extends Collection<T> {
 
     SingleElement<T> first(Predicate<T> predicate);
 
-    /**
-     * Returns a selector for the specified index. The selector will be evaluated upon every access, i.e.
-     * the evaluated element can change. Example:
-     * <pre>{@code
-     * selector = sequence.at(0);
-     * expect(selector.get()).toBe("bar");
-     * selector.insertBefore("foo");
-     * expect(selector.get()).toBe("bar");
-     * }</pre>
-     *
-     * @param index The index of the element to select.
-     * @return A selector for the element at the specified index.
-     */
     SingleElement<T> at(int index);
 
     MultipleElements<T> all();

@@ -407,13 +407,11 @@ public class LinkedSequenceTest {
     public void insertBeforeFirstShouldInsertElementAtFirstIndex() {
         sequence.addAll(Arrays.asList(statement1, statement2));
 
-        final Sequence.SingleElement<Statement> selector = sequence.first();
-
-        selector.insertBefore(statement3);
+        sequence.first().insertBefore(statement3);
 
         expect(sequence).toBe(iterableOf(statement3, statement1, statement2));
         expect(sequence.size()).toBe(3);
-        expect(selector.get()).toBe(statement3);
+        expect(sequence.first().get()).toBe(statement3);
         expect(sequence.first().get()).toBe(statement3);
     }
 
@@ -509,7 +507,7 @@ public class LinkedSequenceTest {
     }
 
     @Test
-    public void insertBeforeShouldInsertElementAtIndexAndUpdateSelectorValue() {
+    public void insertBeforeShouldInsertElementAtIndex() {
         sequence.addAll(Arrays.asList(statement1, statement2, statement3));
 
         final Sequence.SingleElement<Statement> selector = sequence.at(1);
@@ -517,7 +515,6 @@ public class LinkedSequenceTest {
         selector.insertBefore(statement3);
 
         expect(sequence).toBe(iterableOf(statement1, statement3, statement2, statement3));
-        expect(selector.get()).toBe(statement3);
     }
 
 }

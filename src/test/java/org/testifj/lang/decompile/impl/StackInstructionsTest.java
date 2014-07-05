@@ -25,7 +25,8 @@ import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 public class StackInstructionsTest {
 
     private final StackInstructions stackInstructions = new StackInstructions();
-    private final DecompilationContext decompilationContext = new DecompilationContextImpl(mock(Decompiler.class), mock(Method.class), mock(ProgramCounter.class), mock(LineNumberCounter.class), mock(TypeResolver.class));
+    private final ProgramCounter pc = mock(ProgramCounter.class);
+    private final DecompilationContext decompilationContext = new DecompilationContextImpl(mock(Decompiler.class), mock(Method.class), pc, mock(LineNumberCounter.class), mock(TypeResolver.class));
     private final CodeStream codeStream = mock(CodeStream.class);
     private final Expression element1 = mock(Expression.class, withSettings().extraInterfaces(Statement.class).name("element1"));
     private final Expression element2 = mock(Expression.class, withSettings().extraInterfaces(Statement.class).name("element2"));
@@ -81,7 +82,10 @@ public class StackInstructionsTest {
         when(element1.getType()).thenReturn(int.class);
         when(element2.getType()).thenReturn(int.class);
 
+        when(pc.get()).thenReturn(1);
         decompilationContext.push(element1);
+
+        when(pc.get()).thenReturn(2);
         decompilationContext.push(element2);
 
         execute(ByteCode.pop2);

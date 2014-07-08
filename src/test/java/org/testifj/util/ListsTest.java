@@ -1,9 +1,6 @@
 package org.testifj.util;
 
 import org.junit.Test;
-import org.mockito.AdditionalAnswers;
-import org.mockito.Mockito;
-import org.testifj.matchers.core.CollectionThatIs;
 
 import java.util.Arrays;
 import java.util.Collections;

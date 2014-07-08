@@ -169,10 +169,6 @@ public final class DecompilerImpl implements Decompiler {
 
                         break;
                     }
-                    case ByteCode.invokevirtual: {
-                        invokeMethod(context, codeStream, constantPool, false, false);
-                        break;
-                    }
                     case ByteCode.invokestatic:
                         invokeMethod(context, codeStream, constantPool, true, false);
                         break;

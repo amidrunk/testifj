@@ -6,6 +6,9 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.testifj.lang.decompile.ConstantPoolEntry;
 import org.testifj.lang.classfile.impl.DefaultConstantPool;
+import org.testifj.matchers.core.CollectionThatIs;
+
+import java.util.Arrays;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -13,12 +16,25 @@ import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.testifj.Expect.expect;
+import static org.testifj.matchers.core.CollectionThatIs.collectionOf;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
+import static org.testifj.matchers.core.ObjectThatIs.instanceOf;
 import static org.testifj.matchers.core.StringShould.containString;
 
 public class ExpectTest {
 
     private final ExpectationFailureHandler expectationFailureHandler = mock(ExpectationFailureHandler.class);
+
+    private Object asObject(Object object) {
+        return object;
+    }
+
+    @Test
+    public void expectShouldAcceptMatcherForMoreSpecificTypeThanValue() {
+        expect(() -> expect(asObject(new String("str").toString())).toBe(equalTo("str"))).not().toThrow(AssertionError.class);
+        expect(() -> expect(asObject(new String("str").toString())).toBe(instanceOf(String.class))).not().toThrow(AssertionError.class);
+        expect(() -> expect(asObject(Arrays.asList("foo", "bar"))).toBe(collectionOf("foo", "bar"))).not().toThrow(AssertionError.class);
+    }
 
     @Test
     public void expectToThrowShouldSucceedIfConditionsAreFulfilled() {

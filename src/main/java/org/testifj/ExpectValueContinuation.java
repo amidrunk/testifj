@@ -10,7 +10,13 @@ public interface ExpectValueContinuation<T> {
         to(matcher);
     }
 
+    @SuppressWarnings("unchecked")
     default void toBe(T instance) {
+        if (instance instanceof Matcher) {
+            to((Matcher) instance);
+            return;
+        }
+
         toBe(Equal.equal(instance));
     }
 

@@ -1,6 +1,5 @@
 package org.testifj.lang.decompile.impl;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.testifj.lang.CodeStreamTestUtils;
 import org.testifj.lang.TypeResolver;
@@ -9,15 +8,11 @@ import org.testifj.lang.classfile.LocalVariable;
 import org.testifj.lang.classfile.Method;
 import org.testifj.lang.decompile.*;
 import org.testifj.lang.model.*;
-import org.testifj.lang.model.impl.BinaryOperatorImpl;
-import org.testifj.lang.model.impl.CastImpl;
 import org.testifj.lang.model.impl.IncrementImpl;
 import org.testifj.lang.model.impl.LocalVariableReferenceImpl;
-import org.testifj.matchers.core.IterableThatIs;
 import org.testifj.matchers.core.IteratorThatIs;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Iterator;
 
 import static org.mockito.Matchers.eq;

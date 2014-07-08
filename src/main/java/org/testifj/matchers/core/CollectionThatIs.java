@@ -15,7 +15,32 @@ public final class CollectionThatIs {
     }
 
     @SafeVarargs
-    public static <E, T extends Collection<? extends E>> Matcher<T> collectionOf(E... elements) {
+    public static <E, T extends Collection<? extends E>> Matcher<T> collectionWithElements(Matcher<E>... matchers) {
+        assert matchers != null : "Matchers can't be null";
+
+        return instance -> {
+            if (instance == null) {
+                return false;
+            }
+
+            if (instance.size() != matchers.length) {
+                return false;
+            }
+
+            int index = 0;
+
+            for (E element : instance) {
+                if (!matchers[index++].matches(element)) {
+                    return false;
+                }
+            }
+
+            return true;
+        };
+    }
+
+    @SafeVarargs
+    public static <E, C extends Collection<? extends E>> Matcher<C> collectionOf(E... elements) {
         assert elements != null : "Elements can't be null";
 
         return instance -> {

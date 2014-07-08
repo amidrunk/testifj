@@ -1,7 +1,6 @@
 package org.testifj.lang.model;
 
 import org.junit.Test;
-import org.testifj.lang.decompile.impl.UnaryOperations;
 
 import java.util.Arrays;
 

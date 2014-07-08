@@ -9,7 +9,6 @@ import org.testifj.lang.decompile.CodeStream;
 import org.testifj.lang.decompile.DecompilationContext;
 import org.testifj.lang.decompile.Decompiler;
 import org.testifj.lang.decompile.LineNumberCounter;
-import org.testifj.lang.model.AST;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.Statement;
 

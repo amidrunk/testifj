@@ -54,6 +54,11 @@ public final class Expect {
 
             @Override
             public void toBe(T expectedValue) {
+                if (expectedValue instanceof Matcher) {
+                    to((Matcher) expectedValue);
+                    return;
+                }
+
                 final Matcher<T> matcher = Equal.equal(expectedValue);
 
                 if (!matcher.matches(instance)) {

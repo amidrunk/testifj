@@ -15,6 +15,7 @@ import org.testifj.util.Iterators;
 import org.testifj.util.Lists;
 import org.testifj.util.Pair;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Iterator;
 import java.util.List;
@@ -32,39 +33,56 @@ public final class MethodCallInstructions implements DecompilerDelegation {
 
         configurationBuilder.on(ByteCode.invokeinterface).then(invokeinterface());
         configurationBuilder.on(ByteCode.invokespecial).then(invokespecial());
+        configurationBuilder.on(ByteCode.invokevirtual).then(invokespecial());
     }
 
     public static DecompilerDelegate invokeinterface() {
-        return (context, code, instruction) -> {
-            final InterfaceMethodRefDescriptor interfaceMethodRefDescriptor = context
-                    .getMethod()
-                    .getClassFile()
-                    .getConstantPool()
-                    .getInterfaceMethodRefDescriptor(code.nextUnsignedShort());
+        return new DecompilerDelegate() {
+            @Override
+            public void apply(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
+                final InterfaceMethodRefDescriptor interfaceMethodRefDescriptor = context
+                        .getMethod()
+                        .getClassFile()
+                        .getConstantPool()
+                        .getInterfaceMethodRefDescriptor(codeStream.nextUnsignedShort());
 
-            invoke(context, interfaceMethodRefDescriptor);
+                invoke(context, interfaceMethodRefDescriptor);
 
-            if (code.nextUnsignedByte() == 0) {
-                throw new ClassFileFormatException("Expected byte subsequent to interface method invocation to be non-zero");
+                if (codeStream.nextUnsignedByte() == 0) {
+                    throw new ClassFileFormatException("Expected byte subsequent to interface method invocation to be non-zero");
+                }
             }
         };
     }
 
     public static DecompilerDelegate invokespecial() {
-        return (context, code, instruction) -> {
-            final MethodRefDescriptor methodRefDescriptor = context
-                    .getMethod()
-                    .getClassFile()
-                    .getConstantPool()
-                    .getMethodRefDescriptor(code.nextUnsignedShort());
+        return new DecompilerDelegate() {
+            @Override
+            public void apply(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
+                final MethodRefDescriptor methodRefDescriptor = context
+                        .getMethod()
+                        .getClassFile()
+                        .getConstantPool()
+                        .getMethodRefDescriptor(codeStream.nextUnsignedShort());
 
-            invoke(context, methodRefDescriptor);
+                invoke(context, methodRefDescriptor);
+            }
         };
     }
 
-    // TODO Implement
     public static DecompilerDelegate invokevirtual() {
-        return (dc, cs, bc) -> {};
+        return new DecompilerDelegate() {
+            @Override
+            public void apply(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
+                final MethodRefDescriptor methodRefDescriptor = context
+                        .getMethod()
+                        .getClassFile()
+                        .getConstantPool()
+                        .getMethodRefDescriptor(codeStream.nextUnsignedShort());
+
+                invoke(context, methodRefDescriptor);
+            }
+        };
     }
 
     // TODO Implement

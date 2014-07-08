@@ -13,7 +13,7 @@ public class CoreDecompilerDelegationTest {
     public void createShouldCreateCoreConfiguration() {
         final DecompilerConfiguration configuration = CoreDecompilerDelegation.configuration();
 
-        expect(configuration.getDecompilerExtension(mock(DecompilationContext.class), ByteCode.iconst_0)).not().toBe(equalTo(null));
+        expect(configuration.getDecompilerDelegate(mock(DecompilationContext.class), ByteCode.iconst_0)).not().toBe(equalTo(null));
     }
 
 }

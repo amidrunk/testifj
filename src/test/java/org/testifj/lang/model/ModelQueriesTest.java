@@ -3,16 +3,17 @@ package org.testifj.lang.model;
 import org.junit.Test;
 import org.testifj.lang.model.impl.IncrementImpl;
 import org.testifj.lang.model.impl.VariableAssignmentImpl;
+import org.testifj.matchers.core.ObjectThatIs;
 import org.testifj.matchers.core.OptionalThatIs;
 
 import java.util.function.Predicate;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
 import static org.testifj.lang.model.AST.*;
-import static org.testifj.lang.model.ModelQueries.affixIsUndefined;
-import static org.testifj.lang.model.ModelQueries.leftOperand;
-import static org.testifj.lang.model.ModelQueries.rightOperand;
+import static org.testifj.lang.model.ModelQueries.*;
 import static org.testifj.matchers.core.OptionalThatIs.optionalOf;
 import static org.testifj.matchers.core.OptionalThatIs.present;
 
@@ -184,5 +185,63 @@ public class ModelQueriesTest {
         final VariableAssignment variableAssignment = set(local("foo", String.class, 1)).to(constant("bar"));
 
         expect(ModelQueries.assignedVariableTypeIs(String.class).test(variableAssignment)).toBe(true);
+    }
+
+    @Test
+    public void ofRuntimeTypeShouldNotAcceptNullType() {
+        expect(() -> ModelQueries.ofRuntimeType(null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void ofRuntimeTypeShouldNotMatchNullExpression() {
+        expect(ModelQueries.ofRuntimeType(String.class).test(null)).toBe(false);
+    }
+
+    @Test
+    public void ofRuntimeTypeShouldNotMatchExpressionWithDifferentType() {
+        final Expression expression = mock(Expression.class);
+
+        when(expression.getType()).thenReturn(String.class);
+
+        expect(ModelQueries.ofRuntimeType(Object.class).test(expression)).toBe(false);
+    }
+
+    @Test
+    public void ofRuntimeTypeShouldMatchExpressionWithEqualType() {
+        final Expression expression = mock(Expression.class);
+
+        when(expression.getType()).thenReturn(String.class);
+
+        expect(ModelQueries.ofRuntimeType(String.class).test(expression)).toBe(true);
+    }
+    
+    @Test
+    public void leftComparativeOperandShouldReturnNonPresentOptionalForNull() {
+        expect(ModelQueries.leftComparativeOperand().from(null)).not().toBe(present());
+    }
+
+    @Test
+    public void leftComparativeOperandShouldReturnLeftOperandOfBranch() {
+        final Branch branch = mock(Branch.class);
+        final Expression operand = mock(Expression.class);
+
+        when(branch.getLeftOperand()).thenReturn(operand);
+
+        expect(ModelQueries.leftComparativeOperand().from(branch)).toBe(optionalOf(operand));
+    }
+
+    @Test
+    public void rightComparativeOperandShouldReturnNonPresentOptionalForNull() {
+        expect(ModelQueries.rightComparativeOperand().from(null)).not().toBe(present());
+    }
+
+    @Test
+    public void rightComparativeOperandShouldReturnOptionalOfRightOperand() {
+        final Branch branch = mock(Branch.class);
+        final Expression operand = mock(Expression.class);
+
+        when(branch.getRightOperand()).thenReturn(operand);
+
+        expect(ModelQueries.rightComparativeOperand().from(branch)).toBe(optionalOf(operand));
     }
 }

@@ -70,6 +70,9 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
             case BINARY_OPERATOR:
                 append(context, codePointer, (BinaryOperator) element, out);
                 break;
+            case UNARY_OPERATOR:
+                append(context, codePointer, (UnaryOperator) element, out);
+                break;
             case FIELD_REFERENCE:
                 append(context, codePointer, (FieldReference) element, out);
                 break;
@@ -82,9 +85,18 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
             case NEW:
                 append(context, codePointer, (NewInstance) element, out);
                 break;
+            case COMPARE:
+                append(context, codePointer, (Compare) element, out);
+                break;
             default:
                 throw new IllegalArgumentException("Unsupported element: " + element);
         }
+    }
+
+    private void append(CodeGenerationContext context, CodePointer codePointer, Compare compare, PrintWriter out) {
+        context.delegate(codePointer.forElement(compare.getLeftOperand()));
+        out.print(" ::= ");
+        context.delegate(codePointer.forElement(compare.getRightOperand()));
     }
 
     private void append(CodeGenerationContext context, CodePointer codePointer, MethodCall methodCall, PrintWriter out) {
@@ -162,8 +174,23 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
         return typeName;
     }
 
+    private void append(CodeGenerationContext context, CodePointer codePointer, UnaryOperator unaryOperator, PrintWriter out) {
+        switch (unaryOperator.getOperatorType()) {
+            case NOT:
+                out.print('!');
+                context.delegate(codePointer.forElement(unaryOperator.getOperand()));
+                break;
+            default:
+                throw new UnsupportedOperationException();
+        }
+    }
+
     private void append(CodeGenerationContext context, CodePointer codePointer, BinaryOperator binaryOperator, PrintWriter out) {
         append(context, codePointer.forElement(binaryOperator.getLeftOperand()), out);
+
+        // TODO: Want around(assignment.where(value).eq(binaryOperator)).then((out, generation) -> out.print("("); generation.proceed(); out.print(")")
+
+        // TODO: When binary(X, OP1, binary(Y, OP2, Z)) and OP2 < OP1 in precedence, we need to insert "(" ... ")"
 
         switch (binaryOperator.getOperatorType()) {
             case PLUS:
@@ -184,6 +211,20 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
             case NE:
                 out.append(" != ");
                 break;
+            case GE:
+                out.append(" >= ");
+                break;
+            case LT:
+                out.append(" < ");
+                break;
+            case LE:
+                out.append(" <= ");
+                break;
+            case GT:
+                out.append(" > ");
+                break;
+            default:
+                throw new UnsupportedOperationException("Unsupported operator " + binaryOperator.getOperatorType());
         }
 
         append(context, codePointer.forElement(binaryOperator.getRightOperand()), out);

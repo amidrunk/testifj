@@ -25,15 +25,15 @@ public class DecompilationContextImplTest {
 
     private final LineNumberCounter lineNumberCounter = mock(LineNumberCounter.class);
 
-    private final DecompilationContextImpl context = new DecompilationContextImpl(decompiler, method, programCounter, lineNumberCounter, typeResolver);
+    private final DecompilationContextImpl context = new DecompilationContextImpl(decompiler, method, programCounter, lineNumberCounter, typeResolver, 1234);
 
     @Test
     public void constructorShouldNotAcceptInvalidParameters() {
-        expect(() -> new DecompilationContextImpl(null, method, programCounter, lineNumberCounter, typeResolver)).toThrow(AssertionError.class);
-        expect(() -> new DecompilationContextImpl(decompiler, null, programCounter, lineNumberCounter, typeResolver)).toThrow(AssertionError.class);
-        expect(() -> new DecompilationContextImpl(decompiler, method, programCounter, null, typeResolver)).toThrow(AssertionError.class);
-        expect(() -> new DecompilationContextImpl(decompiler, method, null, lineNumberCounter, typeResolver)).toThrow(AssertionError.class);
-        expect(() -> new DecompilationContextImpl(decompiler, method, programCounter, lineNumberCounter, null)).toThrow(AssertionError.class);
+        expect(() -> new DecompilationContextImpl(null, method, programCounter, lineNumberCounter, typeResolver, 0)).toThrow(AssertionError.class);
+        expect(() -> new DecompilationContextImpl(decompiler, null, programCounter, lineNumberCounter, typeResolver, 0)).toThrow(AssertionError.class);
+        expect(() -> new DecompilationContextImpl(decompiler, method, programCounter, null, typeResolver, 0)).toThrow(AssertionError.class);
+        expect(() -> new DecompilationContextImpl(decompiler, method, null, lineNumberCounter, typeResolver, 0)).toThrow(AssertionError.class);
+        expect(() -> new DecompilationContextImpl(decompiler, method, programCounter, lineNumberCounter, null, 0)).toThrow(AssertionError.class);
     }
 
     @Test
@@ -42,6 +42,7 @@ public class DecompilationContextImplTest {
         expect(context.getMethod()).toBe(method);
         expect(context.getProgramCounter()).toBe(programCounter);
         expect(context.getLineNumberCounter()).toBe(lineNumberCounter);
+        expect(context.getStartPC()).toBe(1234);
     }
 
     @Test

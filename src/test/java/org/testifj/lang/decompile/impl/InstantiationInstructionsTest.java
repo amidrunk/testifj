@@ -38,7 +38,7 @@ public class InstantiationInstructionsTest {
     @Test
     public void configureShouldConfigureSupportForNewByteCode() {
         given(configuration()).then(it -> {
-            expect(it.getDecompilerExtension(mock(DecompilationContext.class), ByteCode.new_)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(mock(DecompilationContext.class), ByteCode.new_)).not().toBe(equalTo(null));
         });
     }
 

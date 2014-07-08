@@ -34,6 +34,7 @@ public final class MethodCallInstructions implements DecompilerDelegation {
         configurationBuilder.on(ByteCode.invokeinterface).then(invokeinterface());
         configurationBuilder.on(ByteCode.invokespecial).then(invokespecial());
         configurationBuilder.on(ByteCode.invokevirtual).then(invokespecial());
+        configurationBuilder.on(ByteCode.invokestatic).then(invokestatic());
     }
 
     public static DecompilerDelegate invokeinterface() {
@@ -46,7 +47,7 @@ public final class MethodCallInstructions implements DecompilerDelegation {
                         .getConstantPool()
                         .getInterfaceMethodRefDescriptor(codeStream.nextUnsignedShort());
 
-                invoke(context, interfaceMethodRefDescriptor);
+                invoke(context, interfaceMethodRefDescriptor, false);
 
                 if (codeStream.nextUnsignedByte() == 0) {
                     throw new ClassFileFormatException("Expected byte subsequent to interface method invocation to be non-zero");
@@ -65,7 +66,7 @@ public final class MethodCallInstructions implements DecompilerDelegation {
                         .getConstantPool()
                         .getMethodRefDescriptor(codeStream.nextUnsignedShort());
 
-                invoke(context, methodRefDescriptor);
+                invoke(context, methodRefDescriptor, false);
             }
         };
     }
@@ -80,17 +81,27 @@ public final class MethodCallInstructions implements DecompilerDelegation {
                         .getConstantPool()
                         .getMethodRefDescriptor(codeStream.nextUnsignedShort());
 
-                invoke(context, methodRefDescriptor);
+                invoke(context, methodRefDescriptor, false);
             }
         };
     }
 
-    // TODO Implement
     public static DecompilerDelegate invokestatic() {
-        return (dc, cs, bc) -> {};
+        return new DecompilerDelegate() {
+            @Override
+            public void apply(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
+                final MethodRefDescriptor methodRefDescriptor = context
+                        .getMethod()
+                        .getClassFile()
+                        .getConstantPool()
+                        .getMethodRefDescriptor(codeStream.nextUnsignedShort());
+
+                invoke(context, methodRefDescriptor, true);
+            }
+        };
     }
 
-    private static void invoke(DecompilationContext context, MethodRefDescriptor methodReference) {
+    private static void invoke(DecompilationContext context, MethodRefDescriptor methodReference, boolean isStatic) {
         final Signature signature = MethodSignature.parse(methodReference.getDescriptor());
         final Expression[] arguments = new Expression[signature.getParameterTypes().size()];
         final Type targetType = context.resolveType(methodReference.getClassName());
@@ -107,11 +118,19 @@ public final class MethodCallInstructions implements DecompilerDelegation {
             expressionType = signature.getReturnType();
         }
 
+        final Expression thiz;
+
+        if (isStatic) {
+            thiz = null;
+        } else {
+            thiz = context.pop();
+        }
+
         context.push(new MethodCallImpl(
                 targetType,
                 methodReference.getMethodName(),
                 signature,
-                context.pop(),
+                thiz,
                 arguments,
                 expressionType));
     }

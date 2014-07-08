@@ -4,6 +4,9 @@ import org.junit.Test;
 import org.testifj.lang.*;
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.decompile.*;
+import org.testifj.lang.model.ModelQuery;
+import org.testifj.lang.model.Sequences;
+import org.testifj.lang.model.Statement;
 import org.testifj.util.Priority;
 
 import java.io.IOException;
@@ -18,6 +21,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
+import static org.testifj.lang.decompile.DecompilationContextQueries.lastStatement;
+import static org.testifj.lang.model.Sequences.emptySequence;
+import static org.testifj.lang.model.Sequences.sequenceOf;
 import static org.testifj.matchers.core.IteratorThatIs.emptyIterator;
 import static org.testifj.matchers.core.IteratorThatIs.iteratorOf;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
@@ -35,15 +41,15 @@ public class DecompilerConfigurationImplTest {
 
     @Test
     public void getDecompilerExtensionShouldFailForInvalidArguments() {
-        expect(() -> emptyConfiguration.getDecompilerExtension(null, 1)).toThrow(AssertionError.class);
-        expect(() -> emptyConfiguration.getDecompilerExtension(decompilationContext, -1)).toThrow(AssertionError.class);
-        expect(() -> emptyConfiguration.getDecompilerExtension(decompilationContext, 257)).toThrow(AssertionError.class);
+        expect(() -> emptyConfiguration.getDecompilerDelegate(null, 1)).toThrow(AssertionError.class);
+        expect(() -> emptyConfiguration.getDecompilerDelegate(decompilationContext, -1)).toThrow(AssertionError.class);
+        expect(() -> emptyConfiguration.getDecompilerDelegate(decompilationContext, 257)).toThrow(AssertionError.class);
     }
 
     @Test
     public void emptyConfigurationShouldReturnNullExtensionForAllByteCodes() {
         for (int i = 0; i < 256; i++) {
-            expect(emptyConfiguration.getDecompilerExtension(decompilationContext, i)).toBe(equalTo(null));
+            expect(emptyConfiguration.getDecompilerDelegate(decompilationContext, i)).toBe(equalTo(null));
         }
     }
 
@@ -53,7 +59,7 @@ public class DecompilerConfigurationImplTest {
                 .on(ByteCode.nop).then(extension1)
                 .build();
 
-        final DecompilerDelegate extension = configuration.getDecompilerExtension(decompilationContext, ByteCode.nop);
+        final DecompilerDelegate extension = configuration.getDecompilerDelegate(decompilationContext, ByteCode.nop);
 
         extension.apply(decompilationContext, codeStream, ByteCode.nop);
 
@@ -81,7 +87,7 @@ public class DecompilerConfigurationImplTest {
         when(selector1.select(eq(decompilationContext), eq(ByteCode.nop))).thenReturn(false);
         when(selector2.select(eq(decompilationContext), eq(ByteCode.nop))).thenReturn(true);
 
-        expect(configuration.getDecompilerExtension(decompilationContext, ByteCode.nop)).toBe(extension2);
+        expect(configuration.getDecompilerDelegate(decompilationContext, ByteCode.nop)).toBe(extension2);
 
         verify(selector1).select(eq(decompilationContext), eq(ByteCode.nop));
         verify(selector2).select(eq(decompilationContext), eq(ByteCode.nop));
@@ -109,7 +115,7 @@ public class DecompilerConfigurationImplTest {
                 ByteCode.iconst_5);
 
         for (Integer byteCode : byteCodes) {
-            final DecompilerDelegate actualExtension = configuration.getDecompilerExtension(decompilationContext, byteCode);
+            final DecompilerDelegate actualExtension = configuration.getDecompilerDelegate(decompilationContext, byteCode);
 
             expect(actualExtension).toBe(extension);
         }
@@ -118,14 +124,14 @@ public class DecompilerConfigurationImplTest {
     @Test
     public void decompilerExtensionWithoutPriorityAndPredicateAndBeConfigured() {
         given(builder.on(ByteCode.nop).then(extension1).build()).then(it -> {
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.nop)).toBe(extension1);
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.nop)).toBe(extension1);
         });
     }
 
     @Test
     public void decompilerExtensionWithPriorityAndNoPredicateCanBeConfigured() {
         given(builder.on(ByteCode.nop).withPriority(Priority.HIGH).then(extension1).build()).then(it -> {
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.nop)).toBe(extension1);
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.nop)).toBe(extension1);
         });
     }
 
@@ -135,7 +141,7 @@ public class DecompilerConfigurationImplTest {
 
         given(builder.on(ByteCode.nop).withPriority(Priority.HIGH).when(selector).then(extension1).build()).then(it -> {
             when(selector.select(eq(decompilationContext), eq(ByteCode.nop))).thenReturn(true);
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.nop)).toBe(extension1);
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.nop)).toBe(extension1);
         });
     }
 
@@ -146,7 +152,7 @@ public class DecompilerConfigurationImplTest {
                 .on(ByteCode.nop).withPriority(Priority.HIGHER).then(extension2)
                 .build();
 
-        expect(configuration.getDecompilerExtension(decompilationContext, ByteCode.nop)).toBe(extension2);
+        expect(configuration.getDecompilerDelegate(decompilationContext, ByteCode.nop)).toBe(extension2);
     }
 
     @Test
@@ -161,7 +167,7 @@ public class DecompilerConfigurationImplTest {
         final Range range = Range.from(1).to(3);
 
         given(builder.on(range.all()).then(extension1).build()).then(it -> {
-            range.each(byteCode -> expect(it.getDecompilerExtension(decompilationContext, byteCode)).not().toBe(equalTo(null)));
+            range.each(byteCode -> expect(it.getDecompilerDelegate(decompilationContext, byteCode)).not().toBe(equalTo(null)));
         });
     }
 
@@ -238,8 +244,8 @@ public class DecompilerConfigurationImplTest {
 
         final DecompilerConfiguration mergedConfiguration = configuration1.merge(configuration2);
 
-        expect(mergedConfiguration.getDecompilerExtension(decompilationContext, ByteCode.iadd)).toBe(extension1);
-        expect(mergedConfiguration.getDecompilerExtension(decompilationContext, ByteCode.isub)).toBe(extension2);
+        expect(mergedConfiguration.getDecompilerDelegate(decompilationContext, ByteCode.iadd)).toBe(extension1);
+        expect(mergedConfiguration.getDecompilerDelegate(decompilationContext, ByteCode.isub)).toBe(extension2);
     }
 
     @Test
@@ -253,11 +259,11 @@ public class DecompilerConfigurationImplTest {
                 .build();
 
         given(configuration1.merge(configuration2)).then(it -> {
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.iadd)).toBe(extension1);
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.iadd)).toBe(extension1);
         });
 
         given(configuration2.merge(configuration1)).then(it -> {
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.iadd)).toBe(extension2);
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.iadd)).toBe(extension2);
         });
     }
 
@@ -350,5 +356,4 @@ public class DecompilerConfigurationImplTest {
         expect(configuration.getCorrectionalDecompilerEnhancements(decompilationContext, ByteCode.nop)).toBe(iteratorOf(enhancement1));
         expect(configuration.getCorrectionalDecompilerEnhancements(decompilationContext, ByteCode.dup)).toBe(iteratorOf(enhancement1));
     }
-
 }

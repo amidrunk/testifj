@@ -11,7 +11,7 @@ import java.util.Optional;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
-import static org.testifj.lang.model.Sequences.emptySeries;
+import static org.testifj.lang.model.Sequences.emptySequence;
 import static org.testifj.lang.model.Sequences.sequenceOf;
 import static org.testifj.matchers.core.OptionalThatIs.optionalOf;
 import static org.testifj.matchers.core.OptionalThatIs.present;
@@ -22,14 +22,14 @@ public class DecompilationContextQueriesTest {
 
     @Test
     public void lastStatementOfShouldReturnNonPresentInstanceForNull() {
-        expect(DecompilationContextQueries.lastDecompiledStatement().from(null)).not().toBe(present());
+        expect(DecompilationContextQueries.lastStatement().from(null)).not().toBe(present());
     }
 
     @Test
     public void lastStatementOfShouldReturnEmptyForEmptyStatementList() {
-        when(decompilationContext.getStatements()).thenReturn(emptySeries());
+        when(decompilationContext.getStatements()).thenReturn(emptySequence());
 
-        final Optional<Statement> result = DecompilationContextQueries.lastDecompiledStatement().from(decompilationContext);
+        final Optional<Statement> result = DecompilationContextQueries.lastStatement().from(decompilationContext);
 
         expect(result).not().toBe(present());
     }
@@ -41,7 +41,7 @@ public class DecompilationContextQueriesTest {
 
         when(decompilationContext.getStatements()).thenReturn(sequenceOf(statement1, statement2));
 
-        final Optional<Statement> result = DecompilationContextQueries.lastDecompiledStatement().from(decompilationContext);
+        final Optional<Statement> result = DecompilationContextQueries.lastStatement().from(decompilationContext);
 
         expect(result).toBe(optionalOf(statement2));
     }
@@ -96,6 +96,35 @@ public class DecompilationContextQueriesTest {
         when(decompilationContext.peek()).thenReturn(expectedExpression);
 
         expect(DecompilationContextQueries.currentValue().from(decompilationContext)).toBe(optionalOf(expectedExpression));
+    }
+
+    @Test
+    public void secondToLastStatementShouldReturnSecondToLastStatement() {
+        final Statement s1 = mock(Statement.class);
+        final Statement s2 = mock(Statement.class);
+
+        when(decompilationContext.getStatements()).thenReturn(sequenceOf(s1, s2));
+
+        expect(DecompilationContextQueries.secondToLastStatement().from(decompilationContext)).toBe(optionalOf(s1));
+    }
+
+    @Test
+    public void secondToLastStatementShouldReturnNonPresentOptionalIfStatementDoesNotExist() {
+        when(decompilationContext.getStatements()).thenReturn(sequenceOf(mock(Statement.class)));
+
+        expect(DecompilationContextQueries.secondToLastStatement().from(decompilationContext)).not().toBe(present());
+    }
+
+    @Test
+    public void secondToLastStatementShouldReturnNonPresentOptionalForNullContext() {
+        expect(DecompilationContextQueries.secondToLastStatement().from(null)).not().toBe(present());
+    }
+
+    @Test
+    public void secondToLastStatementShouldReturnNonPresentOptionalForEmptyStatements() {
+        when(decompilationContext.getStatements()).thenReturn(emptySequence());
+
+        expect(DecompilationContextQueries.secondToLastStatement().from(decompilationContext)).not().toBe(present());
     }
 
 }

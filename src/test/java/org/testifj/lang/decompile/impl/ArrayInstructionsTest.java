@@ -36,11 +36,11 @@ public class ArrayInstructionsTest {
     @Test
     public void configureShouldConfigureSupportForArrayInstructions() {
         given(configuration()).then(it -> {
-            expect(it.getDecompilerExtension(context, ByteCode.anewarray)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(context, ByteCode.aaload)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(context, ByteCode.aastore)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(context, ByteCode.arraylength)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(context, ByteCode.iaload)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(context, ByteCode.anewarray)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(context, ByteCode.aaload)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(context, ByteCode.aastore)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(context, ByteCode.arraylength)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(context, ByteCode.iaload)).not().toBe(equalTo(null));
         });
     }
 

@@ -11,7 +11,7 @@ public class SequencesTest {
 
     @Test
     public void emptySeriesShouldReturnEmptyImmutableSeries() {
-        final Sequence<Object> sequence = Sequences.emptySeries();
+        final Sequence<Object> sequence = Sequences.emptySequence();
 
         expect(sequence.isEmpty()).toBe(true);
         expect(sequence.size()).toBe(0);

@@ -202,4 +202,10 @@ public class TransformedSequenceTest {
         expect(sourceSequence).toBe(iterableOf("1", "100", "2", "3"));
     }
 
+    @Test
+    public void selectorCanBeNavigatedToPreviousElement() {
+        sourceSequence.addAll(Arrays.asList("1", "2", "3"));
+        expect(transformedSequence.last().previous().get()).toBe(2);
+    }
+
 }

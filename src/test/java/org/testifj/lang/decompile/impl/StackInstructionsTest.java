@@ -25,7 +25,7 @@ public class StackInstructionsTest {
 
     private final StackInstructions stackInstructions = new StackInstructions();
     private final ProgramCounter pc = mock(ProgramCounter.class);
-    private final DecompilationContext decompilationContext = new DecompilationContextImpl(mock(Decompiler.class), mock(Method.class), pc, mock(LineNumberCounter.class), mock(TypeResolver.class));
+    private final DecompilationContext decompilationContext = new DecompilationContextImpl(mock(Decompiler.class), mock(Method.class), pc, mock(LineNumberCounter.class), mock(TypeResolver.class), 0);
     private final CodeStream codeStream = mock(CodeStream.class);
     private final Expression element1 = mock(Expression.class, withSettings().extraInterfaces(Statement.class).name("element1"));
     private final Expression element2 = mock(Expression.class, withSettings().extraInterfaces(Statement.class).name("element2"));
@@ -40,15 +40,15 @@ public class StackInstructionsTest {
     @Test
     public void configureShouldConfigureSupportForStackRelatedInstructions() {
         given(configuration()).then(it -> {
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.pop)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.pop2)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.dup)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.dup_x1)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.dup_x2)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.dup2)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.dup2_x1)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.dup2_x2)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.swap)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.pop)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.pop2)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.dup)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.dup_x1)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.dup_x2)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.dup2)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.dup2_x1)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.dup2_x2)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.swap)).not().toBe(equalTo(null));
         });
     }
 
@@ -453,7 +453,7 @@ public class StackInstructionsTest {
     }
 
     private void execute(int byteCode) throws IOException {
-        configuration().getDecompilerExtension(decompilationContext, byteCode).apply(decompilationContext, codeStream, byteCode);
+        configuration().getDecompilerDelegate(decompilationContext, byteCode).apply(decompilationContext, codeStream, byteCode);
     }
 
     private org.testifj.lang.decompile.DecompilerConfiguration configuration() {

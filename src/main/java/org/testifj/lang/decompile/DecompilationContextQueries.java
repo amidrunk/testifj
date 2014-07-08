@@ -2,6 +2,7 @@ package org.testifj.lang.decompile;
 
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.ModelQuery;
+import org.testifj.lang.model.Sequence;
 import org.testifj.lang.model.Statement;
 
 import java.util.List;
@@ -46,8 +47,35 @@ public final class DecompilationContextQueries {
         }
     };
 
-    public static ModelQuery<DecompilationContext, Statement> lastDecompiledStatement() {
+    public static final ModelQuery<DecompilationContext, Statement> SECOND_TO_LAST = new ModelQuery<DecompilationContext, Statement>() {
+        @Override
+        public Optional<Statement> from(DecompilationContext from) {
+            if (from == null) {
+                return Optional.empty();
+            }
+
+            final Sequence.SingleElement<Statement> last = from.getStatements().last();
+
+            if (!last.exists()) {
+                return Optional.empty();
+            }
+
+            final Sequence.SingleElement<Statement> previous = last.previous();
+
+            if (!previous.exists()) {
+                return Optional.empty();
+            }
+
+            return Optional.of(previous.get());
+        }
+    };
+
+    public static ModelQuery<DecompilationContext, Statement> lastStatement() {
         return LAST_DECOMPILED_STATEMENT;
+    }
+
+    public static ModelQuery<DecompilationContext, Statement> secondToLastStatement() {
+        return SECOND_TO_LAST;
     }
 
     public static ModelQuery<DecompilationContext, Expression> previousValue() {

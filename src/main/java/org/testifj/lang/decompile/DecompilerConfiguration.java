@@ -1,12 +1,13 @@
 package org.testifj.lang.decompile;
 
+import org.testifj.lang.model.ModelQuery;
 import org.testifj.util.Priority;
 
 import java.util.Iterator;
 
 public interface DecompilerConfiguration {
 
-    DecompilerDelegate getDecompilerExtension(DecompilationContext context, int byteCode);
+    DecompilerDelegate getDecompilerDelegate(DecompilationContext context, int byteCode);
 
     Iterator<DecompilerDelegate> getAdvisoryDecompilerEnhancements(DecompilationContext context, int byteCode);
 

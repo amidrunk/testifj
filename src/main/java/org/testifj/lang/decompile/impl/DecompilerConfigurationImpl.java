@@ -2,11 +2,12 @@ package org.testifj.lang.decompile.impl;
 
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.decompile.*;
+import org.testifj.lang.model.ModelQuery;
 import org.testifj.util.Iterators;
 import org.testifj.util.Priority;
 
-import java.util.Arrays;
-import java.util.Iterator;
+import java.io.IOException;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -32,7 +33,7 @@ public final class DecompilerConfigurationImpl implements DecompilerConfiguratio
     }
 
     @Override
-    public DecompilerDelegate getDecompilerExtension(DecompilationContext context, int byteCode) {
+    public DecompilerDelegate getDecompilerDelegate(DecompilationContext context, int byteCode) {
         assert context != null : "Decompilation context can't be null";
         assert validByteCode(byteCode) : "Byte code must be in range [0, 255]";
 

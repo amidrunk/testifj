@@ -4,6 +4,14 @@ public enum OperatorType {
 
     PLUS,
     NE,
-    MINUS, MULTIPLY, DIVIDE, EQ
+    MINUS,
+    MULTIPLY,
+    DIVIDE,
+    EQ,
+    NOT,
+    GE,
+    LT,
+    GT,
+    LE
 
 }

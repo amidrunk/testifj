@@ -1,11 +1,12 @@
 package org.testifj.lang.model;
 
-import com.sun.org.apache.xpath.internal.operations.Variable;
+import org.testifj.annotations.DSL;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+@DSL
 public final class ModelQueries {
 
     public static Predicate<Expression> ofType(ElementType elementType) {
@@ -61,8 +62,30 @@ public final class ModelQueries {
         return o -> o == null ? Optional.<Expression>empty() : Optional.of(o.getRightOperand());
     }
 
+    public static ModelQuery<Branch, Expression> leftComparativeOperand() {
+        return b -> b == null ? Optional.<Expression>empty() : Optional.of(b.getLeftOperand());
+    }
+
+    public static ModelQuery<Branch, Expression> rightComparativeOperand() {
+        return b -> b == null ? Optional.<Expression>empty() : Optional.of(b.getRightOperand());
+    }
+
+    public static Predicate<Branch> operatorTypeIs(OperatorType operatorType) {
+        return new Predicate<Branch>() {
+            @Override
+            public boolean test(Branch branch) {
+                return branch.getOperatorType() == operatorType;
+            }
+        };
+    }
+
     public static <S> Predicate<S> equalTo(S expectedValue) {
         return s -> Objects.equals(s, expectedValue);
+    }
+
+    public static <E extends Expression> Predicate<E> ofRuntimeType(Class<?> type) {
+        assert type != null : "Type can't be null";
+        return e -> e != null && e.getType().equals(type);
     }
 
     public static Predicate<Increment> affixIsUndefined() {

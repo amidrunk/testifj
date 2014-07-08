@@ -12,6 +12,8 @@ import java.util.List;
 
 public interface DecompilationContext {
 
+    int getStartPC();
+
     ProgramCounter getProgramCounter();
 
     LineNumberCounter getLineNumberCounter();

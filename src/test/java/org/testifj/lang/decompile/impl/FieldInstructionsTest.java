@@ -61,8 +61,8 @@ public class FieldInstructionsTest {
     @Test
     public void configureShouldConfigureSupportForByteCodes() {
         given(configuration()).then(it -> {
-            expect(it.getDecompilerExtension(mock(DecompilationContext.class), ByteCode.putfield)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(mock(DecompilationContext.class), ByteCode.putstatic)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(mock(DecompilationContext.class), ByteCode.putfield)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(mock(DecompilationContext.class), ByteCode.putstatic)).not().toBe(equalTo(null));
         });
     }
 
@@ -120,7 +120,7 @@ public class FieldInstructionsTest {
     }
 
     private void execute(int byteCode, int ... code) throws IOException {
-        configuration().getDecompilerExtension(context, byteCode)
+        configuration().getDecompilerDelegate(context, byteCode)
                 .apply(context, CodeStreamTestUtils.codeStream(code), byteCode);
     }
 

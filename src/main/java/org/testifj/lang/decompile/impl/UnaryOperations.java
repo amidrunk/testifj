@@ -186,7 +186,7 @@ public final class UnaryOperations implements DecompilerDelegation {
         return (context, codeStream, byteCode) -> {
             final LocalVariableReference loadedVariable = context.peek().as(LocalVariableReference.class);
 
-            final Optional<BinaryOperator> increment = lastDecompiledStatement().as(VariableAssignment.class)
+            final Optional<BinaryOperator> increment = lastStatement().as(VariableAssignment.class)
                     .where(isAssignmentTo(loadedVariable))
                     .get(assignedValue()).as(Cast.class)
                     .get(castValue()).as(BinaryOperator.class)
@@ -225,7 +225,7 @@ public final class UnaryOperations implements DecompilerDelegation {
      */
     private DecompilerDelegate correctPostfixByteCodeIncrement() {
         return (context, codeStream, byteCode) -> {
-            final Optional<BinaryOperator> result = lastDecompiledStatement().as(VariableAssignment.class)
+            final Optional<BinaryOperator> result = lastStatement().as(VariableAssignment.class)
                     .get(assignedValue()).as(Cast.class)
                     .get(castValue()).as(BinaryOperator.class)
                     .where(leftOperand().is(equalTo(context.getStack().peek())))
@@ -276,7 +276,7 @@ public final class UnaryOperations implements DecompilerDelegation {
     }
 
     private static DecompilerDelegate correctPrefixFloatingPointIncrement(Constant decrementConstant, Constant incrementConstant) {
-        final ModelQuery<DecompilationContext, VariableAssignment> query = lastDecompiledStatement().as(VariableAssignment.class)
+        final ModelQuery<DecompilationContext, VariableAssignment> query = lastStatement().as(VariableAssignment.class)
                 .join(assignedValue().as(BinaryOperator.class)
                         .where(leftOperand().is(ofType(LocalVariableReference.class)))
                         .and(rightOperand().is(equalTo(incrementConstant))));
@@ -333,7 +333,7 @@ public final class UnaryOperations implements DecompilerDelegation {
     }
 
     private static DecompilerDelegate correctPostfixFloatingPointIncrement(Constant decrementConstant, Constant incrementConstant) {
-        final ModelQuery<DecompilationContext, VariableAssignment> query = lastDecompiledStatement().as(VariableAssignment.class)
+        final ModelQuery<DecompilationContext, VariableAssignment> query = lastStatement().as(VariableAssignment.class)
                 .join(assignedValue().as(BinaryOperator.class)
                         .where(leftOperand().is(ofType(LocalVariableReference.class)))
                         .and(rightOperand().is(equalTo(incrementConstant))));

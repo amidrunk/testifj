@@ -7,7 +7,7 @@ public final class Sequences {
 
     private static final Sequence EMPTY = unmodifiableSeries(new LinkedSequence());
 
-    public static <E> Sequence<E> emptySeries() {
+    public static <E> Sequence<E> emptySequence() {
         return EMPTY;
     }
 

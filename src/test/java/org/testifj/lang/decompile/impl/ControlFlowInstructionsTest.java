@@ -9,9 +9,10 @@ import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.classfile.ClassFileFormatException;
 import org.testifj.lang.decompile.DecompilationContext;
 import org.testifj.lang.decompile.DecompilerConfiguration;
-import org.testifj.lang.model.AST;
 import org.testifj.lang.model.Expression;
+import org.testifj.lang.model.Goto;
 import org.testifj.lang.model.LocalVariableReference;
+import org.testifj.lang.model.impl.GotoImpl;
 import org.testifj.lang.model.impl.ReturnImpl;
 import org.testifj.util.SingleThreadedStack;
 import org.testifj.util.Stack;
@@ -50,12 +51,12 @@ public class ControlFlowInstructionsTest {
     @Test
     public void configurationShouldSupportReturnInstructions() {
         given(configuration()).then(it -> {
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.return_)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.ireturn)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.lreturn)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.freturn)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.dreturn)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.areturn)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.return_)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.ireturn)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.lreturn)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.freturn)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.dreturn)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.areturn)).not().toBe(equalTo(null));
         });
     }
 
@@ -130,8 +131,20 @@ public class ControlFlowInstructionsTest {
         expect(() -> execute(ByteCode.areturn)).toThrow(ClassFileFormatException.class);
     }
 
+    @Test
+    public void gotoShouldEnlistGotoElement() throws IOException {
+        final ProgramCounter pc = mock(ProgramCounter.class);
+
+        when(pc.get()).thenReturn(100);
+        when(decompilationContext.getProgramCounter()).thenReturn(pc);
+
+        execute(ByteCode.goto_, 0, 10);
+
+        verify(decompilationContext).enlist(eq(new GotoImpl(99, 10)));
+    }
+
     private void execute(int byteCode, int ... code) throws IOException {
-        configuration().getDecompilerExtension(decompilationContext, byteCode)
+        configuration().getDecompilerDelegate(decompilationContext, byteCode)
                 .apply(decompilationContext, CodeStreamTestUtils.codeStream(code), byteCode);
     }
 

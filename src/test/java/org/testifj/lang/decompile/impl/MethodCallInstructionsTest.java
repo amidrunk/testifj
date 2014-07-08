@@ -10,7 +10,6 @@ import org.testifj.lang.classfile.Method;
 import org.testifj.lang.classfile.impl.DefaultConstantPool;
 import org.testifj.lang.classfile.impl.SimpleTypeResolver;
 import org.testifj.lang.decompile.*;
-import org.testifj.lang.model.Constant;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.impl.ConstantImpl;
 import org.testifj.lang.model.impl.LocalVariableReferenceImpl;
@@ -39,7 +38,7 @@ public class MethodCallInstructionsTest {
     private final ProgramCounterImpl pc = new ProgramCounterImpl(-1);
     private final TypeResolver typeResolver = new SimpleTypeResolver();
     private final LineNumberCounter lineNumberCounter = mock(LineNumberCounter.class);
-    private final DecompilationContext context = new DecompilationContextImpl(decompiler, method, pc, lineNumberCounter,typeResolver);
+    private final DecompilationContext context = new DecompilationContextImpl(decompiler, method, pc, lineNumberCounter,typeResolver, 0);
 
     @Before
     public void setup() {
@@ -54,8 +53,8 @@ public class MethodCallInstructionsTest {
     @Test
     public void configureShouldConfigureSupportForMethodCalls() {
         given(configuration()).then(it -> {
-            expect(it.getDecompilerExtension(context, ByteCode.invokeinterface)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(context, ByteCode.invokespecial)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(context, ByteCode.invokeinterface)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(context, ByteCode.invokespecial)).not().toBe(equalTo(null));
         });
     }
 
@@ -118,7 +117,7 @@ public class MethodCallInstructionsTest {
 
         context.getStack().push(target);
 
-        decompile(constantPool, in(ByteCode.invokevirtual, 0, 1), configuration().getDecompilerExtension(context, ByteCode.invokevirtual));
+        decompile(constantPool, in(ByteCode.invokevirtual, 0, 1), configuration().getDecompilerDelegate(context, ByteCode.invokevirtual));
 
         expect(context.getStack()).toBe(iterableOf(call(target, "toString", String.class)));
     }
@@ -132,10 +131,29 @@ public class MethodCallInstructionsTest {
         context.getStack().push(constant(1234));
         context.getStack().push(constant(2345));
 
-        decompile(constantPool, in(ByteCode.invokevirtual, 0, 1), configuration().getDecompilerExtension(context, ByteCode.invokevirtual));
+        decompile(constantPool, in(ByteCode.invokevirtual, 0, 1), configuration().getDecompilerDelegate(context, ByteCode.invokevirtual));
 
         expect(context.getStack()).toBe(iterableOf(call(target, "substring", String.class, constant(1234), constant(2345))));
+    }
 
+    @Test
+    public void invokeStaticWithNoArgumentsShouldPushMethodCallToStack() {
+        final ConstantPool constantPool = methodRefPool("java/lang/String", "empty", "()Ljava/lang/String;");
+
+        decompile(constantPool, in(ByteCode.invokestatic, 0, 1), configuration().getDecompilerDelegate(context, ByteCode.invokestatic));
+
+        expect(context.getStack()).toBe(iterableOf(call(String.class, "empty", String.class)));
+    }
+
+    @Test
+    public void invokeStaticWithArgumentsShouldPushMethodCallToStack() {
+        final ConstantPool constantPool = methodRefPool("java/lang/String", "valueOf", "(I)Ljava/lang/String;");
+
+        context.getStack().push(constant(1234));
+
+        decompile(constantPool, in(ByteCode.invokestatic, 0, 1), configuration().getDecompilerDelegate(context, ByteCode.invokestatic));
+
+        expect(context.getStack()).toBe(iterableOf(call(String.class, "valueOf", String.class, constant(1234))));
     }
 
     private DefaultConstantPool methodRefPool(String declaringClass, String name, String signature) {

@@ -25,7 +25,7 @@ public class InvokeDynamicInstructionsTest {
 
         new InvokeDynamicInstructions().configure(builder);
 
-        expect(builder.build().getDecompilerExtension(mock(DecompilationContext.class), ByteCode.invokedynamic)).not().toBe(equalTo(null));
+        expect(builder.build().getDecompilerDelegate(mock(DecompilationContext.class), ByteCode.invokedynamic)).not().toBe(equalTo(null));
     }
 
 }

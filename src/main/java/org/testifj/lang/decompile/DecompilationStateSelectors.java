@@ -1,7 +1,16 @@
 package org.testifj.lang.decompile;
 
+import org.testifj.annotations.DSL;
 import org.testifj.lang.model.ElementType;
+import org.testifj.lang.model.Expression;
+import org.testifj.lang.model.Sequence;
+import org.testifj.lang.model.Statement;
+import org.testifj.util.Stack;
 
+import java.util.Arrays;
+import java.util.function.Predicate;
+
+@DSL
 public final class DecompilationStateSelectors {
 
     private static final DecompilationStateSelector AT_LAST_ONE_STATEMENT = new DecompilationStateSelector() {
@@ -34,6 +43,60 @@ public final class DecompilationStateSelectors {
     public static DecompilationStateSelector elementIsStacked(ElementType elementType) {
         assert elementType != null : "Element type can't be null";
         return (context,byteCode) -> !context.getStack().isEmpty() && context.getStack().peek().getElementType() == elementType;
+    }
+
+    @SafeVarargs
+    public static DecompilationStateSelector elementsAreStacked(Predicate<Expression>... predicates) {
+        assert predicates != null : "Predicates can't be null";
+
+        return new DecompilationStateSelector() {
+            @Override
+            public boolean select(DecompilationContext context, int byteCode) {
+                final Stack<Expression> stack = context.getStack();
+
+                if (stack.size() < predicates.length) {
+                    return false;
+                }
+
+                int index = 0;
+
+                for (Expression expression : stack.tail(-predicates.length)) {
+                    if (!predicates[index++].test(expression)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        };
+    }
+
+    public static DecompilationStateSelector elementsAreStacked(Expression... expressions) {
+        return new DecompilationStateSelector() {
+            @Override
+            public boolean select(DecompilationContext context, int byteCode) {
+                if (context.getStack().size() < expressions.length) {
+                    return false;
+                }
+
+                return context.getStack().tail(-expressions.length).equals(Arrays.asList(expressions));
+            }
+        };
+    }
+
+    public static DecompilationStateSelector lastStatementIs(ElementType elementType) {
+        return new DecompilationStateSelector() {
+            @Override
+            public boolean select(DecompilationContext context, int byteCode) {
+                final Sequence.SingleElement<Statement> last = context.getStatements().last();
+
+                if (!last.exists()) {
+                    return false;
+                }
+
+                return last.get().getElementType() == elementType;
+            }
+        };
     }
 
     private static DecompilationStateSelector stackSizeIsAtLeastUnCached(int count) {

@@ -9,9 +9,7 @@ import org.testifj.lang.model.*;
 import java.util.Optional;
 
 import static org.testifj.lang.classfile.ByteCode.*;
-import static org.testifj.lang.decompile.DecompilationContextQueries.lastDecompiledStatement;
 import static org.testifj.lang.model.AST.constant;
-import static org.testifj.lang.model.ModelQueries.*;
 
 public final class VariableInstructions implements DecompilerDelegation {
 

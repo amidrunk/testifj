@@ -48,62 +48,62 @@ public class ConstantInstructionsTest {
     @Test
     public void configureShouldConfigureSupportForLoadConstantInstructionsFromConstantPool() {
         given(configuration()).then(it -> {
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.ldc)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.ldcw)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.ldc2w)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.ldc)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.ldcw)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.ldc2w)).not().toBe(equalTo(null));
         });
     }
 
     @Test
     public void configureShouldConfigureSupportForPushingNullConstant() {
         given(configuration()).then(it -> {
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.aconst_null)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.aconst_null)).not().toBe(equalTo(null));
         });
     }
 
     @Test
     public void configureShouldConfigureSupportForStaticDoubleConstants() {
         given(configuration()).then(it -> {
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.dconst_0)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.dconst_1)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.dconst_0)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.dconst_1)).not().toBe(equalTo(null));
         });
     }
 
     @Test
     public void configureShouldConfigureSupportForStaticFloatConstants() {
         given(configuration()).then(it -> {
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.fconst_0)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.fconst_1)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.fconst_2)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.fconst_0)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.fconst_1)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.fconst_2)).not().toBe(equalTo(null));
         });
     }
 
     @Test
     public void configureShouldConfigureSupportForIntegerConstants() {
         given(configuration()).then(it -> {
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.iconst_m1)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.iconst_0)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.iconst_1)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.iconst_2)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.iconst_3)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.iconst_4)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.iconst_5)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.iconst_m1)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.iconst_0)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.iconst_1)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.iconst_2)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.iconst_3)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.iconst_4)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.iconst_5)).not().toBe(equalTo(null));
         });
     }
 
     @Test
     public void configureShouldConfigureSupportForLongConstants() {
         given(configuration()).then(it -> {
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.lconst_0)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.lconst_1)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.lconst_0)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.lconst_1)).not().toBe(equalTo(null));
         });
     }
 
     @Test
     public void configureShouldConfigureSupportForConstantPushInstructions() {
         given(configuration()).then(it -> {
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.bipush)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.sipush)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.bipush)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.sipush)).not().toBe(equalTo(null));
         });
     }
 
@@ -262,7 +262,7 @@ public class ConstantInstructionsTest {
     private void verifyLDC(int index, ConstantPoolEntry entry, Constant constant) throws IOException {
         when(constantPool.getEntry(eq(index))).thenReturn(entry);
 
-        configuration().getDecompilerExtension(decompilationContext, ByteCode.ldc).apply(decompilationContext, CodeStreamTestUtils.codeStream(index), ByteCode.ldc);
+        configuration().getDecompilerDelegate(decompilationContext, ByteCode.ldc).apply(decompilationContext, CodeStreamTestUtils.codeStream(index), ByteCode.ldc);
 
         verify(decompilationContext).push(constant);
     }
@@ -270,7 +270,7 @@ public class ConstantInstructionsTest {
     private void verifyLDCW(int indexh, int indexl, ConstantPoolEntry entry, Constant constant) throws IOException {
         when(constantPool.getEntry(eq(indexh << 8 | indexl))).thenReturn(entry);
 
-        configuration().getDecompilerExtension(decompilationContext, ByteCode.ldcw).apply(decompilationContext, CodeStreamTestUtils.codeStream(indexh, indexl), ByteCode.ldcw);
+        configuration().getDecompilerDelegate(decompilationContext, ByteCode.ldcw).apply(decompilationContext, CodeStreamTestUtils.codeStream(indexh, indexl), ByteCode.ldcw);
 
         verify(decompilationContext).push(constant);
     }
@@ -278,7 +278,7 @@ public class ConstantInstructionsTest {
     private void verifyLDC2W(int indexh, int indexl, ConstantPoolEntry entry, Constant constant) throws IOException {
         when(constantPool.getEntry(eq(indexh << 8 | indexl))).thenReturn(entry);
 
-        configuration().getDecompilerExtension(decompilationContext, ByteCode.ldc2w).apply(decompilationContext, CodeStreamTestUtils.codeStream(indexh, indexl), ByteCode.ldc2w);
+        configuration().getDecompilerDelegate(decompilationContext, ByteCode.ldc2w).apply(decompilationContext, CodeStreamTestUtils.codeStream(indexh, indexl), ByteCode.ldc2w);
 
         verify(decompilationContext).push(constant);
     }
@@ -292,7 +292,7 @@ public class ConstantInstructionsTest {
     }
 
     private void execute(int instruction) throws IOException {
-        configuration().getDecompilerExtension(decompilationContext, instruction).apply(decompilationContext, codeStream, instruction);
+        configuration().getDecompilerDelegate(decompilationContext, instruction).apply(decompilationContext, codeStream, instruction);
     }
 
 }

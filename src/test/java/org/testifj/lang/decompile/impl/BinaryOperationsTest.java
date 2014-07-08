@@ -4,11 +4,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.testifj.lang.CodeStreamTestUtils;
 import org.testifj.lang.classfile.ByteCode;
-import org.testifj.lang.decompile.CodeStream;
 import org.testifj.lang.decompile.DecompilationContext;
 import org.testifj.lang.decompile.DecompilerConfiguration;
-import org.testifj.lang.decompile.DecompilerDelegate;
-import org.testifj.lang.model.AST;
 import org.testifj.lang.model.Expression;
 import org.testifj.util.SingleThreadedStack;
 
@@ -43,40 +40,40 @@ public class BinaryOperationsTest {
     @Test
     public void supportForArithmeticIntegerOperatorsShouldBeConfigured() {
         given(configuration()).then(it -> {
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.iadd)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.isub)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.imul)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.idiv)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.iadd)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.isub)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.imul)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.idiv)).not().toBe(equalTo(null));
         });
     }
 
     @Test
     public void supportForAllArithmeticFloatOperatorsShouldBeConfigured() {
         given(configuration()).then(it -> {
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.fadd)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.fsub)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.fmul)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.fdiv)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.fadd)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.fsub)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.fmul)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.fdiv)).not().toBe(equalTo(null));
         });
     }
 
     @Test
     public void supportForAllArithmeticDoubleOperatorsShouldBeConfigured() {
         given(configuration()).then(it -> {
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.dadd)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.dsub)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.dmul)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.ddiv)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.dadd)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.dsub)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.dmul)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.ddiv)).not().toBe(equalTo(null));
         });
     }
 
     @Test
     public void supportForAllArithmeticLongOperatorsShouldBeConfigured() {
         given(configuration()).then(it -> {
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.ladd)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.lsub)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.lmul)).not().toBe(equalTo(null));
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.ldiv)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.ladd)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.lsub)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.lmul)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.ldiv)).not().toBe(equalTo(null));
         });
     }
 
@@ -241,7 +238,7 @@ public class BinaryOperationsTest {
     }
 
     private void execute(int byteCode, int ... code) throws IOException {
-        configuration().getDecompilerExtension(decompilationContext, byteCode)
+        configuration().getDecompilerDelegate(decompilationContext, byteCode)
                 .apply(decompilationContext, CodeStreamTestUtils.codeStream(code), byteCode);
     }
 

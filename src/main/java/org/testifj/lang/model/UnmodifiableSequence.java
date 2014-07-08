@@ -75,11 +75,21 @@ public final class UnmodifiableSequence<E> extends AbstractCollection<E> impleme
         return unmodifiableSelector(sourceSequence.last(predicate));
     }
 
+    @Override
+    public MultipleElements<E> tail(int offset) {
+        return unmodifiableSelector(sourceSequence.tail(offset));
+    }
+
     private MultipleElements<E> unmodifiableSelector(final MultipleElements<E> selector) {
         return new MultipleElements<E>() {
             @Override
             public List<E> get() {
                 return selector.get();
+            }
+
+            @Override
+            public boolean exists() {
+                return selector.exists();
             }
 
             @Override
@@ -109,6 +119,11 @@ public final class UnmodifiableSequence<E> extends AbstractCollection<E> impleme
             @Override
             public E get() {
                 return selector.get();
+            }
+
+            @Override
+            public SingleElement<E> previous() {
+                return selector.previous();
             }
 
             @Override

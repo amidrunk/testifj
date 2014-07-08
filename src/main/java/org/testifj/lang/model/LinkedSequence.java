@@ -109,6 +109,12 @@ public final class LinkedSequence<T> extends AbstractCollection<T> implements Se
         final int snapshotVersion = version;
 
         return new MultipleElements<T>() {
+
+            @Override
+            public boolean exists() {
+                return true;
+            }
+
             @Override
             public List<T> get() {
                 final ArrayList<T> copy = new ArrayList<>();
@@ -131,6 +137,80 @@ public final class LinkedSequence<T> extends AbstractCollection<T> implements Se
                 }
             }
         };
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public MultipleElements<T> tail(int offset) {
+        if (offset < 0) {
+            offset = size + offset;
+        }
+
+        if (offset < 0 || offset > size) {
+            return NON_EXISTING_ELEMENTS;
+        }
+
+        final Link[] tail = new Link[size - offset];
+
+        Link link = first;
+
+        while (offset-- > 0 && link != null) {
+            link = link.next;
+        }
+
+        int index = 0;
+
+        while (link != null) {
+            tail[index++] = link;
+            link = link.next;
+        }
+
+        return new LinkArraySelector(tail);
+    }
+
+    private final class LinkArraySelector implements MultipleElements<T> {
+
+        private final int snapshotVersion = version;
+
+        private final Link<T>[] links;
+
+        private LinkArraySelector(Link<T>[] links) {
+            this.links = links;
+        }
+
+        @Override
+        public List<T> get() {
+            checkVersion();
+
+            final ArrayList<T> copy = new ArrayList<>(links.length);
+
+            for (Link<T> link : links) {
+                copy.add(link.element);
+            }
+
+            return copy;
+        }
+
+        @Override
+        public void remove() {
+            checkVersion();
+
+            for (Link<T> link : links) {
+                removeLink(link);
+            }
+        }
+
+        @Override
+        public boolean exists() {
+            checkVersion();
+            return true;
+        }
+
+        private void checkVersion() {
+            if (version != snapshotVersion) {
+                throw new ConcurrentModificationException();
+            }
+        }
     }
 
     @Override
@@ -173,6 +253,23 @@ public final class LinkedSequence<T> extends AbstractCollection<T> implements Se
                 return Optional.of(element);
             }
         });
+    }
+
+    private void removeLink(Link<T> link) {
+        if (link.previous == null) {
+            first = link.next;
+        } else {
+            link.previous.next = link.next;
+        }
+
+        if (link.next == null) {
+            last = link.previous;
+        } else {
+            link.next.previous = link.previous;
+        }
+
+        size--;
+        version++;
     }
 
     private static final class Link<T> {
@@ -276,6 +373,13 @@ public final class LinkedSequence<T> extends AbstractCollection<T> implements Se
         }
 
         @Override
+        public SingleElement<T> previous() {
+            checkExists();
+            checkVersion();
+            return new LinkSelector(link.previous);
+        }
+
+        @Override
         public void remove() {
             checkExists();
             checkVersion();
@@ -302,21 +406,20 @@ public final class LinkedSequence<T> extends AbstractCollection<T> implements Se
         }
     }
 
-    private void removeLink(Link<T> link) {
-        if (link.previous == null) {
-            first = link.next;
-        } else {
-            link.previous.next = link.next;
+    private static final MultipleElements NON_EXISTING_ELEMENTS = new MultipleElements() {
+        @Override
+        public List<Object> get() {
+            throw new NoSuchElementException();
         }
 
-        if (link.next == null) {
-            last = link.previous;
-        } else {
-            link.next.previous = link.previous;
+        @Override
+        public void remove() {
+            throw new NoSuchElementException();
         }
 
-        size--;
-        version++;
-    }
-
+        @Override
+        public boolean exists() {
+            return false;
+        }
+    };
 }

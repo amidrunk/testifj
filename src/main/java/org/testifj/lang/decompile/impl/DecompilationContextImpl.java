@@ -45,11 +45,14 @@ public final class DecompilationContextImpl implements DecompilationContext {
 
     private final Sequence<Statement> visibleStatements;
 
+    private final int startPC;
+
     public DecompilationContextImpl(Decompiler decompiler,
                                     Method method,
                                     ProgramCounter programCounter,
                                     LineNumberCounter lineNumberCounter,
-                                    TypeResolver typeResolver) {
+                                    TypeResolver typeResolver,
+                                    int startPC) {
         assert decompiler != null : "Decompiler can't be null";
         assert method != null : "Method can't be null";
         assert programCounter != null : "Program counter can't be null";
@@ -66,6 +69,7 @@ public final class DecompilationContextImpl implements DecompilationContext {
             configureContextMetaData(statement);
             return statementWithPC;
         });
+        this.startPC = startPC;
     }
 
     @Override
@@ -245,6 +249,11 @@ public final class DecompilationContextImpl implements DecompilationContext {
     }
 
     @Override
+    public int getStartPC() {
+        return startPC;
+    }
+
+    @Override
     public ProgramCounter getProgramCounter() {
         return programCounter;
     }
@@ -270,8 +279,10 @@ public final class DecompilationContextImpl implements DecompilationContext {
 
         if (metaData != null) {
             final int lineNumber = lineNumberCounter.get();
+            final int programCounter = getProgramCounter().get();
 
             metaData.setAttribute(ElementMetaData.LINE_NUMBER, lineNumber);
+            metaData.setAttribute(ElementMetaData.PROGRAM_COUNTER, programCounter);
         }
     }
 

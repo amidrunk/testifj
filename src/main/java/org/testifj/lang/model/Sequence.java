@@ -20,6 +20,8 @@ public interface Sequence<T> extends Collection<T> {
 
     MultipleElements<T> all();
 
+    MultipleElements<T> tail(int offset);
+
     void clear();
 
     boolean isEmpty();
@@ -30,13 +32,13 @@ public interface Sequence<T> extends Collection<T> {
 
         void remove();
 
+        boolean exists();
+
     }
 
     interface SingleElement<T> extends ElementSelector<T> {
 
         void swap(T newElement);
-
-        boolean exists();
 
         T get();
 
@@ -56,6 +58,8 @@ public interface Sequence<T> extends Collection<T> {
         void insertBefore(T element);
 
         // TODO insertAfter
+
+        SingleElement<T> previous();
 
         default Optional<T> optional() {
             return (exists() ? Optional.of(get()) : Optional.empty());

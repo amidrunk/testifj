@@ -57,13 +57,13 @@ public class VariableInstructionsTest {
     public void configureShouldConfigureSupportForAllVariableOperations() {
         Range.from(ByteCode.iload).to(ByteCode.aload_3).each(instruction -> {
             describe(ByteCode.toString(instruction), () -> {
-                expect(configuration.getDecompilerExtension(context, instruction)).not().toBe(equalTo(null));
+                expect(configuration.getDecompilerDelegate(context, instruction)).not().toBe(equalTo(null));
             });
         });
 
         Range.from(ByteCode.istore).to(ByteCode.astore_3).each(instruction -> {
             describe(ByteCode.toString(instruction), () -> {
-                expect(configuration.getDecompilerExtension(context, instruction)).not().toBe(equalTo(null));
+                expect(configuration.getDecompilerDelegate(context, instruction)).not().toBe(equalTo(null));
             });
         });
     }
@@ -195,7 +195,7 @@ public class VariableInstructionsTest {
         }
 
         try {
-            final DecompilerDelegate extension = configuration.getDecompilerExtension(context, instruction);
+            final DecompilerDelegate extension = configuration.getDecompilerDelegate(context, instruction);
 
             expect(extension).not().toBe(equalTo(null));
 

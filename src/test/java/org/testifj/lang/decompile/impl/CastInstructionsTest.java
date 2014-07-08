@@ -47,7 +47,7 @@ public class CastInstructionsTest {
     @Test
     public void configureShouldConfigureSupportForCheckCast() {
         given(configuration()).then(it -> {
-            expect(it.getDecompilerExtension(mock(DecompilationContext.class), ByteCode.checkcast)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(mock(DecompilationContext.class), ByteCode.checkcast)).not().toBe(equalTo(null));
         });
     }
 
@@ -80,7 +80,7 @@ public class CastInstructionsTest {
     @Test
     public void supportForIntToByteInstructionShouldBeConfigured() {
         given(configuration()).then(it -> {
-            expect(it.getDecompilerExtension(exampleContext, ByteCode.i2b)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(exampleContext, ByteCode.i2b)).not().toBe(equalTo(null));
         });
     }
 
@@ -184,7 +184,7 @@ public class CastInstructionsTest {
     }
 
     private void execute(int byteCode) throws IOException {
-        configuration().getDecompilerExtension(exampleContext, byteCode).apply(exampleContext, mock(CodeStream.class), byteCode);
+        configuration().getDecompilerDelegate(exampleContext, byteCode).apply(exampleContext, mock(CodeStream.class), byteCode);
     }
 
     private DecompilerConfiguration configuration() {

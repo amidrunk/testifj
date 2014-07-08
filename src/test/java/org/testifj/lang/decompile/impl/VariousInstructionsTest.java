@@ -1,14 +1,12 @@
 package org.testifj.lang.decompile.impl;
 
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.decompile.CodeStream;
 import org.testifj.lang.decompile.DecompilationContext;
 
 import java.io.IOException;
 
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -30,7 +28,7 @@ public class VariousInstructionsTest {
     @Test
     public void configureShouldConfigureSupportForNopInstruction() {
         given(configuration()).then(it -> {
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.nop)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.nop)).not().toBe(equalTo(null));
         });
     }
 
@@ -43,7 +41,7 @@ public class VariousInstructionsTest {
     }
 
     private void execute(int instruction) throws IOException {
-        configuration().getDecompilerExtension(decompilationContext, instruction).apply(decompilationContext, codeStream, instruction);
+        configuration().getDecompilerDelegate(decompilationContext, instruction).apply(decompilationContext, codeStream, instruction);
     }
 
     private org.testifj.lang.decompile.DecompilerConfiguration configuration() {

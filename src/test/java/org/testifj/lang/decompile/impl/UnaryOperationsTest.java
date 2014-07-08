@@ -30,7 +30,7 @@ public class UnaryOperationsTest {
 
     private final UnaryOperations unaryOperations = new UnaryOperations();
     private final Method method = mock(Method.class);
-    private final DecompilationContext decompilationContext = new DecompilationContextImpl(mock(Decompiler.class), method, mock(ProgramCounter.class), mock(LineNumberCounter.class), mock(TypeResolver.class));
+    private final DecompilationContext decompilationContext = new DecompilationContextImpl(mock(Decompiler.class), method, mock(ProgramCounter.class), mock(LineNumberCounter.class), mock(TypeResolver.class), 0);
     private final CodeStream codeStream = mock(CodeStream.class);
     private final LocalVariable localVariable = mock(LocalVariable.class);
 
@@ -42,7 +42,7 @@ public class UnaryOperationsTest {
     @Test
     public void configureShouldConfigureSupportForUnaryOperators() {
         given(configuration()).then(it -> {
-            expect(it.getDecompilerExtension(decompilationContext, ByteCode.iinc)).not().toBe(equalTo(null));
+            expect(it.getDecompilerDelegate(decompilationContext, ByteCode.iinc)).not().toBe(equalTo(null));
         });
     }
 
@@ -221,7 +221,7 @@ public class UnaryOperationsTest {
     }
 
     private void execute(int byteCode, int ... code) throws IOException {
-        configuration().getDecompilerExtension(decompilationContext, byteCode).apply(decompilationContext, CodeStreamTestUtils.codeStream(code), byteCode);
+        configuration().getDecompilerDelegate(decompilationContext, byteCode).apply(decompilationContext, CodeStreamTestUtils.codeStream(code), byteCode);
     }
 
     private DecompilerConfiguration configuration() {

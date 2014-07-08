@@ -517,4 +517,56 @@ public class LinkedSequenceTest {
         expect(sequence).toBe(iterableOf(statement1, statement3, statement2, statement3));
     }
 
+    @Test
+    public void selectedElementCanBeNavigatedToPreviousElement() {
+        sequence.addAll(Arrays.asList(statement1, statement2, statement3));
+
+        expect(sequence.last().previous().get()).toBe(statement2);
+    }
+
+    @Test
+    public void previousOnSelectorShouldFailIfElementDoesNotExists() {
+        expect(() -> sequence.last().previous()).toThrow(NoSuchElementException.class);
+    }
+
+    @Test
+    public void previousOnSelectorShouldReturnNonExistingSelectorIfPreviousElementDoesNotExist() {
+        sequence.addAll(Arrays.asList(statement1));
+
+        expect(sequence.last().previous().exists()).toBe(false);
+    }
+
+    @Test
+    public void tailShouldReturnNonExistingSelectorForInvalidIndex() {
+        expect(sequence.tail(1).exists()).toBe(false);
+    }
+
+    @Test
+    public void tailShouldReturnRemainingElementsForPositiveIndex() {
+        sequence.addAll(Arrays.asList(statement1, statement2, statement3));
+
+        expect(sequence.tail(0).get()).toBe(collectionOf(statement1, statement2, statement3));
+        expect(sequence.tail(1).get()).toBe(collectionOf(statement2, statement3));
+        expect(sequence.tail(2).get()).toBe(collectionOf(statement3));
+        expect(sequence.tail(3).get()).toBe(empty());
+        expect(sequence.tail(4).exists()).toBe(false);
+    }
+
+    @Test
+    public void tailWithRelativeOffsetFromStartCanBeRemoved() {
+        sequence.addAll(Arrays.asList(statement1, statement2, statement3));
+        sequence.tail(1).remove();
+        expect(sequence.all().get()).toBe(iterableOf(statement1));
+    }
+
+    @Test
+    public void tailShouldReturnTailFromEndForNegativeIndex() {
+        sequence.addAll(Arrays.asList(statement1, statement2, statement3));
+
+        expect(sequence.tail(-1).get()).toBe(collectionOf(statement3));
+        expect(sequence.tail(-2).get()).toBe(collectionOf(statement2, statement3));
+        expect(sequence.tail(-3).get()).toBe(collectionOf(statement1, statement2, statement3));
+        expect(sequence.tail(-4).exists()).toBe(false);
+    }
+
 }

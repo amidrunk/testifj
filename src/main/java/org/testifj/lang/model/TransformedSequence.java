@@ -63,6 +63,11 @@ public final class TransformedSequence<T, S> extends AbstractCollection<T> imple
     }
 
     @Override
+    public MultipleElements<T> tail(int offset) {
+        return transformed(sourceSequence.tail(offset));
+    }
+
+    @Override
     public void clear() {
         sourceSequence.clear();
     }
@@ -84,6 +89,12 @@ public final class TransformedSequence<T, S> extends AbstractCollection<T> imple
 
     private MultipleElements<T> transformed(final MultipleElements<S> selector) {
         return new MultipleElements<T>() {
+
+            @Override
+            public boolean exists() {
+                return selector.exists();
+            }
+
             @Override
             public List<T> get() {
                 return Lists.collect(selector.get(), sourceToTarget);
@@ -97,31 +108,46 @@ public final class TransformedSequence<T, S> extends AbstractCollection<T> imple
     }
 
     private SingleElement<T> transformed(final SingleElement<S> selector) {
-        return new SingleElement<T>() {
-            @Override
-            public void swap(T newElement) {
-                selector.swap(targetToSource.apply(newElement));
-            }
+        return new TransformedSingleElement(selector);
+    }
 
-            @Override
-            public boolean exists() {
-                return selector.exists();
-            }
+    private final class TransformedSingleElement implements SingleElement<T> {
 
-            @Override
-            public T get() {
-                return sourceToTarget.apply(selector.get());
-            }
+        private final SingleElement<S> selector;
 
-            @Override
-            public void remove() {
-                selector.remove();
-            }
+        private TransformedSingleElement(SingleElement<S> selector) {
+            this.selector = selector;
+        }
 
-            @Override
-            public void insertBefore(T element) {
-                selector.insertBefore(targetToSource.apply(element));
-            }
-        };
+        @Override
+        public void swap(T newElement) {
+            selector.swap(targetToSource.apply(newElement));
+        }
+
+        @Override
+        public boolean exists() {
+            return selector.exists();
+        }
+
+        @Override
+        public T get() {
+            return sourceToTarget.apply(selector.get());
+        }
+
+        @Override
+        public SingleElement<T> previous() {
+            return new TransformedSingleElement(selector.previous());
+        }
+
+        @Override
+        public void remove() {
+            selector.remove();
+        }
+
+        @Override
+        public void insertBefore(T element) {
+            selector.insertBefore(targetToSource.apply(element));
+        }
+
     }
 }

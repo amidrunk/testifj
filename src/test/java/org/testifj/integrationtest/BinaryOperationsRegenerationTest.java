@@ -6,7 +6,7 @@ import org.testifj.Caller;
 import static org.junit.Assert.assertEquals;
 import static org.testifj.Expect.expect;
 
-public class BinaryOperationsTest extends TestOnDefaultConfiguration {
+public class BinaryOperationsRegenerationTest extends TestOnDefaultConfiguration {
 
     @Test
     public void additionOfIntegersCanBeRegenerated() {

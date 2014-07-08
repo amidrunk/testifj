@@ -43,7 +43,6 @@ public final class BooleanOperations implements DecompilerDelegation {
         configurationBuilder.on(ByteCode.fcmpg).then(fcmpg());
         configurationBuilder.on(ByteCode.dcmpl).then(dcmpl());
         configurationBuilder.on(ByteCode.dcmpg).then(dcmpg());
-
         configurationBuilder.on(ByteCode.ifne).then(ifne());
         configurationBuilder.on(ByteCode.ifeq).then(ifeq());
         configurationBuilder.on(ByteCode.iflt).then(iflt());

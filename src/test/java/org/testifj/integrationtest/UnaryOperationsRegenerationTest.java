@@ -5,7 +5,7 @@ import org.testifj.Caller;
 
 import static org.testifj.Expect.expect;
 
-public class UnaryOperationsTest extends TestOnDefaultConfiguration {
+public class UnaryOperationsRegenerationTest extends TestOnDefaultConfiguration {
 
     @Test
     public void prefixDecrementOfByteCanBeRegenerated() {

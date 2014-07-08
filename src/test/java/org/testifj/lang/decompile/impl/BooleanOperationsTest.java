@@ -232,6 +232,7 @@ public class BooleanOperationsTest {
         expect(decompilationContext.getStack()).toBe(iterableOf(new CompareImpl(constant(1d), constant(2d))));
     }
 
+
     private void after(int byteCode, int ... code) throws IOException {
         final Iterator<DecompilerDelegate> delegates = configuration().getCorrectionalDecompilerEnhancements(decompilationContext, byteCode);
 

@@ -5,7 +5,7 @@ import org.testifj.Caller;
 
 import static org.testifj.Expect.expect;
 
-public class ConstantOperationsTest extends TestOnDefaultConfiguration {
+public class ConstantOperationsRegenerationTest extends TestOnDefaultConfiguration {
 
     @Test
     public void nullConstantCanBeRegenerated() {

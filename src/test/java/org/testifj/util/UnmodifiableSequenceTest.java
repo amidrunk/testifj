@@ -1,6 +1,9 @@
-package org.testifj.lang.model;
+package org.testifj.util;
 
 import org.junit.Test;
+import org.testifj.util.LinkedSequence;
+import org.testifj.util.Sequence;
+import org.testifj.util.UnmodifiableSequence;
 
 import java.util.Arrays;
 

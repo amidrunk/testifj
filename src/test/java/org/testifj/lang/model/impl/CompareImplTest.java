@@ -3,6 +3,7 @@ package org.testifj.lang.model.impl;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.testifj.lang.model.Compare;
+import org.testifj.lang.model.ElementMetaData;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;
 
@@ -48,6 +49,14 @@ public class CompareImplTest {
 
         expect(exampleCompare).toBe(equalTo(other));
         expect(exampleCompare.hashCode()).toBe(equalTo(other.hashCode()));
+    }
+
+    @Test
+    public void compareWithMetaDataCanBeCreated() {
+        final ElementMetaData metaData = mock(ElementMetaData.class);
+
+        expect(exampleCompare.getMetaData()).not().toBe(equalTo(null));
+        expect(new CompareImpl(leftOperand, rightOperand, metaData).getMetaData()).toBe(metaData);
     }
 
 }

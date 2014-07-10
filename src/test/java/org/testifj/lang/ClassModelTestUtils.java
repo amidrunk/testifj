@@ -10,7 +10,7 @@ import org.testifj.lang.classfile.impl.ClassFileReaderImpl;
 import org.testifj.lang.decompile.CodePointer;
 import org.testifj.lang.decompile.CodeStream;
 import org.testifj.lang.decompile.impl.CallerDecompilerImpl;
-import org.testifj.lang.decompile.impl.CodePointerCodeGenerator;
+import org.testifj.lang.codegeneration.impl.CodePointerCodeGenerator;
 import org.testifj.lang.decompile.impl.DecompilerImpl;
 import org.testifj.lang.decompile.impl.InputStreamCodeStream;
 import org.testifj.lang.model.Element;

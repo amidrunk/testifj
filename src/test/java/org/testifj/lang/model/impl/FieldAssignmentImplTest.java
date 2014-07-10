@@ -1,6 +1,7 @@
 package org.testifj.lang.model.impl;
 
 import org.junit.Test;
+import org.testifj.lang.model.ElementMetaData;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.FieldReference;
@@ -57,6 +58,14 @@ public class FieldAssignmentImplTest {
             expect(it).to(containString(fieldReference.toString()));
             expect(it).to(containString(expression.toString()));
         });
+    }
+
+    @Test
+    public void fieldAssignmentWithMetaDataCanBeCreated() {
+        final ElementMetaData metaData = mock(ElementMetaData.class);
+
+        expect(exampleAssignment.getMetaData()).not().toBe(equalTo(null));
+        expect(new FieldAssignmentImpl(fieldReference, expression, metaData).getMetaData()).toBe(metaData);
     }
 
 }

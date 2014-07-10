@@ -1,5 +1,6 @@
 package org.testifj.lang.decompile.impl;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.testifj.lang.CodeStreamTestUtils;
 import org.testifj.lang.TypeResolver;
@@ -19,6 +20,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
 import static org.testifj.lang.model.AST.constant;
 import static org.testifj.lang.model.AST.local;
@@ -29,7 +31,14 @@ public class BooleanOperationsTest {
 
     private final BooleanOperations booleanOperations = new BooleanOperations();
 
-    private final DecompilationContext decompilationContext = new DecompilationContextImpl(mock(Decompiler.class), mock(Method.class), mock(ProgramCounter.class), mock(LineNumberCounter.class), mock(TypeResolver.class), 0);
+    private final ProgramCounter pc = mock(ProgramCounter.class);
+
+    private final DecompilationContext decompilationContext = new DecompilationContextImpl(mock(Decompiler.class), mock(Method.class), pc, mock(LineNumberCounter.class), mock(TypeResolver.class), 0);
+
+    @Before
+    public void setup() {
+        when(pc.get()).thenReturn(1234);
+    }
 
     @Test
     public void configureShouldNotAcceptNullConfigurationBuilder() {
@@ -64,7 +73,7 @@ public class BooleanOperationsTest {
 
         execute(ByteCode.ifne, 0, 100);
 
-        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant(1), OperatorType.NE, constant(0), 100)));
+        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant(1), OperatorType.NE, constant(0), 1334)));
     }
 
     @Test
@@ -73,7 +82,7 @@ public class BooleanOperationsTest {
 
         execute(ByteCode.ifeq, 0, 100);
 
-        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant(1), OperatorType.EQ, constant(0), 100)));
+        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant(1), OperatorType.EQ, constant(0), 1334)));
     }
 
     @Test
@@ -82,7 +91,7 @@ public class BooleanOperationsTest {
 
         execute(ByteCode.iflt, 0, 100);
 
-        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant(1), OperatorType.LT, constant(0), 100)));
+        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant(1), OperatorType.LT, constant(0), 1334)));
     }
 
     @Test
@@ -91,7 +100,7 @@ public class BooleanOperationsTest {
 
         execute(ByteCode.ifge, 0, 100);
 
-        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant(1), OperatorType.GE, constant(0), 100)));
+        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant(1), OperatorType.GE, constant(0), 1334)));
     }
 
     @Test
@@ -100,7 +109,7 @@ public class BooleanOperationsTest {
 
         execute(ByteCode.ifgt, 0, 100);
 
-        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant(1), OperatorType.GT, constant(0), 100)));
+        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant(1), OperatorType.GT, constant(0), 1334)));
     }
 
     @Test
@@ -109,7 +118,7 @@ public class BooleanOperationsTest {
 
         execute(ByteCode.ifle, 0, 100);
 
-        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant(1), OperatorType.LE, constant(0), 100)));
+        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant(1), OperatorType.LE, constant(0), 1334)));
     }
 
     @Test
@@ -119,7 +128,7 @@ public class BooleanOperationsTest {
 
         execute(ByteCode.if_icmpne, 0, 100);
 
-        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant(1234), OperatorType.NE, constant(2345), 100)));
+        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant(1234), OperatorType.NE, constant(2345), 1334)));
     }
 
     @Test
@@ -129,7 +138,7 @@ public class BooleanOperationsTest {
 
         execute(ByteCode.if_icmpeq, 0, 100);
 
-        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant(1234), OperatorType.EQ, constant(2345), 100)));
+        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant(1234), OperatorType.EQ, constant(2345), 1334)));
     }
 
     @Test
@@ -139,7 +148,7 @@ public class BooleanOperationsTest {
 
         execute(ByteCode.if_icmpge, 0, 100);
 
-        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant(1234), OperatorType.GE, constant(2345), 100)));
+        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant(1234), OperatorType.GE, constant(2345), 1334)));
     }
 
     @Test
@@ -149,7 +158,7 @@ public class BooleanOperationsTest {
 
         execute(ByteCode.if_icmple, 0, 100);
 
-        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant(1234), OperatorType.LE, constant(2345), 100)));
+        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant(1234), OperatorType.LE, constant(2345), 1334)));
     }
 
     @Test
@@ -159,7 +168,7 @@ public class BooleanOperationsTest {
 
         execute(ByteCode.if_icmplt, 0, 100);
 
-        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant(1234), OperatorType.LT, constant(2345), 100)));
+        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant(1234), OperatorType.LT, constant(2345), 1334)));
     }
 
     @Test
@@ -169,7 +178,7 @@ public class BooleanOperationsTest {
 
         execute(ByteCode.if_acmpeq, 0, 100);
 
-        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant("foo"), OperatorType.EQ, constant("bar"), 100)));
+        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant("foo"), OperatorType.EQ, constant("bar"), 1334)));
     }
 
     @Test
@@ -179,7 +188,7 @@ public class BooleanOperationsTest {
 
         execute(ByteCode.if_acmpne, 0, 100);
 
-        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant("foo"), OperatorType.NE, constant("bar"), 100)));
+        expect(decompilationContext.getStatements()).toBe(iterableOf(new BranchImpl(constant("foo"), OperatorType.NE, constant("bar"), 1334)));
     }
 
     @Test

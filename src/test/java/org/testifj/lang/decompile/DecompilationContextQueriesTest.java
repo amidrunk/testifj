@@ -11,8 +11,8 @@ import java.util.Optional;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
-import static org.testifj.lang.model.Sequences.emptySequence;
-import static org.testifj.lang.model.Sequences.sequenceOf;
+import static org.testifj.util.Sequences.emptySequence;
+import static org.testifj.util.Sequences.sequenceOf;
 import static org.testifj.matchers.core.OptionalThatIs.optionalOf;
 import static org.testifj.matchers.core.OptionalThatIs.present;
 
@@ -78,14 +78,14 @@ public class DecompilationContextQueriesTest {
 
     @Test
     public void currentValueShouldReturnNonPresentResultForNull() {
-        expect(DecompilationContextQueries.currentValue().from(null)).not().toBe(present());
+        expect(DecompilationContextQueries.peek().from(null)).not().toBe(present());
     }
 
     @Test
     public void currentValueShouldReturnNonPresentResultIfStackIsEmpty() {
         when(decompilationContext.hasStackedExpressions()).thenReturn(false);
 
-        expect(DecompilationContextQueries.currentValue().from(decompilationContext)).not().toBe(present());
+        expect(DecompilationContextQueries.peek().from(decompilationContext)).not().toBe(present());
     }
 
     @Test
@@ -95,7 +95,7 @@ public class DecompilationContextQueriesTest {
         when(decompilationContext.hasStackedExpressions()).thenReturn(true);
         when(decompilationContext.peek()).thenReturn(expectedExpression);
 
-        expect(DecompilationContextQueries.currentValue().from(decompilationContext)).toBe(optionalOf(expectedExpression));
+        expect(DecompilationContextQueries.peek().from(decompilationContext)).toBe(optionalOf(expectedExpression));
     }
 
     @Test

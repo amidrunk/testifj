@@ -4,30 +4,30 @@ import org.junit.Test;
 import org.testifj.lang.*;
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.decompile.*;
-import org.testifj.lang.model.ModelQuery;
-import org.testifj.lang.model.Sequences;
-import org.testifj.lang.model.Statement;
+import org.testifj.lang.model.*;
 import org.testifj.util.Priority;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
-import static org.testifj.lang.decompile.DecompilationContextQueries.lastStatement;
-import static org.testifj.lang.model.Sequences.emptySequence;
-import static org.testifj.lang.model.Sequences.sequenceOf;
+import static org.testifj.lang.model.AST.constant;
+import static org.testifj.lang.model.ModelQueries.runtimeType;
+import static org.testifj.lang.model.ModelQueries.value;
 import static org.testifj.matchers.core.IteratorThatIs.emptyIterator;
 import static org.testifj.matchers.core.IteratorThatIs.iteratorOf;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
+import static org.testifj.matchers.core.OptionalThatIs.optionalOf;
+import static org.testifj.matchers.core.OptionalThatIs.present;
 
+@SuppressWarnings("unchecked")
 public class DecompilerConfigurationImplTest {
 
     private final DecompilerConfigurationImpl.Builder builder = new DecompilerConfigurationImpl.Builder();
@@ -356,4 +356,105 @@ public class DecompilerConfigurationImplTest {
         expect(configuration.getCorrectionalDecompilerEnhancements(decompilationContext, ByteCode.nop)).toBe(iteratorOf(enhancement1));
         expect(configuration.getCorrectionalDecompilerEnhancements(decompilationContext, ByteCode.dup)).toBe(iteratorOf(enhancement1));
     }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void singleTransformationForElementTypeCanBeConfigured() {
+        final ModelTransformation expectedTransformation = mock(ModelTransformation.class);
+
+        final DecompilerConfiguration configuration = new DecompilerConfigurationImpl.Builder()
+                .map(ElementType.CONSTANT).forQuery(value().where(runtimeType().is(ModelQueries.equalTo(String.class)))).to(expectedTransformation)
+                .build();
+
+        given(configuration.getTransformations(ElementType.CONSTANT)).then(it -> {
+            expect(it.length).toBe(1);
+
+            final ModelTransformation<Element, Element> transformation = it[0];
+            final Constant input = constant("foo");
+            final Constant output = constant("bar");
+
+            when(expectedTransformation.apply(eq(input))).thenReturn(Optional.of(output));
+
+            final Optional<Element> element = transformation.apply(input);
+
+            expect(element).toBe(optionalOf(output));
+            verify(expectedTransformation).apply(eq(input));
+
+            expect(transformation.apply(constant(1))).not().toBe(present());
+            verifyNoMoreInteractions(expectedTransformation);
+        });
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void transformationsShouldBeAppliedInPriorityOrder() {
+        final ModelTransformation transformation1 = mock(ModelTransformation.class, withSettings().defaultAnswer(a -> Optional.of(a.getArguments()[0])));
+        final ModelTransformation transformation2 = mock(ModelTransformation.class, withSettings().defaultAnswer(a -> Optional.of(a.getArguments()[0])));
+
+        final DecompilerConfiguration configuration = new DecompilerConfigurationImpl.Builder()
+                .map(ElementType.CONSTANT).forQuery(value()).to(transformation1)
+                .map(ElementType.CONSTANT).forQuery(value()).withPriority(Priority.HIGH).to(transformation2)
+                .build();
+
+        final Constant element = constant(1);
+
+        applyTransformations(configuration, element);
+
+        verify(transformation2).apply(eq(element));
+        verifyZeroInteractions(transformation1);
+    }
+
+    @Test
+    public void modelTransformationsShouldBeRetainedInPriorityOrderOnMerge() {
+        final ModelTransformation transformation1 = mock(ModelTransformation.class, withSettings().name("t1").defaultAnswer(a -> Optional.of(a.getArguments()[0])));
+        final ModelTransformation transformation2 = mock(ModelTransformation.class, withSettings().name("t2").defaultAnswer(a -> Optional.of(a.getArguments()[0])));
+
+        final DecompilerConfiguration configuration1 = new DecompilerConfigurationImpl.Builder()
+                .map(ElementType.CONSTANT).forQuery(value()).to(transformation2)
+                .build();
+
+        final DecompilerConfiguration configuration2 = new DecompilerConfigurationImpl.Builder()
+                .map(ElementType.CONSTANT).forQuery(value()).withPriority(Priority.HIGH).to(transformation1)
+                .build();
+
+        final Element element = AST.constant(1);
+
+        applyTransformations(configuration1.merge(configuration2), element);
+
+        verify(transformation1).apply(eq(element));
+        verifyNoMoreInteractions(transformation1);
+        verifyZeroInteractions(transformation2);
+        reset(transformation1, transformation2);
+
+        applyTransformations(configuration2.merge(configuration1), element);
+
+        verify(transformation1).apply(eq(element));
+        verifyNoMoreInteractions(transformation1);
+        verifyZeroInteractions(transformation2);
+    }
+
+    @Test
+    public void modelQueryConfigurationShouldNotAcceptInvalidArguments() {
+        final DecompilerConfigurationImpl.Builder builder = new DecompilerConfigurationImpl.Builder();
+
+        expect(() -> builder.map((ElementType) null)).toThrow(AssertionError.class);
+        expect(() -> builder.map(ElementType.CONSTANT).forQuery(null)).toThrow(AssertionError.class);
+        expect(() -> builder.map(ElementType.CONSTANT).forQuery(mock(ModelQuery.class)).withPriority(null)).toThrow(AssertionError.class);
+        expect(() -> builder.map(ElementType.CONSTANT).forQuery(mock(ModelQuery.class)).withPriority(Priority.DEFAULT).to(null)).toThrow(AssertionError.class);
+        expect(() -> builder.map(ElementType.CONSTANT).forQuery(mock(ModelQuery.class)).to(null)).toThrow(AssertionError.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Optional<Element> applyTransformations(DecompilerConfiguration configuration, Element element) {
+        for (ModelTransformation transformation : configuration.getTransformations(element.getElementType())) {
+            final Optional result = transformation.apply(element);
+
+            if (result.isPresent()) {
+                return result;
+            }
+        }
+
+        return Optional.empty();
+    }
+
 }

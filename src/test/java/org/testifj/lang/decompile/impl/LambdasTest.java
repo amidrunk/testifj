@@ -12,8 +12,7 @@ import org.testifj.lang.classfile.impl.LambdaImpl;
 import org.testifj.lang.classfile.impl.Lambdas;
 import org.testifj.lang.decompile.CodePointer;
 import org.testifj.lang.decompile.Decompiler;
-import org.testifj.lang.decompile.SyntaxTreeVisitor;
-import org.testifj.lang.decompile.impl.DecompilerImpl;
+import org.testifj.lang.model.SyntaxTreeVisitor;
 import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.MethodSignature;
 

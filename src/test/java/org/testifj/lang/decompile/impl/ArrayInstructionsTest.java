@@ -267,6 +267,13 @@ public class ArrayInstructionsTest {
         verify(context).push(eq(new ArrayLoadImpl(array, index, short.class)));
     }
 
+    @Test
+    public void arraylengthShouldFailIfStackedInstanceIsNotArrayType() throws IOException {
+        when(context.pop()).thenReturn(AST.constant(1));
+
+        expect(() -> ArrayInstructions.arraylength().apply(context, code, ByteCode.arraylength)).toThrow(ClassFileFormatException.class);
+    }
+
     private DecompilerConfiguration configuration() {
         final DecompilerConfiguration.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
 

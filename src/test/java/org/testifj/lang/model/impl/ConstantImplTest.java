@@ -1,8 +1,11 @@
 package org.testifj.lang.model.impl;
 
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.testifj.lang.model.ElementMetaData;
 import org.testifj.lang.model.ElementType;
 
+import static org.mockito.Mockito.mock;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
@@ -35,6 +38,14 @@ public class ConstantImplTest {
         expect(constant.getConstant()).toBe("foobar");
         expect(constant.getType()).toBe((Class) String.class);
         expect(constant.getElementType()).toBe(ElementType.CONSTANT);
+    }
+
+    @Test
+    public void constantWithMetaDataCanBeCreated() {
+        final ElementMetaData metaData = mock(ElementMetaData.class);
+
+        expect(new ConstantImpl("foo", String.class).getMetaData()).not().toBe(equalTo(null));
+        expect(new ConstantImpl("foo", String.class, metaData).getMetaData()).toBe(metaData);
     }
 
 }

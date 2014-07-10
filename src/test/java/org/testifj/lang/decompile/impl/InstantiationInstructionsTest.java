@@ -7,14 +7,15 @@ import org.testifj.lang.classfile.impl.DefaultConstantPool;
 import org.testifj.lang.decompile.CodePointer;
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.classfile.ClassFile;
-import org.testifj.lang.decompile.ConstantPoolEntry;
+import org.testifj.lang.classfile.ConstantPoolEntry;
 import org.testifj.lang.decompile.DecompilationContext;
 import org.testifj.lang.decompile.DecompilerConfiguration;
+import org.testifj.lang.decompile.ProgramCounter;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.NewInstance;
 import org.testifj.lang.model.VariableAssignment;
-import org.testifj.lang.model.impl.AllocateInstanceImpl;
+import org.testifj.lang.model.impl.InstanceAllocationImpl;
 import org.testifj.lang.model.impl.ConstantImpl;
 
 import java.io.ByteArrayInputStream;
@@ -60,7 +61,7 @@ public class InstantiationInstructionsTest {
 
         InstantiationInstructions.newInstance().apply(context, codeStream, ByteCode.new_);
 
-        verify(context).push(eq(new AllocateInstanceImpl(String.class)));
+        verify(context).push(eq(new InstanceAllocationImpl(String.class)));
         verify(context).resolveType(eq("java/lang/String"));
     }
 

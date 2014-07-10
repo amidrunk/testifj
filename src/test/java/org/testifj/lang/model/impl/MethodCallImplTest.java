@@ -12,6 +12,7 @@ import static org.testifj.Expect.expect;
 import static org.testifj.lang.model.AST.call;
 import static org.testifj.lang.model.AST.constant;
 import static org.testifj.matchers.core.CollectionThatIs.collectionOf;
+import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
 public class MethodCallImplTest {
 
@@ -90,5 +91,13 @@ public class MethodCallImplTest {
         expect(exampleMethodCall.getParameters()).toBe(collectionOf(constant(1)));
         expect(newMethodCall.getParameters()).toBe(collectionOf(constant(2)));
         expect(newMethodCall.getSignature()).toBe(MethodSignature.parse("(I)Ljava/lang/String;"));
+    }
+
+    @Test
+    public void methodCallWithMetaDataCanBeCreated() {
+        final ElementMetaData metaData = mock(ElementMetaData.class);
+
+        expect(new MethodCallImpl(int.class, "foo", mock(Signature.class), mock(Expression.class), new Expression[0], String.class).getMetaData()).not().toBe(equalTo(null));
+        expect(new MethodCallImpl(int.class, "foo", mock(Signature.class), mock(Expression.class), new Expression[0], String.class, metaData).getMetaData()).toBe(metaData);
     }
 }

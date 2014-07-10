@@ -10,6 +10,7 @@ import java.util.function.Predicate;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
 import static org.testifj.lang.model.AST.*;
@@ -243,5 +244,21 @@ public class ModelQueriesTest {
         when(branch.getRightOperand()).thenReturn(operand);
 
         expect(ModelQueries.rightComparativeOperand().from(branch)).toBe(optionalOf(operand));
+    }
+
+    @Test
+    public void runtimeTypeShouldReturnNonPresentOptionalForNull() {
+        expect(ModelQueries.runtimeType().from(null)).not().toBe(present());
+    }
+
+    @Test
+    public void runtimeTypeShouldReturnTypeOfElement() {
+        final Expression expression = mock(Expression.class);
+
+        when(expression.getType()).thenReturn(int.class);
+
+        expect(ModelQueries.runtimeType().from(expression)).toBe(optionalOf(int.class));
+
+        verify(expression).getType();
     }
 }

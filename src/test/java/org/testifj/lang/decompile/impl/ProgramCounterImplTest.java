@@ -2,13 +2,12 @@ package org.testifj.lang.decompile.impl;
 
 import org.junit.Test;
 import org.testifj.Procedure;
-import org.testifj.lang.decompile.impl.ProgramCounter;
-import org.testifj.lang.decompile.impl.ProgramCounterImpl;
+import org.testifj.lang.decompile.ProgramCounter;
 
 import static org.mockito.Mockito.*;
 import static org.testifj.Expect.expect;
 
-public class ProgramCounterTest {
+public class ProgramCounterImplTest {
 
     @Test
     public void defaultConstructorShouldInitializePCToZero() {

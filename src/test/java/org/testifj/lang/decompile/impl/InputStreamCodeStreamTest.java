@@ -2,9 +2,7 @@ package org.testifj.lang.decompile.impl;
 
 import org.junit.Test;
 import org.testifj.lang.decompile.CodeStream;
-import org.testifj.lang.decompile.impl.InputStreamCodeStream;
-import org.testifj.lang.decompile.impl.ProgramCounter;
-import org.testifj.lang.decompile.impl.ProgramCounterImpl;
+import org.testifj.lang.decompile.ProgramCounter;
 
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;

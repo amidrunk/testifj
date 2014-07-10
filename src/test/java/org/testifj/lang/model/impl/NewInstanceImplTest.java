@@ -1,6 +1,7 @@
 package org.testifj.lang.model.impl;
 
 import org.junit.Test;
+import org.testifj.lang.model.ElementMetaData;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.Signature;
 
@@ -67,6 +68,14 @@ public class NewInstanceImplTest {
             expect(it.toString()).to(containString(exampleSignature.toString()));
             expect(it.toString()).to(containString(exampleParameter.toString()));
         });
+    }
+
+    @Test
+    public void elementWithMetaDataCanBeCreated() {
+        final ElementMetaData metaData = mock(ElementMetaData.class);
+
+        expect(new NewInstanceImpl(String.class, exampleSignature, Collections.emptyList()).getMetaData()).not().toBe(equalTo(null));
+        expect(new NewInstanceImpl(String.class, exampleSignature, Collections.emptyList(), metaData).getMetaData()).toBe(metaData);
     }
 
 }

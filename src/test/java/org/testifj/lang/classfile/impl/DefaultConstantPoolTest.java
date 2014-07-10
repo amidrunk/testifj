@@ -2,9 +2,8 @@ package org.testifj.lang.classfile.impl;
 
 import org.junit.Test;
 import org.testifj.lang.classfile.*;
-import org.testifj.lang.classfile.impl.DefaultConstantPool;
-import org.testifj.lang.decompile.ConstantPoolEntry;
-import org.testifj.lang.decompile.ConstantPoolEntryTag;
+import org.testifj.lang.classfile.ConstantPoolEntry;
+import org.testifj.lang.classfile.ConstantPoolEntryTag;
 
 import java.util.Arrays;
 
@@ -12,7 +11,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.*;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
-import static org.testifj.lang.decompile.ConstantPoolEntry.*;
+import static org.testifj.lang.classfile.ConstantPoolEntry.*;
 
 public class DefaultConstantPoolTest {
 

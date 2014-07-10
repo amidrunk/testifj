@@ -1,4 +1,4 @@
-package org.testifj.lang.decompile.impl;
+package org.testifj.lang.codegeneration.impl;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -9,8 +9,8 @@ import org.testifj.lang.classfile.Method;
 import org.testifj.lang.classfile.impl.ClassFileReaderImpl;
 import org.testifj.lang.classfile.impl.SimpleCodeGeneratorConfiguration;
 import org.testifj.lang.classfile.impl.SimpleTypeResolver;
+import org.testifj.lang.codegeneration.*;
 import org.testifj.lang.decompile.*;
-import org.testifj.lang.decompile.impl.CodeGenerationContextImpl;
 import org.testifj.lang.decompile.impl.CodePointerImpl;
 import org.testifj.lang.decompile.impl.CoreCodeGenerationExtensions;
 import org.testifj.lang.decompile.impl.DecompilerImpl;
@@ -351,7 +351,7 @@ public class CoreCodeGenerationExtensionsTest {
 
     @Test
     public void allocateInstanceShouldBeSupported() {
-        expect(codeFor(new AllocateInstanceImpl(String.class))).toBe("new String<uninitialized>");
+        expect(codeFor(new InstanceAllocationImpl(String.class))).toBe("new String<uninitialized>");
     }
 
     private static class Inner {

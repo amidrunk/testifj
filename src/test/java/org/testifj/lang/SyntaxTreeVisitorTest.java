@@ -5,7 +5,7 @@ import org.mockito.InOrder;
 import org.mockito.Mockito;
 import org.testifj.Predicate;
 import org.testifj.lang.classfile.ReferenceKind;
-import org.testifj.lang.decompile.SyntaxTreeVisitor;
+import org.testifj.lang.model.SyntaxTreeVisitor;
 import org.testifj.lang.classfile.impl.LambdaImpl;
 import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.*;
@@ -166,15 +166,6 @@ public class SyntaxTreeVisitorTest {
     }
 
     @Test
-    public void jumpCanBeVisited() {
-        final Jump jump = new JumpImpl(1234);
-
-        SyntaxTreeVisitor.visit(jump, callback);
-
-        verify(callback).visit(any(), eq(jump));
-    }
-
-    @Test
     public void branchCanBeVisited() {
         final Constant left = constant(1);
         final Constant right = constant(2);
@@ -272,14 +263,14 @@ public class SyntaxTreeVisitorTest {
     @Test
     public void castCanBeVisited() {
         final Constant constant = constant("foo");
-        final Cast cast = AST.cast(constant).to(String.class);
+        final TypeCast typeCast = AST.cast(constant).to(String.class);
 
-        SyntaxTreeVisitor.visit(cast, callback);
+        SyntaxTreeVisitor.visit(typeCast, callback);
 
         final InOrder inOrder = Mockito.inOrder(callback);
 
         inOrder.verify(callback).visit(any(), eq(constant));
-        inOrder.verify(callback).visit(any(), eq(cast));
+        inOrder.verify(callback).visit(any(), eq(typeCast));
     }
 
     @Test
@@ -299,7 +290,7 @@ public class SyntaxTreeVisitorTest {
 
     @Test
     public void allocateCanBeVisited() {
-        final AllocateInstanceImpl allocateInstance = new AllocateInstanceImpl(String.class);
+        final InstanceAllocationImpl allocateInstance = new InstanceAllocationImpl(String.class);
 
         SyntaxTreeVisitor.visit(allocateInstance, callback);
 

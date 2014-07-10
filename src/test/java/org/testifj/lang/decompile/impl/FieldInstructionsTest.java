@@ -9,7 +9,7 @@ import org.testifj.lang.classfile.Method;
 import org.testifj.lang.classfile.impl.FieldRefDescriptorImpl;
 import org.testifj.lang.classfile.impl.SimpleTypeResolver;
 import org.testifj.lang.decompile.CodeStream;
-import org.testifj.lang.decompile.ConstantPool;
+import org.testifj.lang.classfile.ConstantPool;
 import org.testifj.lang.decompile.DecompilationContext;
 import org.testifj.lang.decompile.DecompilerConfiguration;
 import org.testifj.lang.model.AST;

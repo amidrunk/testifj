@@ -1,8 +1,8 @@
-package org.testifj.lang.decompile.impl;
+package org.testifj.lang.codegeneration.impl;
 
 import org.junit.Test;
-import org.testifj.lang.decompile.CodeStyle;
-import org.testifj.lang.decompile.impl.ConfigurableCodeStyle;
+import org.testifj.lang.codegeneration.CodeStyle;
+import org.testifj.lang.codegeneration.impl.ConfigurableCodeStyle;
 
 import static org.testifj.Expect.expect;
 

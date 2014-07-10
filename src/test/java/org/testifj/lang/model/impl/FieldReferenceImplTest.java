@@ -2,17 +2,20 @@ package org.testifj.lang.model.impl;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.testifj.lang.model.ElementMetaData;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;
 
 import java.math.BigDecimal;
 
+import static org.mockito.Mockito.mock;
 import static org.testifj.Expect.expect;
+import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 import static org.testifj.matchers.core.OptionalThatIs.present;
 
 public class FieldReferenceImplTest {
 
-    private final Expression exampleTargetInstance = Mockito.mock(Expression.class);
+    private final Expression exampleTargetInstance = mock(Expression.class);
 
     @Test
     public void constructorShouldNotAcceptInvalidParameters() {
@@ -41,6 +44,14 @@ public class FieldReferenceImplTest {
 
         expect(ref.getTargetInstance()).not().toBe(present());
         expect(ref.isStatic()).toBe(true);
+    }
+
+    @Test
+    public void fieldReferenceWithMetaDataCanBeCreated() {
+        final ElementMetaData metaData = mock(ElementMetaData.class);
+
+        expect(new FieldReferenceImpl(exampleTargetInstance, String.class, String.class, "foo").getMetaData()).not().toBe(equalTo(null));
+        expect(new FieldReferenceImpl(exampleTargetInstance, String.class, String.class, "foo", metaData).getMetaData()).toBe(metaData);
     }
 
 }

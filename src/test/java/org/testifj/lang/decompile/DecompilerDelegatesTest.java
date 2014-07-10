@@ -6,17 +6,16 @@ import org.testifj.lang.model.Statement;
 
 import java.io.IOException;
 
-import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 import static org.testifj.Expect.expect;
 import static org.testifj.lang.decompile.DecompilationContextQueries.lastStatement;
-import static org.testifj.lang.model.Sequences.emptySequence;
-import static org.testifj.lang.model.Sequences.sequenceOf;
+import static org.testifj.util.Sequences.emptySequence;
+import static org.testifj.util.Sequences.sequenceOf;
 
 public class DecompilerDelegatesTest {
 
-    private final DecompilerTransformation transformation = mock(DecompilerTransformation.class);
+    private final DecompilerElementDelegate transformation = mock(DecompilerElementDelegate.class);
     private final DecompilationContext context = mock(DecompilationContext.class);
     private final CodeStream codeStream = mock(CodeStream.class);
 

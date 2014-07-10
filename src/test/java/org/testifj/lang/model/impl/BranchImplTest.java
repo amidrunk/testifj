@@ -1,18 +1,19 @@
 package org.testifj.lang.model.impl;
 
 import org.junit.Test;
-import org.testifj.lang.model.ElementType;
-import org.testifj.lang.model.Expression;
-import org.testifj.lang.model.OperatorType;
+import org.testifj.lang.model.*;
 
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.testifj.Expect.expect;
+import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
 public class BranchImplTest {
 
     private final Expression rightOperand = mock(Expression.class);
 
     private final Expression leftOperand = mock(Expression.class);
+    private final Branch exampleBranch = new BranchImpl(leftOperand, OperatorType.NE, rightOperand, 1234);
 
     @Test
     public void constructorShouldValidateParameters() {
@@ -24,13 +25,38 @@ public class BranchImplTest {
 
     @Test
     public void constructorShouldRetainParameters() {
-        final BranchImpl branch = new BranchImpl(leftOperand, OperatorType.NE, rightOperand, 1234);
+        expect(exampleBranch.getLeftOperand()).toBe(leftOperand);
+        expect(exampleBranch.getOperatorType()).toBe(OperatorType.NE);
+        expect(exampleBranch.getRightOperand()).toBe(rightOperand);
+        expect(exampleBranch.getTargetProgramCounter()).toBe(1234);
+        expect(exampleBranch.getElementType()).toBe(ElementType.BRANCH);
+    }
 
-        expect(branch.getLeftOperand()).toBe(leftOperand);
-        expect(branch.getOperatorType()).toBe(OperatorType.NE);
-        expect(branch.getRightOperand()).toBe(rightOperand);
-        expect(branch.getTargetPC()).toBe(1234);
-        expect(branch.getElementType()).toBe(ElementType.BRANCH);
+    @Test
+    public void instanceShouldBeEqualToItSelf() {
+        expect(exampleBranch).toBe(equalTo(exampleBranch));
+    }
+
+    @Test
+    public void instanceShouldNotBeEqualToNullOrDifferentType() {
+        expect(exampleBranch).not().toBe(equalTo(null));
+        expect((Object) exampleBranch).not().toBe(equalTo("foo"));
+    }
+
+    @Test
+    public void instancesWithEqualPropertiesShouldBeEqual() {
+        final Branch other = new BranchImpl(leftOperand, OperatorType.NE, rightOperand, 1234);
+
+        expect(exampleBranch).toBe(equalTo(other));
+        expect(exampleBranch.hashCode()).toBe(equalTo(other.hashCode()));
+    }
+
+    @Test
+    public void branchWithMetaDataCanBeCreated() {
+        final ElementMetaData metaData = mock(ElementMetaData.class);
+
+        expect(new BranchImpl(leftOperand, OperatorType.EQ, rightOperand, 1234).getMetaData()).not().toBe(equalTo(null));
+        expect(new BranchImpl(leftOperand, OperatorType.EQ, rightOperand, 1234, metaData).getMetaData()).toBe(metaData);
     }
 
 }

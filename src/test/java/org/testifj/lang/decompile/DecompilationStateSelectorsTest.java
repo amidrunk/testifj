@@ -17,10 +17,9 @@ import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
 import static org.testifj.lang.model.AST.constant;
-import static org.testifj.lang.model.AST.eq;
 import static org.testifj.lang.model.ModelQueries.equalTo;
-import static org.testifj.lang.model.Sequences.emptySequence;
-import static org.testifj.lang.model.Sequences.sequenceOf;
+import static org.testifj.util.Sequences.emptySequence;
+import static org.testifj.util.Sequences.sequenceOf;
 
 @SuppressWarnings("unchecked")
 public class DecompilationStateSelectorsTest {

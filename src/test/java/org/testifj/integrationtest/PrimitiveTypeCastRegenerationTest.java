@@ -5,7 +5,7 @@ import org.testifj.Caller;
 
 import static org.testifj.Expect.expect;
 
-public class PrimitiveCastRegenerationTest extends TestOnDefaultConfiguration {
+public class PrimitiveTypeCastRegenerationTest extends TestOnDefaultConfiguration {
 
     @Test
     public void integerToByteCanCastCanBeRegenerated() {

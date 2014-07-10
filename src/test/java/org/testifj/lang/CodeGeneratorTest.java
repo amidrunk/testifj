@@ -3,7 +3,7 @@ package org.testifj.lang;
 import org.junit.Test;
 import org.testifj.BasicDescription;
 import org.testifj.Description;
-import org.testifj.lang.decompile.CodeGenerator;
+import org.testifj.lang.codegeneration.CodeGenerator;
 
 import static org.testifj.Expect.expect;
 

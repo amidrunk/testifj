@@ -5,7 +5,10 @@ import org.testifj.lang.decompile.Decompiler;
 import org.testifj.lang.decompile.LineNumberCounter;
 import org.testifj.lang.classfile.Method;
 import org.testifj.lang.TypeResolver;
+import org.testifj.lang.decompile.ProgramCounter;
 import org.testifj.lang.model.*;
+
+import java.util.NoSuchElementException;
 
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
@@ -147,8 +150,10 @@ public class DecompilationContextImplTest {
         final MethodCall statement1 = mock(MethodCall.class, "s1");
         final MethodCall statement2 = mock(MethodCall.class, "s2");
 
+        when(statement1.getMetaData()).thenReturn(new ElementContextMetaData(0, -1));
+        when(statement2.getMetaData()).thenReturn(new ElementContextMetaData(1, -1));
+
         context.push(statement1);
-        programCounter.advance();
         context.push(statement2);
 
         expect(context.reduceAll()).toBe(true);
@@ -167,18 +172,9 @@ public class DecompilationContextImplTest {
     }
 
     @Test
-    public void replaceStatementShouldValidateParameters() {
-        context.enlist(mock(Statement.class));
-
-        expect(() -> context.replaceStatement(-1, mock(Statement.class))).toThrow(IndexOutOfBoundsException.class);
-        expect(() -> context.replaceStatement(1, mock(Statement.class))).toThrow(IndexOutOfBoundsException.class);
-        expect(() -> context.replaceStatement(0, null)).toThrow(AssertionError.class);
-    }
-
-    @Test
     public void removeStatementShouldFailForInvalidIndex() {
-        expect(() -> context.removeStatement(-1)).toThrow(IndexOutOfBoundsException.class);
-        expect(() -> context.removeStatement(1)).toThrow(IndexOutOfBoundsException.class);
+        expect(() -> context.removeStatement(-1)).toThrow(AssertionError.class);
+        expect(() -> context.removeStatement(1)).toThrow(NoSuchElementException.class);
     }
 
     @Test
@@ -194,8 +190,10 @@ public class DecompilationContextImplTest {
         final MethodCall methodCall1 = mock(MethodCall.class, "s1");
         final MethodCall methodCall2 = mock(MethodCall.class, "s2");
 
+        when(methodCall1.getMetaData()).thenReturn(new ElementContextMetaData(0, -1));
+        when(methodCall2.getMetaData()).thenReturn(new ElementContextMetaData(2, -1));
+
         context.push(methodCall1);
-        programCounter.advance();
         context.push(methodCall2);
 
         context.reduce();
@@ -233,53 +231,6 @@ public class DecompilationContextImplTest {
 
         expect(context.peek()).toBe(stackedExpression);
         expect(context.getStackedExpressions().toArray()).toBe(new Object[]{stackedExpression});
-    }
-
-    @Test
-    public void pushShouldSetLineNumberAttributeOnElement() {
-        final Constant element = AST.constant(100);
-
-        when(lineNumberCounter.get()).thenReturn(1234);
-
-        context.push(element);
-
-        expect(element.getMetaData().getAttribute("LineNumber")).toBe(1234);
-    }
-
-    @Test
-    public void enlistShouldSetLineNumberAttributeOnStatement() {
-        final Statement statement = AST.$return();
-
-        when(lineNumberCounter.get()).thenReturn(2345);
-
-        context.enlist(statement);
-
-        expect(statement.getMetaData().getAttribute(ElementMetaData.LINE_NUMBER)).toBe(2345);
-    }
-
-    @Test
-    public void insertShouldSetLineNumberAttributeOnStatement() {
-        final Expression expression = AST.constant("foo");
-
-        when(lineNumberCounter.get()).thenReturn(23456);
-
-        context.insert(0, expression);
-
-        expect(expression.getMetaData().getAttribute(ElementMetaData.LINE_NUMBER)).toBe(23456);
-    }
-
-    @Test
-    public void replaceStatementShouldSetLineNumberOnNewStatement() {
-        final Statement oldStatement = AST.$return();
-        final Statement newStatement = AST.$return();
-
-        context.enlist(oldStatement);
-
-        when(lineNumberCounter.get()).thenReturn(1234);
-
-        context.replaceStatement(0, newStatement);
-
-        expect(newStatement.getMetaData().getAttribute(ElementMetaData.LINE_NUMBER)).toBe(1234);
     }
 
     @Test
@@ -350,17 +301,6 @@ public class DecompilationContextImplTest {
     @Test
     public void isStackCompliantWithComputationalTypesShouldNotAcceptNullTypes() {
         expect(() -> context.isStackCompliantWithComputationalCategories((int[]) null)).toThrow(AssertionError.class);
-    }
-
-    @Test
-    public void elementPushedToStackShouldGetMetaDataConfigured() {
-        final Constant expression = AST.constant(1);
-
-        when(lineNumberCounter.get()).thenReturn(50);
-
-        context.getStack().push(expression);
-
-        expect(expression.getMetaData().getAttribute(ElementMetaData.LINE_NUMBER)).toBe(50);
     }
 
 }

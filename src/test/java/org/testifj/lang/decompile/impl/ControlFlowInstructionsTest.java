@@ -9,8 +9,8 @@ import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.classfile.ClassFileFormatException;
 import org.testifj.lang.decompile.DecompilationContext;
 import org.testifj.lang.decompile.DecompilerConfiguration;
+import org.testifj.lang.decompile.ProgramCounter;
 import org.testifj.lang.model.Expression;
-import org.testifj.lang.model.Goto;
 import org.testifj.lang.model.LocalVariableReference;
 import org.testifj.lang.model.impl.GotoImpl;
 import org.testifj.lang.model.impl.ReturnImpl;
@@ -140,7 +140,7 @@ public class ControlFlowInstructionsTest {
 
         execute(ByteCode.goto_, 0, 10);
 
-        verify(decompilationContext).enlist(eq(new GotoImpl(99, 10)));
+        verify(decompilationContext).enlist(eq(new GotoImpl(110)));
     }
 
     private void execute(int byteCode, int ... code) throws IOException {

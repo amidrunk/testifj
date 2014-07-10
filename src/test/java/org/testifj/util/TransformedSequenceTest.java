@@ -1,4 +1,4 @@
-package org.testifj.lang.model;
+package org.testifj.util;
 
 import org.junit.Test;
 
@@ -14,7 +14,7 @@ public class TransformedSequenceTest {
 
     private final Sequence<String> sourceSequence = new LinkedSequence<>();
 
-    private final Sequence<Integer> transformedSequence = new TransformedSequence<>(sourceSequence, Integer::parseInt, Object::toString);
+    private final Sequence<Integer> transformedSequence = new TransformedSequence<>(sourceSequence, Object::toString, Integer::parseInt);
 
     @Test
     public void enlistShouldNotAcceptNullArg() {

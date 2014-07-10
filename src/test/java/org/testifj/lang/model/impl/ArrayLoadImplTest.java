@@ -1,8 +1,12 @@
 package org.testifj.lang.model.impl;
 
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.testifj.lang.model.AST;
+import org.testifj.lang.model.ElementMetaData;
+import org.testifj.lang.model.Expression;
 
+import static org.mockito.Mockito.mock;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
@@ -54,6 +58,17 @@ public class ArrayLoadImplTest {
             expect(str).to(containString(exampleArrayLoad.getIndex().toString()));
             expect(str).to(containString(exampleArrayLoad.getType().toString()));
         });
+    }
+
+    @Test
+    public void elementWithMetaDataAndDefaultMetaDataCanBeCreated() {
+        final ElementMetaData metaData = mock(ElementMetaData.class);
+
+        final ArrayLoadImpl arrayLoad1 = new ArrayLoadImpl(mock(Expression.class), mock(Expression.class), String.class);
+        final ArrayLoadImpl arrayLoad2 = new ArrayLoadImpl(mock(Expression.class), mock(Expression.class), String.class, metaData);
+
+        expect(arrayLoad1.getMetaData()).not().toBe(equalTo(null));
+        expect(arrayLoad2.getMetaData()).toBe(metaData);
     }
 
 }

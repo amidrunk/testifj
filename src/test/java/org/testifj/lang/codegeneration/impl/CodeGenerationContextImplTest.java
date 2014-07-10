@@ -1,10 +1,13 @@
-package org.testifj.lang.decompile.impl;
+package org.testifj.lang.codegeneration.impl;
 
 import org.junit.Test;
 import org.testifj.lang.*;
 import org.testifj.lang.classfile.ClassFileResolver;
+import org.testifj.lang.codegeneration.CodeGenerationContext;
+import org.testifj.lang.codegeneration.CodeGenerationDelegate;
+import org.testifj.lang.codegeneration.CodeStyle;
+import org.testifj.lang.codegeneration.impl.CodeGenerationContextImpl;
 import org.testifj.lang.decompile.*;
-import org.testifj.lang.decompile.impl.CodeGenerationContextImpl;
 
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;

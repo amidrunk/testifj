@@ -2,11 +2,9 @@ package org.testifj.lang.model.impl;
 
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.testifj.lang.model.ElementType;
-import org.testifj.lang.model.Expression;
-import org.testifj.lang.model.IncompatibleTypeException;
-import org.testifj.lang.model.VariableAssignment;
+import org.testifj.lang.model.*;
 
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
@@ -87,6 +85,14 @@ public class VariableAssignmentImplTest {
         expect(newAssignment.getVariableType()).toBe(assignment.getVariableType());
         expect(newAssignment.getValue()).toBe(constant("foobar"));
         expect(assignment.getValue()).toBe(exampleValue);
+    }
+
+    @Test
+    public void variableAssignmentWithMetaDataCanBeCreated() {
+        final ElementMetaData metaData = mock(ElementMetaData.class);
+
+        expect(assignment.getMetaData()).not().toBe(equalTo(null));
+        expect(new VariableAssignmentImpl(exampleValue, 1, "foo", String.class, metaData).getMetaData()).toBe(metaData);
     }
 
 }

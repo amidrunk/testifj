@@ -1,9 +1,12 @@
 package org.testifj.lang.model.impl;
 
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.testifj.lang.model.ElementMetaData;
 import org.testifj.lang.model.ElementType;
 
 import static org.testifj.Expect.expect;
+import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
 public class LocalVariableReferenceImplTest {
 
@@ -23,5 +26,13 @@ public class LocalVariableReferenceImplTest {
         expect(thisVar.getType()).toBe(Object.class);
         expect(thisVar.getName()).toBe("this");
         expect(thisVar.getIndex()).toBe(1234);
+    }
+
+    @Test
+    public void localVariableReferenceWithMetaDataCanBeCreated() {
+        final ElementMetaData elementMetaData = Mockito.mock(ElementMetaData.class);
+
+        expect(new LocalVariableReferenceImpl("foo", int.class, 1).getMetaData()).not().toBe(equalTo(null));
+        expect(new LocalVariableReferenceImpl("foo", int.class, 1, elementMetaData).getMetaData()).toBe(elementMetaData);
     }
 }

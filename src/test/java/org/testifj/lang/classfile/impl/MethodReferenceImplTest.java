@@ -1,4 +1,4 @@
-package org.testifj.lang.decompile.impl;
+package org.testifj.lang.classfile.impl;
 
 import org.junit.Test;
 import org.testifj.lang.classfile.impl.MethodReferenceImpl;

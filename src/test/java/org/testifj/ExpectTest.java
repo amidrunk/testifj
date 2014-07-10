@@ -4,9 +4,8 @@ import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.testifj.lang.decompile.ConstantPoolEntry;
+import org.testifj.lang.classfile.ConstantPoolEntry;
 import org.testifj.lang.classfile.impl.DefaultConstantPool;
-import org.testifj.matchers.core.CollectionThatIs;
 
 import java.util.Arrays;
 

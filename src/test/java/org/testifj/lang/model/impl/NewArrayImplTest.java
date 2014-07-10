@@ -1,9 +1,7 @@
 package org.testifj.lang.model.impl;
 
 import org.junit.Test;
-import org.testifj.lang.model.AST;
-import org.testifj.lang.model.ArrayInitializer;
-import org.testifj.lang.model.ElementType;
+import org.testifj.lang.model.*;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -65,6 +63,14 @@ public class NewArrayImplTest {
             expect(it).to(containString(AST.constant(1).toString()));
             expect(it).to(containString(exampleInitializer.toString()));
         });
+    }
+
+    @Test
+    public void newArrayWithMetaDataCanBeCreated() {
+        final ElementMetaData metaData = mock(ElementMetaData.class);
+
+        expect(exampleArray.getMetaData()).not().toBe(equalTo(null));
+        expect(new NewArrayImpl(String[].class, String.class, mock(Expression.class), Collections.emptyList(), metaData).getMetaData()).toBe(metaData);
     }
 
 }

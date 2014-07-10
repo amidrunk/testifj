@@ -1,11 +1,11 @@
 package org.testifj.lang.model.impl;
 
 import org.junit.Test;
-import org.testifj.lang.model.ElementType;
-import org.testifj.lang.model.OperatorType;
-import org.testifj.lang.model.UnaryOperator;
+import org.mockito.Mockito;
+import org.testifj.lang.model.*;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
 import static org.testifj.Expect.expect;
 import static org.testifj.lang.model.AST.constant;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
@@ -48,5 +48,12 @@ public class UnaryOperatorImplTest {
         expect(exampleOperator.hashCode()).toBe(equalTo(other.hashCode()));
     }
 
+    @Test
+    public void elementWithMetaDataCanBeCreated() {
+        final ElementMetaData metaData = mock(ElementMetaData.class);
+
+        expect(new UnaryOperatorImpl(mock(Expression.class), OperatorType.NOT, String.class).getMetaData()).not().toBe(equalTo(null));
+        expect(new UnaryOperatorImpl(mock(Expression.class), OperatorType.NOT, String.class, metaData).getMetaData()).toBe(metaData);
+    }
 
 }

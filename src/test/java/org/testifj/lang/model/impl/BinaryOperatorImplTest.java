@@ -1,12 +1,14 @@
 package org.testifj.lang.model.impl;
 
 import org.junit.Test;
+import org.testifj.lang.model.ElementMetaData;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.OperatorType;
 
 import static org.mockito.Mockito.mock;
 import static org.testifj.Expect.expect;
+import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
 public class BinaryOperatorImplTest {
 
@@ -33,6 +35,14 @@ public class BinaryOperatorImplTest {
     @Test
     public void elementTypeShouldBeSpecified() {
         expect(exampleOperator.getElementType()).toBe(ElementType.BINARY_OPERATOR);
+    }
+
+    @Test
+    public void elementWithMetaDataCanBeCreated() {
+        final ElementMetaData metaData = mock(ElementMetaData.class);
+
+        expect(new BinaryOperatorImpl(leftOperand, OperatorType.AND, rightOperand, int.class).getMetaData()).not().toBe(equalTo(null));
+        expect(new BinaryOperatorImpl(leftOperand, OperatorType.AND, rightOperand, int.class, metaData).getMetaData()).toBe(metaData);
     }
 
 }

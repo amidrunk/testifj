@@ -2,6 +2,7 @@ package org.testifj.lang.model.impl;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.testifj.lang.model.ElementMetaData;
 import org.testifj.lang.model.Expression;
 
 import static org.mockito.Mockito.mock;
@@ -59,6 +60,14 @@ public class ArrayStoreImplTest {
             expect(it).to(containString(index.toString()));
             expect(it).to(containString(value.toString()));
         });
+    }
+
+    @Test
+    public void arrayStoreWithMetaDataCanBeCreated() {
+        final ElementMetaData metaData = mock(ElementMetaData.class);
+
+        expect(new ArrayStoreImpl(array, index, value).getMetaData()).not().toBe(equalTo(null));
+        expect(new ArrayStoreImpl(array, index, value, metaData).getMetaData()).toBe(metaData);
     }
 
 }

@@ -2,22 +2,24 @@ package org.testifj.lang.model.impl;
 
 import org.junit.Test;
 import org.testifj.lang.model.AST;
-import org.testifj.lang.model.Cast;
+import org.testifj.lang.model.ElementMetaData;
 import org.testifj.lang.model.ElementType;
+import org.testifj.lang.model.Expression;
 
+import static org.mockito.Mockito.mock;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 import static org.testifj.matchers.core.StringShould.containString;
 
-public class CastImplTest {
+public class TypeCastImplTest {
 
-    private final CastImpl exampleCast = new CastImpl(AST.constant("foo"), String.class);
+    private final TypeCastImpl exampleCast = new TypeCastImpl(AST.constant("foo"), String.class);
 
     @Test
     public void constructorShouldNotAcceptInvalidParameters() {
-        expect(() -> new CastImpl(null, String.class)).toThrow(AssertionError.class);
-        expect(() -> new CastImpl(AST.constant("foo"), null)).toThrow(AssertionError.class);
+        expect(() -> new TypeCastImpl(null, String.class)).toThrow(AssertionError.class);
+        expect(() -> new TypeCastImpl(AST.constant("foo"), null)).toThrow(AssertionError.class);
     }
 
     @Test
@@ -42,7 +44,7 @@ public class CastImplTest {
 
     @Test
     public void instancesWithEqualPropertiesShouldBeEqual() {
-        final CastImpl other = new CastImpl(AST.constant("foo"), String.class);
+        final TypeCastImpl other = new TypeCastImpl(AST.constant("foo"), String.class);
 
         expect(exampleCast).toBe(equalTo(other));
         expect(exampleCast.hashCode()).toBe(equalTo(other.hashCode()));
@@ -54,5 +56,13 @@ public class CastImplTest {
             expect(it).to(containString(AST.constant("foo").toString()));
             expect(it).to(containString(String.class.getName()));
         });
+    }
+
+    @Test
+    public void typeCastWithMetaDataCanBeCreated() {
+        final ElementMetaData metaData = mock(ElementMetaData.class);
+
+        expect(exampleCast.getMetaData()).not().toBe(equalTo(null));
+        expect(new TypeCastImpl(mock(Expression.class), String.class, metaData).getMetaData()).toBe(metaData);
     }
 }

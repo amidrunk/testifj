@@ -330,6 +330,16 @@ public class BooleanOperationsRegenerationTest extends TestOnDefaultConfiguratio
         expect(regenerate(Caller.adjacent(-2))).toBe("boolean b = d1 >= d2");
     }
 
+    @Test
+    public void logicalAndOperationCanBeRegenerated() {
+        final boolean b1 = Boolean.TRUE;
+        final boolean b2 = Boolean.TRUE;
+        final boolean b3 = Boolean.TRUE;
+        final boolean b = b1 && b2;
+
+        expect(regenerate(Caller.adjacent(-2))).toBe("boolean b = b1 && b2");
+    }
+
     public static final class ExampleClass {
 
         public void accept(boolean b) {}

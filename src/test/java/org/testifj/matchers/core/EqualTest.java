@@ -50,6 +50,7 @@ public class EqualTest {
         try {
             expect(supplier.get()).toBe("bar");
         } catch (AssertionError e) {
+            e.printStackTrace();
             expect(e.getMessage()).toBe("Expected supplier.get() => \"foo\" to be \"bar\"");
             failed = true;
         }

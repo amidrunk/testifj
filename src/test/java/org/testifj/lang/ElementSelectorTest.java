@@ -3,7 +3,7 @@ package org.testifj.lang;
 import org.junit.Test;
 import org.testifj.lang.classfile.Method;
 import org.testifj.lang.decompile.CodePointer;
-import org.testifj.lang.decompile.ElementSelector;
+import org.testifj.lang.codegeneration.ElementSelector;
 import org.testifj.lang.decompile.impl.CodePointerImpl;
 import org.testifj.lang.model.AST;
 import org.testifj.lang.model.Constant;

@@ -2,6 +2,8 @@ package org.testifj.lang;
 
 import org.junit.Test;
 
+import java.util.Collection;
+
 import static org.testifj.Expect.expect;
 
 public class TypesTest {
@@ -115,6 +117,39 @@ public class TypesTest {
         expect(Types.isValueTypePotentiallyAssignableTo(long.class, Long.class)).toBe(true);
         expect(Types.isValueTypePotentiallyAssignableTo(float.class, Float.class)).toBe(true);
         expect(Types.isValueTypePotentiallyAssignableTo(double.class, Double.class)).toBe(true);
+    }
+
+    @Test
+    public void isArrayShouldNotAcceptNullType() {
+        expect(() -> Types.isArray(null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void isArrayShouldReturnFalseForNonArrayType() {
+        expect(Types.isArray(String.class)).toBe(false);
+        expect(Types.isArray(Collection.class)).toBe(false);
+        expect(Types.isArray(boolean.class)).toBe(false);
+        expect(Types.isArray(byte.class)).toBe(false);
+        expect(Types.isArray(short.class)).toBe(false);
+        expect(Types.isArray(char.class)).toBe(false);
+        expect(Types.isArray(int.class)).toBe(false);
+        expect(Types.isArray(long.class)).toBe(false);
+        expect(Types.isArray(float.class)).toBe(false);
+        expect(Types.isArray(double.class)).toBe(false);
+    }
+
+    @Test
+    public void isArrayShouldReturnTrueForArrayType() {
+        expect(Types.isArray(String[].class)).toBe(true);
+        expect(Types.isArray(Collection[].class)).toBe(true);
+        expect(Types.isArray(boolean[].class)).toBe(true);
+        expect(Types.isArray(byte[].class)).toBe(true);
+        expect(Types.isArray(short[].class)).toBe(true);
+        expect(Types.isArray(char[].class)).toBe(true);
+        expect(Types.isArray(int[].class)).toBe(true);
+        expect(Types.isArray(long[].class)).toBe(true);
+        expect(Types.isArray(float[].class)).toBe(true);
+        expect(Types.isArray(double[].class)).toBe(true);
     }
 
 }

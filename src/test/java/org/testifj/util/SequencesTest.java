@@ -1,10 +1,13 @@
-package org.testifj.lang.model;
+package org.testifj.util;
 
 import org.junit.Test;
+import org.testifj.util.LinkedSequence;
+import org.testifj.util.Sequence;
+import org.testifj.util.Sequences;
 
 import static org.testifj.Expect.expect;
-import static org.testifj.lang.model.Sequences.sequenceOf;
-import static org.testifj.lang.model.Sequences.unmodifiableSeries;
+import static org.testifj.util.Sequences.sequenceOf;
+import static org.testifj.util.Sequences.unmodifiableSeries;
 import static org.testifj.matchers.core.IterableThatIs.iterableOf;
 
 public class SequencesTest {

@@ -5,10 +5,11 @@ import org.junit.Test;
 import org.testifj.lang.*;
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.classfile.ClassFile;
+import org.testifj.lang.classfile.ConstantPool;
 import org.testifj.lang.classfile.Method;
 import org.testifj.lang.decompile.*;
 import org.testifj.lang.model.AST;
-import org.testifj.lang.model.Cast;
+import org.testifj.lang.model.TypeCast;
 
 import java.io.IOException;
 
@@ -22,7 +23,7 @@ import static org.testifj.Given.given;
 import static org.testifj.lang.model.AST.constant;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
-public class CastInstructionsTest {
+public class TypeCastInstructionsTest {
 
     private final Method exampleMethod = mock(Method.class);
 
@@ -67,10 +68,10 @@ public class CastInstructionsTest {
     @Test
     public void discardImplicitCastShouldPushTargetExpressionOntoStack() throws IOException {
         final DecompilerDelegate discardImplicitCast = CastInstructions.discardImplicitCast();
-        final Cast cast = AST.cast(AST.constant("foo")).to(String.class);
+        final TypeCast typeCast = AST.cast(AST.constant("foo")).to(String.class);
 
-        when(exampleContext.peek()).thenReturn(cast);
-        when(exampleContext.pop()).thenReturn(cast);
+        when(exampleContext.peek()).thenReturn(typeCast);
+        when(exampleContext.pop()).thenReturn(typeCast);
 
         discardImplicitCast.apply(exampleContext, CodeStreamTestUtils.codeStream(), ByteCode.pop);
 

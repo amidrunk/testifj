@@ -4,8 +4,8 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.testifj.Caller;
 import org.testifj.lang.classfile.*;
-import org.testifj.lang.decompile.ConstantPool;
-import org.testifj.lang.decompile.ConstantPoolEntry;
+import org.testifj.lang.classfile.ConstantPool;
+import org.testifj.lang.classfile.ConstantPoolEntry;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

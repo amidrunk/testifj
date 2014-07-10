@@ -1,14 +1,14 @@
-package org.testifj.lang.decompile.impl;
+package org.testifj.lang.codegeneration.impl;
 
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 import org.testifj.lang.classfile.Method;
 import org.testifj.lang.classfile.impl.SimpleCodeGeneratorConfiguration;
-import org.testifj.lang.decompile.CodeGenerationContext;
-import org.testifj.lang.decompile.CodeGeneratorConfiguration;
-import org.testifj.lang.decompile.CodeGeneratorExtension;
-import org.testifj.lang.decompile.ElementSelector;
+import org.testifj.lang.codegeneration.CodeGenerationContext;
+import org.testifj.lang.codegeneration.CodeGeneratorConfiguration;
+import org.testifj.lang.codegeneration.CodeGeneratorExtension;
+import org.testifj.lang.codegeneration.ElementSelector;
 import org.testifj.lang.decompile.impl.CodePointerImpl;
 import org.testifj.lang.model.Constant;
 import org.testifj.lang.model.ElementType;
@@ -44,7 +44,7 @@ public class SimpleCodeGeneratorConfigurationTest {
     @SuppressWarnings("unchecked")
     public void extendInBuilderShouldNotAcceptNullElementTypeOrExtension() {
         expect(() -> builder.extend(null, mock(CodeGeneratorExtension.class))).toThrow(AssertionError.class);
-        expect(() -> builder.extend(ElementSelector.forType(ElementType.JUMP), null)).toThrow(AssertionError.class);
+        expect(() -> builder.extend(ElementSelector.forType(ElementType.BRANCH), null)).toThrow(AssertionError.class);
     }
 
     @Test

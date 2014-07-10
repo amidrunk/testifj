@@ -1,11 +1,10 @@
 package org.testifj.lang.model.impl;
 
 import org.junit.Test;
-import org.testifj.lang.model.AST;
-import org.testifj.lang.model.Affix;
-import org.testifj.lang.model.ElementType;
-import org.testifj.lang.model.Increment;
+import org.mockito.Mockito;
+import org.testifj.lang.model.*;
 
+import static org.mockito.Mockito.mock;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
@@ -58,6 +57,14 @@ public class IncrementImplTest {
         expect(exampleIncrement.toString()).to(containString(AST.local("foo", int.class, 1).toString()));
         expect(exampleIncrement.toString()).to(containString(AST.constant(1).toString()));
         expect(exampleIncrement.toString()).to(containString(Affix.UNDEFINED.toString()));
+    }
+
+    @Test
+    public void incrementWithMetaDataCanBeCreated() {
+        final ElementMetaData metaData = mock(ElementMetaData.class);
+
+        expect(new IncrementImpl(mock(LocalVariableReference.class), mock(Expression.class), String.class, Affix.POSTFIX, metaData).getMetaData()).toBe(metaData);
+        expect(exampleIncrement.getMetaData()).not().toBe(equalTo(null));
     }
 
 }

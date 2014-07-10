@@ -5,13 +5,12 @@ import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 import org.testifj.lang.CodeStreamTestUtils;
-import org.testifj.lang.classfile.ByteCode;
-import org.testifj.lang.classfile.ClassFile;
-import org.testifj.lang.classfile.ClassFileFormatException;
-import org.testifj.lang.classfile.Method;
+import org.testifj.lang.classfile.*;
 import org.testifj.lang.decompile.*;
 import org.testifj.lang.model.AST;
 import org.testifj.lang.model.Constant;
+import org.testifj.lang.model.ModelFactory;
+import org.testifj.lang.model.impl.BasicModelFactory;
 import org.testifj.lang.model.impl.ConstantImpl;
 
 import java.io.IOException;
@@ -36,6 +35,7 @@ public class ConstantInstructionsTest {
     @Before
     public void setup() {
         when(decompilationContext.getMethod()).thenReturn(method);
+        when(decompilationContext.getModelFactory()).thenReturn(new BasicModelFactory());
         when(method.getClassFile()).thenReturn(classFile);
         when(classFile.getConstantPool()).thenReturn(constantPool);
     }

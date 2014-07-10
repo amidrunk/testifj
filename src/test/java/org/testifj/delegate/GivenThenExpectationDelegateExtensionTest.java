@@ -6,7 +6,7 @@ import org.testifj.Caller;
 import org.testifj.ServiceContext;
 import org.testifj.ServiceContextImpl;
 import org.testifj.lang.decompile.impl.CallerDecompilerImpl;
-import org.testifj.lang.decompile.impl.CodePointerCodeGenerator;
+import org.testifj.lang.codegeneration.impl.CodePointerCodeGenerator;
 
 import java.util.Collections;
 

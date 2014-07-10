@@ -3,8 +3,7 @@ package org.testifj.lang.decompile.impl;
 import org.junit.Test;
 import org.testifj.lang.classfile.LineNumberTable;
 import org.testifj.lang.classfile.impl.LineNumberTableEntryImpl;
-import org.testifj.lang.decompile.impl.LineNumberCounterImpl;
-import org.testifj.lang.decompile.impl.ProgramCounter;
+import org.testifj.lang.decompile.ProgramCounter;
 
 import java.util.Arrays;
 

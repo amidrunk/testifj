@@ -2,12 +2,14 @@ package org.testifj.lang.decompile.impl;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.testifj.Action;
 import org.testifj.Caller;
 import org.testifj.Matcher;
 import org.testifj.lang.classfile.ReferenceKind;
 import org.testifj.lang.decompile.CallerDecompiler;
 import org.testifj.lang.decompile.CodePointer;
+import org.testifj.lang.decompile.DecompilationProgressCallback;
 import org.testifj.lang.decompile.impl.CallerDecompilerImpl;
 import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.*;
@@ -18,7 +20,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
+import static org.mockito.Mockito.mock;
 import static org.testifj.Caller.adjacent;
+import static org.testifj.Caller.me;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
 import static org.testifj.matchers.core.CollectionThatIs.empty;
@@ -28,8 +32,9 @@ public class CallerDecompilerImplTest {
     private final CallerDecompiler callerDecompiler = new CallerDecompilerImpl();
 
     @Test
-    public void decompileCallerShouldNotAcceptNullCaller() {
-        expect(() -> callerDecompiler.decompileCaller(null)).toThrow(AssertionError.class);
+    public void decompileCallerShouldNotAcceptInvalidArguments() {
+        expect(() -> callerDecompiler.decompileCaller(null, mock(DecompilationProgressCallback.class))).toThrow(AssertionError.class);
+        expect(() -> callerDecompiler.decompileCaller(me(), null)).toThrow(AssertionError.class);
     }
 
     @Test

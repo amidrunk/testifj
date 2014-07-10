@@ -5,10 +5,8 @@ import org.testifj.lang.TypeResolver;
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.classfile.ClassFileFormatException;
 import org.testifj.lang.classfile.Method;
-import org.testifj.lang.decompile.CodeStream;
-import org.testifj.lang.decompile.DecompilationContext;
-import org.testifj.lang.decompile.Decompiler;
-import org.testifj.lang.decompile.LineNumberCounter;
+import org.testifj.lang.decompile.*;
+import org.testifj.lang.model.ElementContextMetaData;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.Statement;
 
@@ -80,11 +78,10 @@ public class StackInstructionsTest {
     public void pop2ShouldReduceTwiceForComputationalCategories1() throws IOException {
         when(element1.getType()).thenReturn(int.class);
         when(element2.getType()).thenReturn(int.class);
+        when(element1.getMetaData()).thenReturn(new ElementContextMetaData(1, -1));
+        when(element2.getMetaData()).thenReturn(new ElementContextMetaData(2, -1));
 
-        when(pc.get()).thenReturn(1);
         decompilationContext.push(element1);
-
-        when(pc.get()).thenReturn(2);
         decompilationContext.push(element2);
 
         execute(ByteCode.pop2);

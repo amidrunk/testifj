@@ -4,15 +4,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
+import org.mockito.stubbing.Answer;
 import org.testifj.Caller;
-import org.testifj.lang.ClassModelTestUtils;
 import org.testifj.Procedure;
+import org.testifj.lang.ClassModelTestUtils;
+import org.testifj.lang.Range;
 import org.testifj.lang.classfile.*;
-import org.testifj.lang.classfile.impl.DefaultConstantPool;
-import org.testifj.lang.classfile.impl.LocalVariableImpl;
-import org.testifj.lang.classfile.impl.LocalVariableTableImpl;
+import org.testifj.lang.classfile.impl.*;
 import org.testifj.lang.decompile.*;
-import org.testifj.lang.*;
 import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.*;
 
@@ -25,15 +24,15 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.eq;
 import static org.testifj.Caller.adjacent;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
 import static org.testifj.lang.ClassModelTestUtils.code;
 import static org.testifj.lang.ClassModelTestUtils.toCode;
+import static org.testifj.lang.CodeStreamTestUtils.codeStream;
 import static org.testifj.lang.decompile.impl.DecompilationHistoryCallback.DecompilerState;
 import static org.testifj.lang.model.AST.*;
 import static org.testifj.lang.model.AST.eq;
@@ -54,6 +53,67 @@ public class DecompilerImplTest {
     }
 
     @Test
+    public void elementShouldGetComplementedWithMetaDataWhenPushedToStack() throws IOException {
+        final DecompilerDelegate delegate = mock(DecompilerDelegate.class);
+        final Decompiler decompiler = decompilerWithDelegate(ByteCode.nop, delegate);
+        final Method method = methodWithLineNumberTable();
+
+        doAnswer(pushExpression(call(String.class, "valueOf", String.class))).when(delegate).apply(any(), any(), eq(ByteCode.nop));
+
+        final Element[] elements = decompiler.parse(method, codeStream(ByteCode.nop));
+
+        expect(elements.length).toBe(1);
+        expect(elements[0].getElementType()).toBe(ElementType.METHOD_CALL);
+        expect(elements[0].getMetaData().getProgramCounter()).toBe(0);
+        expect(elements[0].getMetaData().getLineNumber()).toBe(10);
+    }
+
+    @Test
+    public void statementShouldGetComplementedWithMetaDataWhenEnlisted() throws IOException {
+        final DecompilerDelegate delegate = mock(DecompilerDelegate.class);
+        final Decompiler decompiler = decompilerWithDelegate(ByteCode.nop, delegate);
+        final Method method = methodWithLineNumberTable();
+
+        doAnswer(enlistStatement(call(String.class, "valueOf", String.class))).when(delegate).apply(any(), any(), eq(ByteCode.nop));
+
+        final Element[] elements = decompiler.parse(method, codeStream(ByteCode.nop));
+
+        expect(elements.length).toBe(1);
+        expect(elements[0].getElementType()).toBe(ElementType.METHOD_CALL);
+        expect(elements[0].getMetaData().getProgramCounter()).toBe(0);
+        expect(elements[0].getMetaData().getLineNumber()).toBe(10);
+    }
+
+    private Method methodWithLineNumberTable() {
+        final Method method = mock(Method.class);
+
+        when(method.getLineNumberTable()).thenReturn(Optional.of(new LineNumberTableImpl(new LineNumberTableEntry[]{
+                new LineNumberTableEntryImpl(0, 10)
+        }, Range.from(0).to(100))));
+        return method;
+    }
+
+    private Decompiler decompilerWithDelegate(int instruction, DecompilerDelegate delegate) {
+        return new DecompilerImpl(new DecompilerConfigurationImpl.Builder()
+                    .on(instruction).then(delegate)
+                    .build());
+    }
+
+    private Answer enlistStatement(Statement statement) {
+        return a -> {
+            ((DecompilationContext) a.getArguments()[0]).getStatements().add(statement);
+            return null;
+        };
+    }
+
+    private Answer pushExpression(Expression expression) {
+        return a -> {
+            ((DecompilationContext) a.getArguments()[0]).getStack().push(expression);
+            return null;
+        };
+    }
+
+    @Test
     public void constructorShouldNotAcceptNullDecompilerConfiguration() {
         expect(() -> new DecompilerImpl(null)).toThrow(AssertionError.class);
     }
@@ -70,7 +130,7 @@ public class DecompilerImplTest {
 
         final DecompilerImpl decompiler = new DecompilerImpl(configuration);
 
-        decompiler.parse(exampleMethod, CodeStreamTestUtils.codeStream(ByteCode.nop));
+        decompiler.parse(exampleMethod, codeStream(ByteCode.nop));
 
         final InOrder inOrder = Mockito.inOrder(extension, enhancement);
 
@@ -87,7 +147,7 @@ public class DecompilerImplTest {
                 .after(ByteCode.nop).then(enhancement)
                 .build();
 
-        new DecompilerImpl(configuration).parse(exampleMethod, CodeStreamTestUtils.codeStream(ByteCode.nop));
+        new DecompilerImpl(configuration).parse(exampleMethod, codeStream(ByteCode.nop));
 
         final InOrder inOrder = Mockito.inOrder(extension, enhancement);
 
@@ -347,7 +407,7 @@ public class DecompilerImplTest {
 
         final Element[] elements = Arrays.stream(code(adjacent(-2))).map(CodePointer::getElement).toArray(Element[]::new);
 
-        expect(elements).toBe(new Element[]{ newInstance(String.class, constant("Hello World!")) });
+        expect(elements).toBe(new Element[]{newInstance(String.class, constant("Hello World!"))});
     }
 
     @Test
@@ -356,7 +416,7 @@ public class DecompilerImplTest {
 
         final Element[] elements = Arrays.stream(code(adjacent(-2))).map(CodePointer::getElement).toArray(Element[]::new);
 
-        expect(elements).toBe(new Element[]{ set(1, "str", newInstance(String.class, constant("Hello World!"))) });
+        expect(elements).toBe(new Element[]{set(1, "str", newInstance(String.class, constant("Hello World!")))});
     }
 
     @Test
@@ -451,10 +511,10 @@ public class DecompilerImplTest {
         final Element[] elements = Arrays.stream(code(adjacent(-3))).map(CodePointer::getElement).toArray(Element[]::new);
 
         final VariableAssignment variableAssignments = (VariableAssignment) elements[0];
-        expect(variableAssignments.getMetaData().getAttribute(ElementMetaData.LINE_NUMBER)).toBe(caller.getCallerStackTraceElement().getLineNumber());
+        expect(variableAssignments.getMetaData().getLineNumber()).toBe(caller.getCallerStackTraceElement().getLineNumber());
 
         final Constant value = (Constant) variableAssignments.getValue();
-        expect(value.getMetaData().getAttribute(ElementMetaData.LINE_NUMBER)).toBe(caller.getCallerStackTraceElement().getLineNumber());
+        expect(value.getMetaData().getLineNumber()).toBe(caller.getCallerStackTraceElement().getLineNumber());
     }
 
     @Test
@@ -473,7 +533,7 @@ public class DecompilerImplTest {
 
     @Test
     public void longArrayLoadCanBeDecompiled() {
-        long[] array = new long[] {1};
+        long[] array = new long[]{1};
         long l = array[0];
 
         expect(code(adjacent(-2))[0].getElement()).toBe(

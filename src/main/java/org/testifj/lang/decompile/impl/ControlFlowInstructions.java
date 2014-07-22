@@ -8,8 +8,6 @@ import org.testifj.lang.classfile.ExceptionTableEntry;
 import org.testifj.lang.decompile.*;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.Goto;
-import org.testifj.lang.model.Sequence;
-import org.testifj.lang.model.Statement;
 import org.testifj.lang.model.impl.GotoImpl;
 import org.testifj.lang.model.impl.ReturnImpl;
 import org.testifj.lang.model.impl.ReturnValueImpl;
@@ -22,6 +20,11 @@ import java.util.Optional;
 import static org.testifj.lang.decompile.DecompilationContextQueries.lastStatement;
 import static org.testifj.lang.decompile.DecompilerDelegates.forQuery;
 
+/**
+ * The <code>ControlFlowInstructions</code> handles instructions related to control flow in the java byte
+ * code format. This includes return statements and branching, as well as transformations that need to be
+ * applied to re-engineer the syntax tree from the binary code format.
+ */
 public final class ControlFlowInstructions implements DecompilerDelegation {
 
     @Override
@@ -41,13 +44,13 @@ public final class ControlFlowInstructions implements DecompilerDelegation {
                 .then(forQuery(lastStatement().as(Goto.class)).apply(tryCatch()));
     }
 
-    private static DecompilerTransformation<Goto> tryCatch() {
-        return new DecompilerTransformation<Goto>() {
+    private static DecompilerElementDelegate<Goto> tryCatch() {
+        return new DecompilerElementDelegate<Goto>() {
             @Override
             public void apply(DecompilationContext context, CodeStream codeStream, int byteCode, Goto gotoElement) throws IOException {
                 final Optional<ExceptionTableEntry> exceptionTableEntry = Methods.getExceptionTableEntryForCatchLocation(
                         context.getMethod(),
-                        gotoElement.getProgramCounter() + 1);
+                        gotoElement.getMetaData().getProgramCounter());
 
                 if (exceptionTableEntry.isPresent()) {
                     if (exceptionTableEntry.get().getStartPC() <= context.getStartPC() + 1) {
@@ -71,7 +74,7 @@ public final class ControlFlowInstructions implements DecompilerDelegation {
         return new DecompilerDelegate() {
             @Override
             public void apply(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
-                final int programCounter = context.getProgramCounter().get() - 1;
+                final int programCounter = context.getProgramCounter().get();
                 final int relativeOffset = codeStream.nextSignedShort();
                 final int absoluteOffset = programCounter + relativeOffset;
 
@@ -84,7 +87,7 @@ public final class ControlFlowInstructions implements DecompilerDelegation {
                     return;
                 }
 
-                context.enlist(new GotoImpl(programCounter, relativeOffset));
+                context.enlist(new GotoImpl(absoluteOffset));
             }
         };
     }

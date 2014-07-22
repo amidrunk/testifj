@@ -9,7 +9,7 @@ import org.testifj.lang.classfile.Method;
 import org.testifj.lang.decompile.CodePointer;
 import org.testifj.lang.decompile.CodeStream;
 import org.testifj.lang.decompile.Decompiler;
-import org.testifj.lang.decompile.SyntaxTreeVisitor;
+import org.testifj.lang.model.SyntaxTreeVisitor;
 import org.testifj.lang.decompile.impl.CodePointerImpl;
 import org.testifj.lang.decompile.impl.InputStreamCodeStream;
 import org.testifj.lang.model.Element;

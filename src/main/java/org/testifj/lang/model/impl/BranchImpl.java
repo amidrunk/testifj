@@ -1,6 +1,7 @@
 package org.testifj.lang.model.impl;
 
 import org.testifj.lang.model.Branch;
+import org.testifj.lang.model.ElementMetaData;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.OperatorType;
 
@@ -12,18 +13,24 @@ public final class BranchImpl extends AbstractElement implements Branch {
 
     private final Expression rightOperand;
 
-    private final int targetPc;
+    private final int targetProgramCounter;
 
-    public BranchImpl(Expression leftOperand, OperatorType operatorType, Expression rightOperand, int targetPc) {
+    public BranchImpl(Expression leftOperand, OperatorType operatorType, Expression rightOperand, int targetProgramCounter) {
+        this(leftOperand, operatorType, rightOperand, targetProgramCounter, null);
+    }
+
+    public BranchImpl(Expression leftOperand, OperatorType operatorType, Expression rightOperand, int targetProgramCounter, ElementMetaData metaData) {
+        super(metaData);
+
         assert leftOperand != null : "Left operand can't be null";
         assert operatorType != null : "Operator type can't be null";
         assert rightOperand != null : "Right operand can't be null";
-        assert targetPc >= 0 : "Target PC must be positive";
+        assert targetProgramCounter >= 0 : "Program counter must be positive";
 
         this.leftOperand = leftOperand;
         this.operatorType = operatorType;
         this.rightOperand = rightOperand;
-        this.targetPc = targetPc;
+        this.targetProgramCounter = targetProgramCounter;
     }
 
     @Override
@@ -42,8 +49,8 @@ public final class BranchImpl extends AbstractElement implements Branch {
     }
 
     @Override
-    public int getTargetPC() {
-        return targetPc;
+    public int getTargetProgramCounter() {
+        return targetProgramCounter;
     }
 
     @Override
@@ -53,7 +60,7 @@ public final class BranchImpl extends AbstractElement implements Branch {
 
         BranchImpl branch = (BranchImpl) o;
 
-        if (targetPc != branch.targetPc) return false;
+        if (targetProgramCounter != branch.targetProgramCounter) return false;
         if (!leftOperand.equals(branch.leftOperand)) return false;
         if (operatorType != branch.operatorType) return false;
         if (!rightOperand.equals(branch.rightOperand)) return false;
@@ -66,7 +73,6 @@ public final class BranchImpl extends AbstractElement implements Branch {
         int result = leftOperand.hashCode();
         result = 31 * result + operatorType.hashCode();
         result = 31 * result + rightOperand.hashCode();
-        result = 31 * result + targetPc;
         return result;
     }
 
@@ -76,7 +82,6 @@ public final class BranchImpl extends AbstractElement implements Branch {
                 "leftOperand=" + leftOperand +
                 ", operatorType=" + operatorType +
                 ", rightOperand=" + rightOperand +
-                ", targetPc=" + targetPc +
                 '}';
     }
 }

@@ -5,9 +5,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+// TODO: Make ... better...
 public final class Caller {
 
     public static final int CALLER_STACK_TRACE_INDEX = 2;
+
     private final List<StackTraceElement> stackTraceElements;
 
     private final int callerStackTraceIndex;

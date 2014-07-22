@@ -1,6 +1,6 @@
 package org.testifj.lang.classfile.impl;
 
-import org.testifj.lang.MethodReference;
+import org.testifj.lang.classfile.MethodReference;
 import org.testifj.lang.model.Signature;
 
 import java.lang.reflect.Type;

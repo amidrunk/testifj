@@ -1,6 +1,6 @@
 package org.testifj.lang.model;
 
-public interface Increment extends Expression, Statement {
+public interface Increment extends StatementAndExpression {
 
     LocalVariableReference getLocalVariable();
 

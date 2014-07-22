@@ -1,5 +1,6 @@
 package org.testifj.lang.model.impl;
 
+import org.testifj.lang.model.ElementMetaData;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.ReturnValue;
 
@@ -8,7 +9,14 @@ public final class ReturnValueImpl extends AbstractElement implements ReturnValu
     private final Expression expression;
 
     public ReturnValueImpl(Expression expression) {
+        this(expression, null);
+    }
+
+    public ReturnValueImpl(Expression expression, ElementMetaData metaData) {
+        super(metaData);
+
         assert expression != null : "Expression can't be null";
+
         this.expression = expression;
     }
 

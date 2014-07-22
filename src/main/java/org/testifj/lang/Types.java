@@ -4,6 +4,12 @@ import java.lang.reflect.Type;
 
 public final class Types {
 
+    public static boolean isArray(Type type) {
+        assert type != null : "Type can't be null";
+
+        return type.getTypeName().endsWith("[]");
+    }
+
     public static boolean isPrimitive(Type type) {
         assert type != null : "Type can't be null";
 

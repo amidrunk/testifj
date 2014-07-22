@@ -1,9 +1,6 @@
 package org.testifj.lang.model.impl;
 
-import org.testifj.lang.model.Affix;
-import org.testifj.lang.model.Expression;
-import org.testifj.lang.model.Increment;
-import org.testifj.lang.model.LocalVariableReference;
+import org.testifj.lang.model.*;
 
 import java.lang.reflect.Type;
 
@@ -18,6 +15,12 @@ public class IncrementImpl extends AbstractElement implements Increment {
     private final Affix affix;
 
     public IncrementImpl(LocalVariableReference localVariableReference, Expression value, Type resultType, Affix affix) {
+        this(localVariableReference, value, resultType, affix, null);
+    }
+
+    public IncrementImpl(LocalVariableReference localVariableReference, Expression value, Type resultType, Affix affix, ElementMetaData metaData) {
+        super(metaData);
+
         assert localVariableReference != null : "Local variable reference can't be null";
         assert value != null : "Value can't be null";
         assert resultType != null : "Result type can't be null";

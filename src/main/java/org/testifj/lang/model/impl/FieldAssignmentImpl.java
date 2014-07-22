@@ -1,5 +1,6 @@
 package org.testifj.lang.model.impl;
 
+import org.testifj.lang.model.ElementMetaData;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.FieldAssignment;
 import org.testifj.lang.model.FieldReference;
@@ -11,6 +12,12 @@ public final class FieldAssignmentImpl extends AbstractElement implements FieldA
     private final Expression value;
 
     public FieldAssignmentImpl(FieldReference fieldReference, Expression value) {
+        this(fieldReference, value, null);
+    }
+
+    public FieldAssignmentImpl(FieldReference fieldReference, Expression value, ElementMetaData elementMetaData) {
+        super(elementMetaData);
+
         assert fieldReference != null : "Field reference can't be null";
         assert value != null : "Value can't be null";
 

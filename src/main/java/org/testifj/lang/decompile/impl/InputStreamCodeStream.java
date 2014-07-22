@@ -1,8 +1,7 @@
 package org.testifj.lang.decompile.impl;
 
 import org.testifj.lang.decompile.CodeStream;
-import org.testifj.lang.decompile.impl.ProgramCounter;
-import org.testifj.lang.decompile.impl.ProgramCounterImpl;
+import org.testifj.lang.decompile.ProgramCounter;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;

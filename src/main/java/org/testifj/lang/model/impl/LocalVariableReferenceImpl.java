@@ -1,5 +1,6 @@
 package org.testifj.lang.model.impl;
 
+import org.testifj.lang.model.ElementMetaData;
 import org.testifj.lang.model.LocalVariableReference;
 
 import java.lang.reflect.Type;
@@ -13,6 +14,12 @@ public class LocalVariableReferenceImpl extends AbstractElement implements Local
     private final int index;
 
     public LocalVariableReferenceImpl(String variableName, Type variableType, int index) {
+        this(variableName, variableType, index, null);
+    }
+
+    public LocalVariableReferenceImpl(String variableName, Type variableType, int index, ElementMetaData elementMetaData) {
+        super(elementMetaData);
+
         assert variableName != null && !variableName.isEmpty() : "Variable name can't be null or empty";
         assert variableType != null : "Variable type can't be null";
         assert index >= 0 : "Index must be positive";

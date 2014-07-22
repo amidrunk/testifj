@@ -5,6 +5,13 @@ import java.util.stream.Stream;
 
 public final class SingleThreadedStack<E> implements Stack<E> {
 
+    public static final class Creator implements StackCreator {
+        @Override
+        public <E> Stack<E> createStack() {
+            return new SingleThreadedStack<>();
+        }
+    }
+
     private final LinkedList<StackListener<E>> stackListeners = new LinkedList<>();
 
     private final List<E> targetList;

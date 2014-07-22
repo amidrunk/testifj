@@ -6,7 +6,7 @@ import org.testifj.lang.model.Element;
 /**
  * A reference to a particular syntax element in the syntax tree.
  *
- * TOGO Add line number.
+ * TODO Add line number.
  */
 public interface CodePointer<E extends Element> {
 

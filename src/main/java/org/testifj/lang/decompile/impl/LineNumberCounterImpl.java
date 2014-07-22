@@ -3,7 +3,7 @@ package org.testifj.lang.decompile.impl;
 import org.testifj.lang.decompile.LineNumberCounter;
 import org.testifj.lang.classfile.LineNumberTable;
 import org.testifj.lang.classfile.LineNumberTableEntry;
-import org.testifj.lang.decompile.impl.ProgramCounter;
+import org.testifj.lang.decompile.ProgramCounter;
 
 public final class LineNumberCounterImpl implements LineNumberCounter {
 

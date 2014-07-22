@@ -4,7 +4,7 @@ public final class CompositeDecompilationProgressCallback implements Decompilati
 
     private final DecompilationProgressCallback[] callbacks;
 
-    public CompositeDecompilationProgressCallback(DecompilationProgressCallback[] callbacks) {
+    public CompositeDecompilationProgressCallback(DecompilationProgressCallback ... callbacks) {
         assert callbacks != null : "Callbacks can't be null";
 
         this.callbacks = new DecompilationProgressCallback[callbacks.length];

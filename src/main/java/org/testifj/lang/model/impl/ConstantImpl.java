@@ -1,6 +1,8 @@
 package org.testifj.lang.model.impl;
 
+import org.testifj.lang.Types;
 import org.testifj.lang.model.Constant;
+import org.testifj.lang.model.ElementMetaData;
 
 import java.lang.reflect.Type;
 import java.util.Objects;
@@ -9,11 +11,17 @@ public final class ConstantImpl extends AbstractElement implements Constant {
 
     private final Object constant;
 
-    private final Class type;
+    private final Type type;
 
-    public ConstantImpl(Object constant, Class type) {
+    public ConstantImpl(Object constant, Type type) {
+        this(constant, type, null);
+    }
+
+    public ConstantImpl(Object constant, Type type, ElementMetaData metaData) {
+        super(metaData);
+
         assert type != null : "Type can't be null";
-        assert !type.isPrimitive() || constant != null : "Constant can't be null";
+        assert !Types.isPrimitive(type) || constant != null : "Constant can't be null";
 
         this.constant = constant;
         this.type = type;

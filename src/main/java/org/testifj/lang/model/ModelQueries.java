@@ -2,6 +2,7 @@ package org.testifj.lang.model;
 
 import org.testifj.annotations.DSL;
 
+import java.lang.reflect.Type;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -30,12 +31,12 @@ public final class ModelQueries {
                 && instance.getVariableIndex() == localVariable.getIndex();
     }
 
-    public static Predicate<Cast> isCastTo(Class<?> targetType) {
+    public static Predicate<TypeCast> isCastTo(Class<?> targetType) {
         assert targetType != null : "Target type can't be null";
         return instance -> instance.getType().equals(targetType);
     }
 
-    public static ModelQuery<Cast, Expression> castValue() {
+    public static ModelQuery<TypeCast, Expression> castValue() {
         return cast -> cast == null ? Optional.empty() : Optional.of(cast.getValue());
     }
 
@@ -70,6 +71,10 @@ public final class ModelQueries {
         return b -> b == null ? Optional.<Expression>empty() : Optional.of(b.getRightOperand());
     }
 
+    public static ModelQuery<BinaryOperator, OperatorType> operatorType() {
+        return o -> o == null ? Optional.<OperatorType>empty() : Optional.of(o.getOperatorType());
+    }
+
     public static Predicate<Branch> operatorTypeIs(OperatorType operatorType) {
         return new Predicate<Branch>() {
             @Override
@@ -83,6 +88,10 @@ public final class ModelQueries {
         return s -> Objects.equals(s, expectedValue);
     }
 
+    public static <E extends Expression> ModelQuery<E, Type> runtimeType() {
+        return e -> e == null ? Optional.<Type>empty() : Optional.of(e.getType());
+    }
+
     public static <E extends Expression> Predicate<E> ofRuntimeType(Class<?> type) {
         assert type != null : "Type can't be null";
         return e -> e != null && e.getType().equals(type);
@@ -90,6 +99,10 @@ public final class ModelQueries {
 
     public static Predicate<Increment> affixIsUndefined() {
         return source -> source != null && source.getAffix() == Affix.UNDEFINED;
+    }
+
+    public static <E extends Element> ModelQuery<E, E> value() {
+        return Optional::ofNullable;
     }
 
 

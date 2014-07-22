@@ -3,13 +3,11 @@ package org.testifj.lang.decompile.impl;
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.decompile.*;
 import org.testifj.lang.model.*;
-import org.testifj.lang.model.impl.BinaryOperatorImpl;
-import org.testifj.lang.model.impl.BranchImpl;
-import org.testifj.lang.model.impl.CompareImpl;
-import org.testifj.lang.model.impl.UnaryOperatorImpl;
+import org.testifj.lang.model.impl.*;
 import org.testifj.util.Lists;
 import org.testifj.util.Pair;
 import org.testifj.util.Priority;
+import org.testifj.util.Sequence;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -26,6 +24,11 @@ import static org.testifj.lang.model.ModelQueries.*;
 import static org.testifj.util.Lists.optionallyCollect;
 import static org.testifj.util.Lists.zip;
 
+/**
+ * The <code>BooleanOperations</code> decompilation delegation provides handling of operations related
+ * to boolean operation. Plain instruction handling of lt, gt, eq etc instructions are provided, as well
+ * as post-instruction handling transformation to map stack/statement patterns to syntax elements.
+ */
 public final class BooleanOperations implements DecompilerDelegation {
 
     private final ModelQuery<DecompilationContext, Branch> branchIfOperatorIsNotZero = secondToLastStatement()
@@ -73,6 +76,11 @@ public final class BooleanOperations implements DecompilerDelegation {
         configurationBuilder.after(invokeinterface, invokespecial, invokestatic, invokevirtual)
                 .when(elementIsStacked(ElementType.METHOD_CALL))
                 .then(coerceConstantIntegerMethodParameterToBoolean());
+
+        configurationBuilder.map(ElementType.BINARY_OPERATOR)
+                .forQuery(value().where(operatorType().is(equalTo(OperatorType.NE))).and(leftOperand().get(runtimeType()).is(equalTo(boolean.class))).and(rightOperand().is(equalTo(constant(0)))))
+                .to(source -> Optional.of(source.as(BinaryOperator.class).getLeftOperand()));
+
     }
 
     public static DecompilerDelegate lcmp() {
@@ -167,11 +175,12 @@ public final class BooleanOperations implements DecompilerDelegation {
         return new DecompilerDelegate() {
             @Override
             public void apply(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
-                final int targetPC = context.getProgramCounter().get() + codeStream.nextUnsignedShort();
+                final int programCounter = context.getProgramCounter().get();
+                final int relativeOffset = codeStream.nextSignedShort();
                 final Expression rightOperand = context.pop();
                 final Expression leftOperand = context.pop();
 
-                context.enlist(new BranchImpl(leftOperand, operatorType, rightOperand, targetPC));
+                context.enlist(new BranchImpl(leftOperand, operatorType, rightOperand, programCounter + relativeOffset));
             }
         };
     }
@@ -226,28 +235,84 @@ public final class BooleanOperations implements DecompilerDelegation {
         };
     }
 
-    private DecompilerTransformation<Branch> binaryBranchToBooleanCompare() {
-        return (context, codeStream, byteCode, result) -> {
-            context.getStack().pop();
-            context.getStack().pop();
-            context.getStatements().tail(-2).remove();
+    private DecompilerElementDelegate<Branch> binaryBranchToBooleanCompare() {
+        return (context, codeStream, byteCode, _result) -> {
+            final Expression falseValue = context.getStack().pop();
+            final Expression trueValue = context.getStack().pop();
 
-            final Expression leftOperand;
-            final Expression rightOperand;
+            context.getStatements().last().remove();
 
-            if (result.getLeftOperand().getElementType() == ElementType.COMPARE && result.getRightOperand().equals(constant(0))) {
-                final Compare compare = result.getLeftOperand().as(Compare.class);
+            context.push(reduceBooleanOperation(context, trueValue, falseValue, Optional.<Expression>empty()).get());
+        };
+    }
 
-                leftOperand = compare.getLeftOperand();
-                rightOperand = compare.getRightOperand();
-            } else {
-                leftOperand = result.getLeftOperand();
-                rightOperand = result.getRightOperand();
-            }
+    private Optional<Expression> reduceBooleanOperation(DecompilationContext context, Expression trueValue, Expression falseValue, Optional<Expression> nextBoolean) {
+        final Optional<Branch> branchOptional = lastStatement().as(Branch.class).from(context);
 
-            final OperatorType operatorType;
+        if (!branchOptional.isPresent()) {
+            return nextBoolean;
+        }
 
-            switch (result.getOperatorType()) {
+        final Branch branch = context.getStatements().last().remove().as(Branch.class);
+        final Expression booleanExpression;
+
+        if (branch.getTargetProgramCounter() == trueValue.getMetaData().getProgramCounter()) {
+            final Expression logicalOperator = getLogicalOperator(context, branch, false);
+            final Optional<Expression> result = reduceBooleanOperation(context, trueValue,
+                    findFalseJumpDestination(nextBoolean.get()),
+                    Optional.of(logicalOperator));
+
+            return Optional.of(context.getModelFactory().binary(result.get(), OperatorType.OR, nextBoolean.get(), boolean.class));
+        } else if (branch.getTargetProgramCounter() == falseValue.getMetaData().getProgramCounter()) {
+            final Expression logicalOperator = getLogicalOperator(context, branch, true);
+
+            booleanExpression = (nextBoolean.isPresent() ? context.getModelFactory().binary(logicalOperator, OperatorType.AND, nextBoolean.get(), boolean.class) : logicalOperator);
+
+            return reduceBooleanOperation(context, trueValue, falseValue, Optional.of(booleanExpression));
+        }
+
+        return nextBoolean;
+    }
+
+    private Expression findFalseJumpDestination(Expression expression) {
+        if (expression.getElementType() != ElementType.BINARY_OPERATOR) {
+            return expression;
+        }
+
+        BinaryOperator binaryOperator = expression.as(BinaryOperator.class);
+
+        while (binaryOperator.getLeftOperand().getElementType() == ElementType.BINARY_OPERATOR) {
+            binaryOperator = binaryOperator.getLeftOperand().as(BinaryOperator.class);
+        }
+
+        return binaryOperator.getLeftOperand();
+    }
+
+    private Expression getLogicalOperator(DecompilationContext context, Branch currentBranch, boolean inclusive) {
+        final Expression leftOperand;
+        final Expression rightOperand;
+
+        if (currentBranch.getLeftOperand().getElementType() == ElementType.COMPARE && currentBranch.getRightOperand().equals(constant(0))) {
+            final Compare compare = currentBranch.getLeftOperand().as(Compare.class);
+
+            leftOperand = compare.getLeftOperand();
+            rightOperand = compare.getRightOperand();
+        } else {
+            leftOperand = currentBranch.getLeftOperand();
+            rightOperand = currentBranch.getRightOperand();
+        }
+
+        final OperatorType operatorType = getLogicalOperatorType(currentBranch, inclusive);
+
+        return context.getModelFactory().binary(leftOperand, operatorType, rightOperand, boolean.class);
+    }
+
+    private OperatorType getLogicalOperatorType(Branch currentBranch, boolean inclusive) {
+        OperatorType operatorType;
+        if (!inclusive) {
+            operatorType = currentBranch.getOperatorType();
+        } else {
+            switch (currentBranch.getOperatorType()) {
                 case EQ:
                     operatorType = OperatorType.NE;
                     break;
@@ -267,14 +332,13 @@ public final class BooleanOperations implements DecompilerDelegation {
                     operatorType = OperatorType.GE;
                     break;
                 default:
-                    throw new UnsupportedOperationException("Can't transform operator " + result.getOperatorType());
+                    throw new UnsupportedOperationException("Can't transform operator " + currentBranch.getOperatorType());
             }
-
-            context.push(new BinaryOperatorImpl(leftOperand, operatorType, rightOperand, boolean.class));
-        };
+        }
+        return operatorType;
     }
 
-    private static DecompilerTransformation<Branch> invertBoolean() {
+    private static DecompilerElementDelegate<Branch> invertBoolean() {
         return (context, codeStream, byteCode, result) -> {
             context.getStack().pop();
             context.getStack().pop();
@@ -287,7 +351,10 @@ public final class BooleanOperations implements DecompilerDelegation {
         return new DecompilerDelegate() {
             @Override
             public void apply(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
-                context.enlist(new BranchImpl(context.getStack().pop(), operatorType, constant(0), codeStream.nextSignedShort()));
+                final int pc = context.getProgramCounter().get();
+                final int relativeOffset = codeStream.nextSignedShort();
+
+                context.enlist(new BranchImpl(context.getStack().pop(), operatorType, constant(0), pc + relativeOffset));
             }
         };
     }

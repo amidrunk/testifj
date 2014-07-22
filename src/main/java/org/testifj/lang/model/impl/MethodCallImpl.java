@@ -1,10 +1,7 @@
 package org.testifj.lang.model.impl;
 
 import org.testifj.lang.Types;
-import org.testifj.lang.model.Expression;
-import org.testifj.lang.model.IncompatibleTypeException;
-import org.testifj.lang.model.MethodCall;
-import org.testifj.lang.model.Signature;
+import org.testifj.lang.model.*;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
@@ -30,6 +27,12 @@ public final class MethodCallImpl extends AbstractElement implements MethodCall 
     }
 
     public MethodCallImpl(Type targetType, String methodName, Signature signature, Expression targetInstance, Expression[] parameters, Type expressionType) {
+        this(targetType, methodName, signature, targetInstance, parameters, expressionType, null);
+    }
+
+    public MethodCallImpl(Type targetType, String methodName, Signature signature, Expression targetInstance, Expression[] parameters, Type expressionType, ElementMetaData elementMetaData) {
+        super(elementMetaData);
+
         assert targetType != null : "Target type can't be null";
         assert methodName != null && !methodName.isEmpty() : "Method name can't be null or empty";
         assert signature != null : "Signature can't be null";

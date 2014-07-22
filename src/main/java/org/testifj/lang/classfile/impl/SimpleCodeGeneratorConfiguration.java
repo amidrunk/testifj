@@ -1,5 +1,9 @@
 package org.testifj.lang.classfile.impl;
 
+import org.testifj.lang.codegeneration.CodeGenerationContext;
+import org.testifj.lang.codegeneration.CodeGeneratorConfiguration;
+import org.testifj.lang.codegeneration.CodeGeneratorExtension;
+import org.testifj.lang.codegeneration.ElementSelector;
 import org.testifj.lang.decompile.*;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.ElementType;

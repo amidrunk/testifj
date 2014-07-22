@@ -2,7 +2,7 @@ package org.testifj.lang.classfile.impl;
 
 import org.testifj.lang.classfile.Attribute;
 import org.testifj.lang.classfile.ClassFile;
-import org.testifj.lang.decompile.Constructor;
+import org.testifj.lang.classfile.Constructor;
 import org.testifj.lang.model.Signature;
 
 import java.util.Arrays;

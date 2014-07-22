@@ -51,7 +51,7 @@ public final class Methods {
         }
 
         return optionalLocalVariableTable.get().getLocalVariables().stream()
-                .filter(local -> local.getIndex() == index && (pc >= local.getStartPC() && pc < local.getStartPC() + local.getLength()) || (local.getStartPC() == -1))
+                .filter(local -> local.getIndex() == index && (pc >= local.getStartPC() && pc < local.getStartPC() + local.getLength()) || (local.getIndex() == index && local.getStartPC() == -1))
                 .findFirst();
     }
 

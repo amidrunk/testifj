@@ -3,15 +3,21 @@ package org.testifj.lang.decompile.impl;
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.classfile.ClassFileFormatException;
 import org.testifj.lang.decompile.*;
-import org.testifj.lang.model.Cast;
+import org.testifj.lang.model.TypeCast;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;
-import org.testifj.lang.model.impl.CastImpl;
+import org.testifj.lang.model.impl.TypeCastImpl;
 import org.testifj.util.Priority;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
 
+/**
+ * The <code>CastInstructions</code> decompilation delegation provides support for all available cast
+ * instructions in the class file format. This includes support for non identity primitive cast instructions
+ * (i2b, f2i etc) as well as type safe, loss-less casts through check casts. Further the delegation handles
+ * various intricacies of the java compiler.
+ */
 public final class CastInstructions implements DecompilerDelegation {
 
     public void configure(DecompilerConfiguration.Builder configurationBuilder) {
@@ -46,9 +52,9 @@ public final class CastInstructions implements DecompilerDelegation {
      */
     public static DecompilerDelegate discardImplicitCast() {
         return (context,codeStream,byteCode) -> {
-            final Cast cast = (Cast) context.pop();
+            final TypeCast typeCast = (TypeCast) context.pop();
 
-            context.push(cast.getValue());
+            context.push(typeCast.getValue());
         };
     }
 
@@ -58,7 +64,7 @@ public final class CastInstructions implements DecompilerDelegation {
             final Type targetType = context.resolveType(targetTypeName);
             final Expression castExpression = context.pop();
 
-            context.push(new CastImpl(castExpression, targetType));
+            context.push(new TypeCastImpl(castExpression, targetType));
         };
     }
 
@@ -117,7 +123,7 @@ public final class CastInstructions implements DecompilerDelegation {
                             + "->" + targetType.getSimpleName() + "; value is of incorrect source type: " + sourceValue);
                 }
 
-                context.push(new CastImpl(sourceValue, targetType));
+                context.push(new TypeCastImpl(sourceValue, targetType));
             }
         };
     }

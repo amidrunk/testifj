@@ -1,6 +1,7 @@
 package org.testifj.lang.decompile.impl;
 
 import org.testifj.lang.classfile.ByteCode;
+import org.testifj.lang.classfile.ConstantPool;
 import org.testifj.lang.classfile.FieldRefDescriptor;
 import org.testifj.lang.decompile.*;
 import org.testifj.lang.model.Expression;
@@ -11,6 +12,10 @@ import org.testifj.lang.model.impl.MethodSignature;
 
 import java.io.IOException;
 
+/**
+ * The <code>FieldInstructions</code> decompiler delegation configures support for various field-related
+ * instructions, such as reading and writing to/from fields.
+ */
 public final class FieldInstructions implements DecompilerDelegation {
 
     /**

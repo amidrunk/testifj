@@ -2,7 +2,7 @@ package org.testifj.lang.model;
 
 import java.util.List;
 
-public interface NewInstance extends Expression, Statement {
+public interface NewInstance extends StatementAndExpression {
 
     Signature getConstructorSignature();
 

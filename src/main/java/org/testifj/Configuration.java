@@ -6,7 +6,7 @@ import org.testifj.lang.classfile.ClassFileReader;
 import org.testifj.lang.decompile.Decompiler;
 import org.testifj.lang.decompile.impl.CallerDecompilerImpl;
 import org.testifj.lang.classfile.impl.ClassFileReaderImpl;
-import org.testifj.lang.decompile.impl.CodePointerCodeGenerator;
+import org.testifj.lang.codegeneration.impl.CodePointerCodeGenerator;
 import org.testifj.lang.decompile.impl.DecompilerImpl;
 
 import java.util.concurrent.atomic.AtomicReference;

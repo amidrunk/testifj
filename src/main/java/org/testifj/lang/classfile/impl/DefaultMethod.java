@@ -123,6 +123,7 @@ public final class DefaultMethod implements Method {
     }
 
     @Override
+    @Deprecated
     public InputStream getCodeForLineNumber(int lineNumber) {
         final Range codeRangeForLineNumber = getCodeRangeForLineNumber(lineNumber);
 

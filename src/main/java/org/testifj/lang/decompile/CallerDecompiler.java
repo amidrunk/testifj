@@ -12,4 +12,6 @@ public interface CallerDecompiler {
 
     CodePointer[] decompileCaller(Caller caller) throws IOException;
 
+    CodePointer[] decompileCaller(Caller caller, DecompilationProgressCallback callback) throws IOException;
+
 }

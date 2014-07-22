@@ -14,6 +14,12 @@ public final class CompareImpl extends AbstractElement implements Compare {
     private final Expression rightOperand;
 
     public CompareImpl(Expression leftOperand, Expression rightOperand) {
+        this(leftOperand, rightOperand, null);
+    }
+
+    public CompareImpl(Expression leftOperand, Expression rightOperand, ElementMetaData elementMetaData) {
+        super(elementMetaData);
+
         assert leftOperand != null : "Left operand can't be null";
         assert rightOperand != null : "Right operand can't be null";
 

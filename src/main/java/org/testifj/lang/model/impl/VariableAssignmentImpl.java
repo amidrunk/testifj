@@ -1,6 +1,7 @@
 package org.testifj.lang.model.impl;
 
 import org.testifj.lang.Types;
+import org.testifj.lang.model.ElementMetaData;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.IncompatibleTypeException;
 import org.testifj.lang.model.VariableAssignment;
@@ -18,6 +19,11 @@ public final class VariableAssignmentImpl extends AbstractElement implements Var
     private final Type variableType;
 
     public VariableAssignmentImpl(Expression value, int variableIndex, String variableName, Type variableType) {
+        this(value, variableIndex, variableName, variableType, null);
+    }
+    public VariableAssignmentImpl(Expression value, int variableIndex, String variableName, Type variableType, ElementMetaData elementMetaData) {
+        super(elementMetaData);
+
         assert value != null : "Value can't be null";
         assert variableIndex >= 0 : "Variable must be positive";
         assert variableName != null && !variableName.isEmpty() : "Variable name can't be null or empty";

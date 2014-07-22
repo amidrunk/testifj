@@ -1,11 +1,7 @@
 package org.testifj.lang.classfile.impl;
 
-import org.testifj.lang.model.Lambda;
+import org.testifj.lang.model.*;
 import org.testifj.lang.classfile.ReferenceKind;
-import org.testifj.lang.model.ElementType;
-import org.testifj.lang.model.Expression;
-import org.testifj.lang.model.LocalVariableReference;
-import org.testifj.lang.model.Signature;
 import org.testifj.lang.model.impl.AbstractElement;
 
 import java.lang.reflect.Type;
@@ -33,7 +29,6 @@ public class LambdaImpl extends AbstractElement implements Lambda {
     private final Signature backingMethodSignature;
 
     private final List<LocalVariableReference> enclosedVariables;
-
     public LambdaImpl(Optional<Expression> self,
                       ReferenceKind referenceKind,
                       Type functionalInterface,
@@ -43,6 +38,23 @@ public class LambdaImpl extends AbstractElement implements Lambda {
                       String backingMethodName,
                       Signature backingMethodSignature,
                       List<LocalVariableReference> enclosedVariables) {
+        this(self, referenceKind, functionalInterface, functionalMethodName, interfaceMethodSignature, declaringClass,
+                backingMethodName, backingMethodSignature, enclosedVariables, null);
+    }
+
+    public LambdaImpl(Optional<Expression> self,
+                      ReferenceKind referenceKind,
+                      Type functionalInterface,
+                      String functionalMethodName,
+                      Signature interfaceMethodSignature,
+                      Type declaringClass,
+                      String backingMethodName,
+                      Signature backingMethodSignature,
+                      List<LocalVariableReference> enclosedVariables,
+                      ElementMetaData metaData) {
+
+        super(metaData);
+
         this.self = self;
         this.referenceKind = referenceKind;
         this.functionalInterface = functionalInterface;

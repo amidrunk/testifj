@@ -1,5 +1,6 @@
 package org.testifj.lang.decompile.impl;
 
+import org.testifj.lang.Types;
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.classfile.ClassFileFormatException;
 import org.testifj.lang.decompile.*;
@@ -7,10 +8,27 @@ import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.*;
 import org.testifj.util.Priority;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 
+/**
+ * The <code>ArrayInstructions</code> decompiler delegation deals with instructions related to arrays, such
+ * as
+ * <dir>
+ *     <li>Instantiating arrays through e.g. <code>anewarray</code>, <code>newarray</code> etc</li>
+ *     <li>Retrieving the length of an array through <code>arraylength</code></li>
+ *     <li>Storing elements in an array through e.g. <code>iastore</code>, <code>aastore</code> etc</li>
+ *     <li>Loading elements from an array through e.g. <code>aaload</code>, <code>iaload</code> etc</li>
+ * </dir>
+ *
+ * Further, this decompiler delegation provides
+ *
+ * <dir>
+ *     <li>Configuration to ensure that array instantiation is mapped to a single expression in the syntax tree.</li>
+ * </dir>
+ */
 public final class ArrayInstructions implements DecompilerDelegation {
 
     public void configure(DecompilerConfiguration.Builder configurationBuilder) {
@@ -36,30 +54,43 @@ public final class ArrayInstructions implements DecompilerDelegation {
         configurationBuilder.on(ByteCode.saload).then(saload());
     }
 
+    /**
+     * Loads an element from an object array.
+     *
+     * <p>
+     * <pre>[..., index=Expression&lt;int&gt;,array=Expression&lt;Object[]&gt;] => [..., ArrayLoad(array=array,index=index)]</pre>
+     * </p>
+     *
+     * @return A delegate that handles the <code>aaload</code> instruction.
+     * @see <a href="http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html#jvms-6.5.aaload">aaload</a>.
+     */
     public static DecompilerDelegate aaload() {
-        return (context,codeStream,byteCode) -> {
-            final Expression index = context.pop();
-            final Expression array = context.pop();
-            final Type arrayType = array.getType();
-            final Type componentType;
+        return new DecompilerDelegate() {
+            @Override
+            public void apply(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
+                final Expression index = context.pop();
+                final Expression array = context.pop();
+                final Type arrayType = array.getType();
+                final Type componentType;
 
-            if (!(arrayType instanceof Class)) {
-                final String typeName = arrayType.getTypeName();
+                if (!(arrayType instanceof Class)) {
+                    final String typeName = arrayType.getTypeName();
 
-                if (typeName.charAt(0) != '[') {
-                    throw new ClassFileFormatException("Can't execute 'aaload' on non-array type: " + typeName);
+                    if (typeName.charAt(0) != '[') {
+                        throw new ClassFileFormatException("Can't execute 'aaload' on non-array type: " + typeName);
+                    }
+
+                    componentType = context.resolveType(typeName.substring(1));
+                } else {
+                    componentType = ((Class) arrayType).getComponentType();
+
+                    if (componentType == null) {
+                        throw new ClassFileFormatException("Can't execute 'aaload' on non-array type: " + arrayType.getTypeName());
+                    }
                 }
 
-                componentType = context.resolveType(typeName.substring(1));
-            } else {
-                componentType = ((Class) arrayType).getComponentType();
-
-                if (componentType == null) {
-                    throw new ClassFileFormatException("Can't execute 'aaload' on non-array type: " + arrayType.getTypeName());
-                }
+                context.push(new ArrayLoadImpl(array, index, componentType));
             }
-
-            context.push(new ArrayLoadImpl(array, index, componentType));
         };
     }
 
@@ -130,6 +161,10 @@ public final class ArrayInstructions implements DecompilerDelegation {
     public static DecompilerDelegate arraylength() {
         return (context,codeStream,byteCode) -> {
             final Expression array = context.pop();
+
+            if (!Types.isArray(array.getType())) {
+                throw new ClassFileFormatException("Stacked element is not an array: " + String.valueOf(array));
+            }
 
             context.push(new FieldReferenceImpl(array, array.getType(), int.class, "length"));
         };

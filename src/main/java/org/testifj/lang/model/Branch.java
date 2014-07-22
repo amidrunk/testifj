@@ -8,7 +8,7 @@ public interface Branch extends Statement {
 
     Expression getRightOperand();
 
-    int getTargetPC();
+    int getTargetProgramCounter();
 
     default ElementType getElementType() {
         return ElementType.BRANCH;

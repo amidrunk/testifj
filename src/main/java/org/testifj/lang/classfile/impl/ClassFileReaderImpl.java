@@ -2,10 +2,10 @@ package org.testifj.lang.classfile.impl;
 
 import org.testifj.lang.*;
 import org.testifj.lang.classfile.*;
-import org.testifj.lang.decompile.ConstantPool;
-import org.testifj.lang.decompile.ConstantPoolEntry;
-import org.testifj.lang.decompile.ConstantPoolEntryTag;
-import org.testifj.lang.decompile.Constructor;
+import org.testifj.lang.classfile.ConstantPool;
+import org.testifj.lang.classfile.ConstantPoolEntry;
+import org.testifj.lang.classfile.ConstantPoolEntryTag;
+import org.testifj.lang.classfile.Constructor;
 import org.testifj.lang.model.impl.MethodSignature;
 
 import java.io.ByteArrayInputStream;

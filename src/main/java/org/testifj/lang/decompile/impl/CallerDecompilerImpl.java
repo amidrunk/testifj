@@ -10,7 +10,7 @@ import org.testifj.lang.decompile.*;
 import org.testifj.lang.classfile.impl.Lambdas;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.Expression;
-import org.testifj.lang.model.Sequence;
+import org.testifj.util.Sequence;
 import org.testifj.lang.model.Statement;
 
 import java.io.IOException;
@@ -37,12 +37,17 @@ public final class CallerDecompilerImpl implements CallerDecompiler {
 
     @Override
     public CodePointer[] decompileCaller(Caller caller) throws IOException {
-        assert caller != null : "Caller can't be null";
-
-        return codeForCaller(caller);
+        return decompileCaller(caller, DecompilationProgressCallback.NULL);
     }
 
-    private CodePointer[] codeForCaller(Caller caller) throws IOException {
+    public CodePointer[] decompileCaller(Caller caller, DecompilationProgressCallback callback) throws IOException {
+        assert caller != null : "Caller can't be null";
+        assert callback != null : "Callback can't be null";
+
+        return codeForCaller(caller, callback);
+    }
+
+    private CodePointer[] codeForCaller(Caller caller, DecompilationProgressCallback callback) throws IOException {
         final ClassFile classFile = loadClassFile(caller.getCallerStackTraceElement().getClassName());
 
         if (classFile == null) {
@@ -58,7 +63,7 @@ public final class CallerDecompilerImpl implements CallerDecompiler {
             final AtomicReference<Expression> lingeringExpression = new AtomicReference<>();
             final AtomicInteger exitStackSize = new AtomicInteger(-1);
 
-            final Element[] elements = decompiler.parse(method, code, new DecompilationProgressCallbackAdapter() {
+            final Element[] elements = decompiler.parse(method, code, new CompositeDecompilationProgressCallback(new DecompilationProgressCallbackAdapter() {
                 @Override
                 public void afterInstruction(DecompilationContext context) {
                     // Abort as soon as (a) we've exceeded the PC and (b) the stack is empty
@@ -90,7 +95,7 @@ public final class CallerDecompilerImpl implements CallerDecompiler {
                         }
                     }
                 }
-            });
+            }, callback));
 
             return Arrays.stream(elements).map(e -> new CodePointerImpl<>(method, e)).toArray(CodePointer[]::new);
         }

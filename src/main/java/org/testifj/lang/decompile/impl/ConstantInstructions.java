@@ -2,8 +2,9 @@ package org.testifj.lang.decompile.impl;
 
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.classfile.ClassFileFormatException;
+import org.testifj.lang.classfile.ConstantPool;
+import org.testifj.lang.classfile.ConstantPoolEntry;
 import org.testifj.lang.decompile.*;
-import org.testifj.lang.model.impl.ConstantImpl;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -40,7 +41,7 @@ public final class ConstantInstructions implements DecompilerDelegation {
         return new DecompilerDelegate() {
             @Override
             public void apply(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
-                context.push(new ConstantImpl(codeStream.nextByte(), int.class));
+                context.push(context.getModelFactory().constant(codeStream.nextByte(), int.class));
             }
         };
     }
@@ -49,7 +50,7 @@ public final class ConstantInstructions implements DecompilerDelegation {
         return new DecompilerDelegate() {
             @Override
             public void apply(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
-                context.push(new ConstantImpl(codeStream.nextSignedShort(), int.class));
+                context.push(context.getModelFactory().constant(codeStream.nextSignedShort(), int.class));
             }
         };
     }
@@ -147,17 +148,17 @@ public final class ConstantInstructions implements DecompilerDelegation {
 
         switch (entry.getTag()) {
             case INTEGER:
-                context.push(new ConstantImpl(((ConstantPoolEntry.IntegerEntry) entry).getValue(), int.class));
+                context.push(context.getModelFactory().constant(((ConstantPoolEntry.IntegerEntry) entry).getValue(), int.class));
                 break;
             case FLOAT:
-                context.push(new ConstantImpl(((ConstantPoolEntry.FloatEntry) entry).getValue(), float.class));
+                context.push(context.getModelFactory().constant(((ConstantPoolEntry.FloatEntry) entry).getValue(), float.class));
                 break;
             case STRING:
-                context.push(new ConstantImpl(constantPool.getString(((ConstantPoolEntry.StringEntry) entry).getStringIndex()), String.class));
+                context.push(context.getModelFactory().constant(constantPool.getString(((ConstantPoolEntry.StringEntry) entry).getStringIndex()), String.class));
                 break;
             case CLASS:
                 final Type type = context.resolveType(constantPool.getString(((ConstantPoolEntry.ClassEntry) entry).getNameIndex()));
-                context.push(new ConstantImpl(type, Class.class));
+                context.push(context.getModelFactory().constant(type, Class.class));
                 break;
             default:
                 throw new ClassFileFormatException("Unsupported constant pool entry: " + entry);
@@ -169,10 +170,10 @@ public final class ConstantInstructions implements DecompilerDelegation {
 
         switch (entry.getTag()) {
             case LONG:
-                context.push(new ConstantImpl(((ConstantPoolEntry.LongEntry) entry).getValue(), long.class));
+                context.push(context.getModelFactory().constant(((ConstantPoolEntry.LongEntry) entry).getValue(), long.class));
                 break;
             case DOUBLE:
-                context.push(new ConstantImpl(((ConstantPoolEntry.DoubleEntry) entry).getValue(), double.class));
+                context.push(context.getModelFactory().constant(((ConstantPoolEntry.DoubleEntry) entry).getValue(), double.class));
                 break;
             default:
                 throw new ClassFileFormatException("Invalid constant pool entry at "
@@ -184,7 +185,7 @@ public final class ConstantInstructions implements DecompilerDelegation {
         return new DecompilerDelegate() {
             @Override
             public void apply(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
-                context.push(new ConstantImpl(value, type));
+                context.push(context.getModelFactory().constant(value, type));
             }
         };
     }

@@ -1,9 +1,9 @@
 package org.testifj.lang.decompile;
 
 import org.testifj.lang.classfile.Method;
-import org.testifj.lang.decompile.impl.ProgramCounter;
 import org.testifj.lang.model.Expression;
-import org.testifj.lang.model.Sequence;
+import org.testifj.lang.model.ModelFactory;
+import org.testifj.util.Sequence;
 import org.testifj.lang.model.Statement;
 import org.testifj.util.Stack;
 
@@ -100,8 +100,6 @@ public interface DecompilationContext {
 
     boolean hasStackedExpressions();
 
-    void replaceStatement(int index, Statement newStatement);
-
     void removeStatement(int index);
 
     /**
@@ -117,4 +115,6 @@ public interface DecompilationContext {
      * @return Whether or not the decompilation has been aborted.
      */
     boolean isAborted();
+
+    ModelFactory getModelFactory();
 }

@@ -3,20 +3,19 @@ package org.testifj.lang.decompile.impl;
 import org.testifj.lang.TypeResolver;
 import org.testifj.lang.Types;
 import org.testifj.lang.classfile.Method;
-import org.testifj.lang.decompile.DecompilationContext;
-import org.testifj.lang.decompile.Decompiler;
-import org.testifj.lang.decompile.LineNumberCounter;
+import org.testifj.lang.decompile.*;
 import org.testifj.lang.model.*;
 
 import java.lang.reflect.Type;
 import java.util.*;
 
-import org.testifj.util.SingleThreadedStack;
+import org.testifj.lang.model.impl.DefaultModelFactory;
+import org.testifj.util.*;
 import org.testifj.util.Stack;
-import org.testifj.util.TransformedStack;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 public final class DecompilationContextImpl implements DecompilationContext {
 
@@ -28,9 +27,9 @@ public final class DecompilationContextImpl implements DecompilationContext {
 
     private final LineNumberCounter lineNumberCounter;
 
-    private final SingleThreadedStack<ExpressionWithPC> stack = new SingleThreadedStack<>();
+    private final Stack<Expression> stack;
 
-    private final Sequence<StatementWithPC> statements = new LinkedSequence<>();
+    private final Sequence<Statement> statements;
 
     private final TypeResolver typeResolver;
 
@@ -38,20 +37,34 @@ public final class DecompilationContextImpl implements DecompilationContext {
 
     private final AtomicBoolean aborted = new AtomicBoolean(false);
 
-    private final Stack<Expression> visibleStack = new TransformedStack<>(stack, expression -> {
-        configureContextMetaData(expression);
-        return new ExpressionWithPC(expression, getProgramCounter().get(), contextVersion.incrementAndGet());
-    }, ExpressionWithPC::expression);
+    private final Stack<Expression> visibleStack;
 
     private final Sequence<Statement> visibleStatements;
 
+    private final ModelFactory modelFactory;
+
     private final int startPC;
+
+    @Deprecated
+    public DecompilationContextImpl(Decompiler decompiler,
+                                    Method method,
+                                    ProgramCounter programCounter,
+                                    LineNumberCounter lineNumberCounter,
+                                    TypeResolver typeResolver,
+                                    int startPC) {
+        this(decompiler, method, programCounter, lineNumberCounter, typeResolver,
+                new DefaultModelFactory(() -> EmptyElementMetaData.EMPTY),
+                new SingleThreadedStack<>(), new LinkedSequence<>(), startPC);
+    }
 
     public DecompilationContextImpl(Decompiler decompiler,
                                     Method method,
                                     ProgramCounter programCounter,
                                     LineNumberCounter lineNumberCounter,
                                     TypeResolver typeResolver,
+                                    ModelFactory modelFactory,
+                                    Stack<Expression> stack,
+                                    Sequence<Statement> statements,
                                     int startPC) {
         assert decompiler != null : "Decompiler can't be null";
         assert method != null : "Method can't be null";
@@ -64,12 +77,20 @@ public final class DecompilationContextImpl implements DecompilationContext {
         this.programCounter = programCounter;
         this.lineNumberCounter = lineNumberCounter;
         this.typeResolver = typeResolver;
-        this.visibleStatements = new TransformedSequence<>(statements, StatementWithPC::statement, statement -> {
-            final StatementWithPC statementWithPC = new StatementWithPC(statement, programCounter.get(), contextVersion.incrementAndGet());
-            configureContextMetaData(statement);
-            return statementWithPC;
-        });
+        this.stack = stack;
+        this.statements = statements;
+        this.modelFactory = modelFactory;
         this.startPC = startPC;
+
+        this.visibleStatements = new TransformedSequence<>(statements, statement -> {
+            contextVersion.incrementAndGet();
+            return statement;
+        }, Function.identity());
+
+        this.visibleStack = new TransformedStack<>(stack, expression -> {
+            contextVersion.incrementAndGet();
+            return expression;
+        }, Function.identity());
     }
 
     @Override
@@ -101,14 +122,14 @@ public final class DecompilationContextImpl implements DecompilationContext {
             return false;
         }
 
-        final Iterable<ExpressionWithPC> subStack = (stack.size() == computationalCategories.length
+        final Iterable<Expression> subStack = (stack.size() == computationalCategories.length
                 ? stack
                 : stack.tail(stack.size() - computationalCategories.length));
 
         int index = 0;
 
-        for (ExpressionWithPC expressionWithPC : subStack) {
-            final int actualComputationalCategory = Types.getComputationalCategory(expressionWithPC.expression.getType());
+        for (Expression expression : subStack) {
+            final int actualComputationalCategory = Types.getComputationalCategory(expression.getType());
 
             if (computationalCategories[index++] != actualComputationalCategory) {
                 return false;
@@ -123,8 +144,9 @@ public final class DecompilationContextImpl implements DecompilationContext {
     }
 
     @Override
+    @Deprecated
     public List<Expression> getStackedExpressions() {
-        return Arrays.asList(stack.stream().map(ExpressionWithPC::expression).toArray(Expression[]::new));
+        return Arrays.asList(stack.stream().toArray(Expression[]::new));
     }
 
     @Override
@@ -135,9 +157,10 @@ public final class DecompilationContextImpl implements DecompilationContext {
 
         checkReducable(stack.peek());
 
-        final ExpressionWithPC expressionWithPC = stack.pop();
-        final StatementWithPC newStatement = new StatementWithPC((Statement) expressionWithPC.expression(), expressionWithPC.pc(), expressionWithPC.version());
-        final Sequence.SingleElement<StatementWithPC> selector = statements.first(s -> s.pc() > expressionWithPC.pc());
+        final Expression expression = stack.pop();
+        final Statement newStatement = (Statement) expression;
+        final Sequence.SingleElement<Statement> selector = statements
+                .first(s -> s.getMetaData().getProgramCounter() > expression.getMetaData().getProgramCounter());
 
         if (selector.exists()) {
             selector.insertBefore(newStatement);
@@ -169,30 +192,29 @@ public final class DecompilationContextImpl implements DecompilationContext {
     public void enlist(Statement statement) {
         assert statement != null : "Statement can't be null";
 
-        statements.add(new StatementWithPC(statement, getProgramCounter().get(), contextVersion.incrementAndGet()));
-
-        configureContextMetaData(statement);
+        contextVersion.incrementAndGet();
+        statements.add(statement);
     }
 
     @Override
     public void push(Expression expression) {
         assert expression != null : "Expression can't be null";
 
-        stack.push(new ExpressionWithPC(expression, getProgramCounter().get(), contextVersion.incrementAndGet()));
-
-        configureContextMetaData(expression);
+        contextVersion.incrementAndGet();
+        stack.push(expression);
     }
 
     @Override
     public void insert(int offset, Expression expression) {
-        stack.insert(stack.size() + offset, new ExpressionWithPC(expression, programCounter.get(), contextVersion.incrementAndGet()));
-        configureContextMetaData(expression);
+        contextVersion.incrementAndGet();
+        stack.insert(stack.size() + offset, expression);
     }
 
     @Override
     public Expression pop() {
         checkStackNotEmpty();
-        return stack.pop().expression();
+        contextVersion.incrementAndGet();
+        return stack.pop();
     }
 
     @Override
@@ -201,7 +223,7 @@ public final class DecompilationContextImpl implements DecompilationContext {
             throw new IllegalStateException("Stack is empty");
         }
 
-        return stack.peek().expression();
+        return stack.peek();
     }
 
     @Override
@@ -210,32 +232,17 @@ public final class DecompilationContextImpl implements DecompilationContext {
     }
 
     @Override
+    @Deprecated
     public boolean hasStackedExpressions() {
         return !stack.isEmpty();
     }
 
     @Override
-    public void replaceStatement(int index, Statement newStatement) {
-        assert newStatement != null : "New statement can't be null";
-
-        final ArrayList<StatementWithPC> statementListCopy = new ArrayList<>(statements);
-
-        statementListCopy.set(index, new StatementWithPC(newStatement, programCounter.get(), contextVersion.incrementAndGet()));
-
-        statements.clear();
-        statements.addAll(statementListCopy);
-
-        configureContextMetaData(newStatement);
-    }
-
-    @Override
+    @Deprecated
     public void removeStatement(int index) {
-        final ArrayList<StatementWithPC> copy = new ArrayList<>(statements);
-
-        copy.remove(index);
-
-        statements.clear();
-        statements.addAll(copy);
+        assert index >= 0 : "Index must be positive";
+        contextVersion.incrementAndGet();
+        statements.at(index).remove();
     }
 
     @Override
@@ -246,6 +253,11 @@ public final class DecompilationContextImpl implements DecompilationContext {
     @Override
     public boolean isAborted() {
         return this.aborted.get();
+    }
+
+    @Override
+    public ModelFactory getModelFactory() {
+        return modelFactory;
     }
 
     @Override
@@ -268,21 +280,95 @@ public final class DecompilationContextImpl implements DecompilationContext {
         }
     }
 
-    private void checkReducable(ExpressionWithPC stackedExpression) {
-        if (!(stackedExpression.expression() instanceof Statement)) {
-            throw new IllegalStateException("Stacked expression is not a statement: " + stackedExpression.expression());
+    private void checkReducable(Expression stackedExpression) {
+        if (!(stackedExpression instanceof Statement)) {
+            throw new IllegalStateException("Stacked expression is not a statement: " + stackedExpression);
         }
     }
 
-    private void configureContextMetaData(Element element) {
-        final ElementMetaData metaData = element.getMetaData();
+    public static final class Builder {
 
-        if (metaData != null) {
-            final int lineNumber = lineNumberCounter.get();
-            final int programCounter = getProgramCounter().get();
+        private Decompiler decompiler;
 
-            metaData.setAttribute(ElementMetaData.LINE_NUMBER, lineNumber);
-            metaData.setAttribute(ElementMetaData.PROGRAM_COUNTER, programCounter);
+        private Method method;
+
+        private ProgramCounter programCounter;
+
+        private LineNumberCounter lineNumberCounter;
+
+        private TypeResolver typeResolver;
+
+        private Stack<Expression> stack;
+
+        private Sequence<Statement> statements;
+
+        private ModelFactory modelFactory;
+
+        private InstructionContext instructionContext;
+
+        private int startPC;
+
+        public Builder setDecompiler(Decompiler decompiler) {
+            this.decompiler = decompiler;
+            return this;
+        }
+
+        public Builder setMethod(Method method) {
+            this.method = method;
+            return this;
+        }
+
+        public Builder setProgramCounter(ProgramCounter programCounter) {
+            this.programCounter = programCounter;
+            return this;
+        }
+
+        public Builder setLineNumberCounter(LineNumberCounter lineNumberCounter) {
+            this.lineNumberCounter = lineNumberCounter;
+            return this;
+        }
+
+        public Builder setTypeResolver(TypeResolver typeResolver) {
+            this.typeResolver = typeResolver;
+            return this;
+        }
+
+        public Builder setStack(Stack<Expression> stack) {
+            this.stack = stack;
+            return this;
+        }
+
+        public Builder setStatements(Sequence<Statement> visibleStatements) {
+            this.statements = visibleStatements;
+            return this;
+        }
+
+        public Builder setModelFactory(ModelFactory modelFactory) {
+            this.modelFactory = modelFactory;
+            return this;
+        }
+
+        public Builder setInstructionContext(InstructionContext instructionContext) {
+            this.instructionContext = instructionContext;
+            return this;
+        }
+
+        public Builder setStartPC(int startPC) {
+            this.startPC = startPC;
+            return this;
+        }
+
+        public DecompilationContext build() {
+            return new DecompilationContextImpl(
+                    decompiler,
+                    method,
+                    programCounter,
+                    lineNumberCounter,
+                    typeResolver,
+                    modelFactory,
+                    stack,
+                    statements,
+                    startPC);
         }
     }
 

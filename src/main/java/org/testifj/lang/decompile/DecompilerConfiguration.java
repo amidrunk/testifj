@@ -1,9 +1,10 @@
 package org.testifj.lang.decompile;
 
-import org.testifj.lang.model.ModelQuery;
+import org.testifj.lang.model.*;
 import org.testifj.util.Priority;
 
 import java.util.Iterator;
+import java.util.function.Function;
 
 public interface DecompilerConfiguration {
 
@@ -12,6 +13,8 @@ public interface DecompilerConfiguration {
     Iterator<DecompilerDelegate> getAdvisoryDecompilerEnhancements(DecompilationContext context, int byteCode);
 
     Iterator<DecompilerDelegate> getCorrectionalDecompilerEnhancements(DecompilationContext context, int byteCode);
+
+    ModelTransformation<Element, Element>[] getTransformations(ElementType elementType);
 
     DecompilerConfiguration merge(DecompilerConfiguration other);
 
@@ -30,6 +33,25 @@ public interface DecompilerConfiguration {
         ExtendContinuation<DecompilerDelegate> on(int ... byteCodes);
 
         ExtendContinuation<DecompilerDelegate> on(int startByteCode, int endByteCode);
+
+        OnElementTypeContinuation map(ElementType elementType);
+
+        interface OnElementTypeContinuation {
+
+            <R extends Element> ForQueryContinuationWithPriority<R> forQuery(ModelQuery<Element, R> query);
+        }
+
+        interface ForQueryContinuationWithoutPriority<R extends Element> {
+
+            Builder to(ModelTransformation<R, ? extends Element> transformation);
+
+        }
+
+        interface ForQueryContinuationWithPriority<R extends Element> extends ForQueryContinuationWithoutPriority<R> {
+
+            ForQueryContinuationWithoutPriority<R> withPriority(Priority priority);
+
+        }
 
         interface ExtendContinuation<T> extends WithPriorityContinuation<T> {
 

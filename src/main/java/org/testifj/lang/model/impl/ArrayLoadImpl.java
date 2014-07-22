@@ -1,6 +1,7 @@
 package org.testifj.lang.model.impl;
 
 import org.testifj.lang.model.ArrayLoad;
+import org.testifj.lang.model.ElementMetaData;
 import org.testifj.lang.model.Expression;
 
 import java.lang.reflect.Type;
@@ -14,6 +15,12 @@ public final class ArrayLoadImpl extends AbstractElement implements ArrayLoad {
     private final Type type;
 
     public ArrayLoadImpl(Expression array, Expression index, Type type) {
+        this(array, index, type, null);
+    }
+
+    public ArrayLoadImpl(Expression array, Expression index, Type type, ElementMetaData metaData) {
+        super(metaData);
+
         assert array != null : "Array can't be null";
         assert index != null : "Index can't be null";
         assert type != null : "Type can't be null";

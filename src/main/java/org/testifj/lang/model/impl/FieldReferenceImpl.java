@@ -1,5 +1,6 @@
 package org.testifj.lang.model.impl;
 
+import org.testifj.lang.model.ElementMetaData;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.FieldReference;
 
@@ -18,6 +19,12 @@ public final class FieldReferenceImpl extends AbstractElement implements FieldRe
     private boolean aStatic;
 
     public FieldReferenceImpl(Expression targetInstance, Type declaringType, Type fieldType, String fieldName) {
+        this(targetInstance, declaringType, fieldType, fieldName, null);
+    }
+
+    public FieldReferenceImpl(Expression targetInstance, Type declaringType, Type fieldType, String fieldName, ElementMetaData elementMetaData) {
+        super(elementMetaData);
+
         assert declaringType != null : "Declaring type can't be null";
         assert fieldType != null : "Field type can't be null";
         assert fieldName != null && !fieldName.isEmpty() : "Field name can't be null or empty";

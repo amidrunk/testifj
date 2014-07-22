@@ -1,6 +1,7 @@
 package org.testifj.lang.model.impl;
 
 import org.testifj.lang.model.ArrayStore;
+import org.testifj.lang.model.ElementMetaData;
 import org.testifj.lang.model.Expression;
 
 public class ArrayStoreImpl extends AbstractElement implements ArrayStore {
@@ -12,6 +13,12 @@ public class ArrayStoreImpl extends AbstractElement implements ArrayStore {
     private final Expression value;
 
     public ArrayStoreImpl(Expression array, Expression index, Expression value) {
+        this(array, index, value, null);
+    }
+
+    public ArrayStoreImpl(Expression array, Expression index, Expression value, ElementMetaData metaData) {
+        super(metaData);
+
         assert array != null : "Array can't be null";
         assert index != null : "Index can't be null";
         assert value != null : "Value can't be null";

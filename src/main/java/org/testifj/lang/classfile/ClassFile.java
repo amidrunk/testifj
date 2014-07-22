@@ -1,8 +1,5 @@
 package org.testifj.lang.classfile;
 
-import org.testifj.lang.decompile.ConstantPool;
-import org.testifj.lang.decompile.Constructor;
-
 import java.util.List;
 import java.util.Optional;
 

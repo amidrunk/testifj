@@ -13,6 +13,12 @@ public final class UnaryOperatorImpl extends AbstractElement implements UnaryOpe
     private final Type type;
 
     public UnaryOperatorImpl(Expression operand, OperatorType operatorType, Type type) {
+        this(operand, operatorType, type, null);
+    }
+
+    public UnaryOperatorImpl(Expression operand, OperatorType operatorType, Type type, ElementMetaData elementMetaData) {
+        super(elementMetaData);;
+
         assert operand != null : "Operand can't be null";
         assert operatorType != null : "Operator type can't be null";
         assert type != null : "Type can't be null";

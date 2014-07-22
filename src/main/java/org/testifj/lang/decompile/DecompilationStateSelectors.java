@@ -3,7 +3,7 @@ package org.testifj.lang.decompile;
 import org.testifj.annotations.DSL;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Expression;
-import org.testifj.lang.model.Sequence;
+import org.testifj.util.Sequence;
 import org.testifj.lang.model.Statement;
 import org.testifj.util.Stack;
 

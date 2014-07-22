@@ -1,12 +1,10 @@
 package org.testifj.lang.model.impl;
 
 import org.junit.Test;
-import org.testifj.lang.classfile.LocalVariable;
 import org.testifj.lang.classfile.ReferenceKind;
 import org.testifj.lang.classfile.impl.LambdaImpl;
 import org.testifj.lang.model.*;
 
-import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -33,7 +31,7 @@ public class AbstractModelFactoryTest {
 
     @Test
     public void createConstantShouldCreateConstantWithParametersAndMetaData() {
-        given(modelFactory.createConstant("foo", CharSequence.class)).then(it -> {
+        given(modelFactory.constant("foo", CharSequence.class)).then(it -> {
             expect(it.getConstant()).toBe("foo");
             expect(it.getType()).toBe(CharSequence.class);
             expect(it.getMetaData()).toBe(metaData);
@@ -44,7 +42,7 @@ public class AbstractModelFactoryTest {
     public void createReturnValueShouldCreateElementWithParametersAndMetaData() {
         final Expression expectedValue = mock(Expression.class);
 
-        given(modelFactory.createReturnValue(expectedValue)).then(it -> {
+        given(modelFactory.returnValue(expectedValue).as(ReturnValue.class)).then(it -> {
             expect(it.getValue()).toBe(expectedValue);
             expect(it.getMetaData()).toBe(metaData);
         });
@@ -52,7 +50,7 @@ public class AbstractModelFactoryTest {
 
     @Test
     public void createInstanceAllocationShouldCreateElementWithParametersAndMetaData() {
-        given(modelFactory.createInstanceAllocation(String.class)).then(it -> {
+        given(modelFactory.newInstance(String.class)).then(it -> {
             expect(it.getType()).toBe(String.class);
             expect(it.getMetaData()).toBe(metaData);
         });
@@ -63,7 +61,7 @@ public class AbstractModelFactoryTest {
         final Expression array = mock(Expression.class, "array");
         final Expression index = mock(Expression.class, "index");
 
-        given(modelFactory.createArrayLoad(array, index, String.class)).then(it -> {
+        given(modelFactory.get(array, index, String.class).as(ArrayLoad.class)).then(it -> {
             expect(it.getArray()).toBe(array);
             expect(it.getIndex()).toBe(index);
             expect(it.getType()).toBe(String.class);
@@ -77,7 +75,7 @@ public class AbstractModelFactoryTest {
         final Expression index = mock(Expression.class, "index");
         final Expression value = mock(Expression.class, "value");
 
-        given(modelFactory.createArrayStore(array, index, value)).then(it -> {
+        given(modelFactory.set(array, index, value).as(ArrayStore.class)).then(it -> {
             expect(it.getArray()).toBe(array);
             expect(it.getIndex()).toBe(index);
             expect(it.getValue()).toBe(value);
@@ -90,7 +88,7 @@ public class AbstractModelFactoryTest {
         final Expression leftOperand = mock(Expression.class, "leftOperand");
         final Expression rightOperand = mock(Expression.class, "rightOperand");
 
-        given(modelFactory.createBinaryOperator(leftOperand, OperatorType.AND, rightOperand, int.class)).then(it -> {
+        given(modelFactory.binary(leftOperand, OperatorType.AND, rightOperand, int.class).as(BinaryOperator.class)).then(it -> {
             expect(it.getLeftOperand()).toBe(leftOperand);
             expect(it.getOperatorType()).toBe(OperatorType.AND);
             expect(it.getRightOperand()).toBe(rightOperand);
@@ -104,7 +102,7 @@ public class AbstractModelFactoryTest {
         final Expression leftOperand = mock(Expression.class, "leftOperand");
         final Expression rightOperand = mock(Expression.class, "rightOperand");
 
-        given(modelFactory.createBranch(leftOperand, OperatorType.EQ, rightOperand, 1234)).then(it -> {
+        given(modelFactory.branch(leftOperand, OperatorType.EQ, rightOperand, 1234).as(Branch.class)).then(it -> {
             expect(it.getLeftOperand()).toBe(leftOperand);
             expect(it.getOperatorType()).toBe(OperatorType.EQ);
             expect(it.getRightOperand()).toBe(rightOperand);
@@ -117,7 +115,7 @@ public class AbstractModelFactoryTest {
     public void createTypeCastShouldCreateElementWithMetaData() {
         final Expression value = mock(Expression.class, "value");
 
-        given(modelFactory.createTypeCast(value, String.class)).then(it -> {
+        given(modelFactory.cast(value, String.class).as(TypeCast.class)).then(it -> {
             expect(it.getValue()).toBe(value);
             expect(it.getType()).toBe(String.class);
             expect(it.getMetaData()).toBe(metaData);
@@ -129,7 +127,7 @@ public class AbstractModelFactoryTest {
         final Expression leftOperand = mock(Expression.class, "leftOperand");
         final Expression rightOperand = mock(Expression.class, "rightOperand");
 
-        given(modelFactory.createCompare(leftOperand, rightOperand)).then(it -> {
+        given(modelFactory.compare(leftOperand, rightOperand).as(Compare.class)).then(it -> {
             expect(it.getLeftOperand()).toBe(leftOperand);
             expect(it.getRightOperand()).toBe(rightOperand);
             expect(it.getMetaData()).toBe(metaData);
@@ -141,7 +139,7 @@ public class AbstractModelFactoryTest {
         final FieldReference fieldReference = mock(FieldReference.class, "fieldReference");
         final Expression value = mock(Expression.class, "value");
 
-        given(modelFactory.createFieldAssignment(fieldReference, value)).then(it -> {
+        given(modelFactory.assignField(fieldReference, value).as(FieldAssignment.class)).then(it -> {
             expect(it.getFieldReference()).toBe(fieldReference);
             expect(it.getValue()).toBe(value);
             expect(it.getMetaData()).toBe(metaData);
@@ -152,7 +150,7 @@ public class AbstractModelFactoryTest {
     public void createFieldReferenceShouldCreateElementWithMetaData() {
         final Expression targetInstance = mock(Expression.class, "targetInstance");
 
-        given(modelFactory.createFieldReference(targetInstance, String.class, int.class, "foo")).then(it -> {
+        given(modelFactory.field(targetInstance, String.class, int.class, "foo").as(FieldReference.class)).then(it -> {
             expect(it.getTargetInstance()).toBe(optionalOf(targetInstance));
             expect(it.getDeclaringType()).toBe(String.class);
             expect(it.getFieldType()).toBe(int.class);
@@ -163,7 +161,7 @@ public class AbstractModelFactoryTest {
 
     @Test
     public void createGotoShouldCreateElementWithMetaData() {
-        given(modelFactory.createGoto(1234)).then(it -> {
+        given(modelFactory.jump(1234).as(Goto.class)).then(it -> {
             expect(it.getTargetProgramCounter()).toBe(1234);
             expect(it.getMetaData()).toBe(metaData);
         });
@@ -174,7 +172,7 @@ public class AbstractModelFactoryTest {
         final LocalVariableReference localVariableReference = mock(LocalVariableReference.class, "localVariableReference");
         final Expression value = mock(Expression.class, "value");
 
-        given(modelFactory.createIncrement(localVariableReference, value, int.class, Affix.POSTFIX)).then(it -> {
+        given(modelFactory.increment(localVariableReference, value, int.class, Affix.POSTFIX).as(Increment.class)).then(it -> {
             expect(it.getLocalVariable()).toBe(localVariableReference);
             expect(it.getValue()).toBe(value);
             expect(it.getType()).toBe(int.class);
@@ -210,7 +208,7 @@ public class AbstractModelFactoryTest {
 
     @Test
     public void createLocalVariableReferenceShouldCreateElementWithMetaData() {
-        given(modelFactory.createLocalVariableReference("foo", String.class, 1234)).then(it -> {
+        given(modelFactory.local("foo", String.class, 1234).as(LocalVariableReference.class)).then(it -> {
             expect(it.getName()).toBe("foo");
             expect(it.getType()).toBe(String.class);
             expect(it.getIndex()).toBe(1234);
@@ -224,7 +222,7 @@ public class AbstractModelFactoryTest {
         final Expression targetInstance = mock(Expression.class, "targetInstance");
         final Expression param1 = mock(Expression.class, "param1");
 
-        given(modelFactory.createMethodCall(String.class, "foo", methodSignature, targetInstance, new Expression[]{param1}, int.class)).then(it -> {
+        given(modelFactory.call(String.class, "foo", methodSignature, targetInstance, new Expression[]{param1}, int.class).as(MethodCall.class)).then(it -> {
             expect(it.getTargetType()).toBe(String.class);
             expect(it.getMethodName()).toBe("foo");
             expect(it.getSignature()).toBe(methodSignature);
@@ -239,7 +237,7 @@ public class AbstractModelFactoryTest {
     public void createNewArrayShouldCreateElementWithMetaData() {
         final Expression length = mock(Expression.class, "length");
 
-        given(modelFactory.createNewArray(String[].class, String.class, length, Collections.emptyList())).then(it -> {
+        given(modelFactory.newArray(String[].class, String.class, length, Collections.emptyList()).as(NewArray.class)).then(it -> {
             expect(it.getType()).toBe(String[].class);
             expect(it.getComponentType()).toBe(String.class);
             expect(it.getLength()).toBe(length);
@@ -253,7 +251,7 @@ public class AbstractModelFactoryTest {
         final MethodSignature signature = MethodSignature.parse("()Ljava/lang/String;");
         final Expression param1 = mock(Expression.class, "param1");
 
-        given(modelFactory.createNewInstance(String.class, signature, Arrays.asList(param1))).then(it -> {
+        given(modelFactory.newInstance(String.class, signature, Arrays.asList(param1)).as(NewInstance.class)).then(it -> {
             expect(it.getType()).toBe(String.class);
             expect(it.getConstructorSignature()).toBe(signature);
             expect(it.getParameters()).toBe(collectionOf(param1));
@@ -263,7 +261,7 @@ public class AbstractModelFactoryTest {
 
     @Test
     public void createReturnShouldCreateElementWithMetaData() {
-        given(modelFactory.createReturn()).then(it -> {
+        given(modelFactory.doReturn().as(Return.class)).then(it -> {
             expect(it.getMetaData()).toBe(metaData);
         });
     }
@@ -272,7 +270,7 @@ public class AbstractModelFactoryTest {
     public void createUnaryOperatorShouldCreateElementWithMetaData() {
         final Expression operand = mock(Expression.class, "operand");
 
-        given(modelFactory.createUnaryOperator(operand, OperatorType.NOT, int.class)).then(it -> {
+        given(modelFactory.unary(operand, OperatorType.NOT, int.class).as(UnaryOperator.class)).then(it -> {
             expect(it.getOperand()).toBe(operand);
             expect(it.getOperatorType()).toBe(OperatorType.NOT);
             expect(it.getType()).toBe(int.class);
@@ -284,7 +282,7 @@ public class AbstractModelFactoryTest {
     public void createVariableAssignmentShouldCreateElementWithMetaData() {
         final Expression value = mock(Expression.class, "value");
 
-        given(modelFactory.createVariableAssignment(value, 1234, "foo", String.class)).then(it -> {
+        given(modelFactory.assignLocal(value, 1234, "foo", String.class).as(VariableAssignment.class)).then(it -> {
             expect(it.getValue()).toBe(value);
             expect(it.getVariableIndex()).toBe(1234);
             expect(it.getVariableName()).toBe("foo");

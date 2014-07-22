@@ -1,7 +1,5 @@
 package org.testifj.lang.decompile;
 
-import org.testifj.lang.decompile.impl.ProgramCounter;
-
 import java.io.IOException;
 
 public interface CodeStream extends AutoCloseable {

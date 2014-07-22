@@ -5,6 +5,7 @@ import org.testifj.lang.decompile.*;
 import org.testifj.lang.classfile.impl.LambdaImpl;
 import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.MethodSignature;
+import org.testifj.util.Sequence;
 
 import java.util.Arrays;
 import java.util.Optional;

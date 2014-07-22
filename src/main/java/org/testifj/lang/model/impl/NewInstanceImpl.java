@@ -1,5 +1,6 @@
 package org.testifj.lang.model.impl;
 
+import org.testifj.lang.model.ElementMetaData;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.NewInstance;
 import org.testifj.lang.model.Signature;
@@ -17,6 +18,12 @@ public final class NewInstanceImpl extends AbstractElement implements NewInstanc
     private final List<Expression> parameters;
 
     public NewInstanceImpl(Type type, Signature constructorSignature, List<Expression> parameters) {
+        this(type, constructorSignature, parameters, null);
+    }
+
+    public NewInstanceImpl(Type type, Signature constructorSignature, List<Expression> parameters, ElementMetaData elementMetaData) {
+        super(elementMetaData);
+
         assert type != null : "Type can't be null";
         assert constructorSignature != null : "Constructor signature can't be null";
         assert parameters != null : "Parameters can't be null";

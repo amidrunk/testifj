@@ -1,17 +1,17 @@
 package org.testifj.lang.classfile.impl;
 
 import org.testifj.lang.classfile.*;
-import org.testifj.lang.decompile.ConstantPool;
-import org.testifj.lang.decompile.ConstantPoolEntry;
-import org.testifj.lang.decompile.ConstantPoolEntryDescriptor;
-import org.testifj.lang.decompile.ConstantPoolEntryTag;
+import org.testifj.lang.classfile.ConstantPool;
+import org.testifj.lang.classfile.ConstantPoolEntry;
+import org.testifj.lang.classfile.ConstantPoolEntryDescriptor;
+import org.testifj.lang.classfile.ConstantPoolEntryTag;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.testifj.lang.decompile.ConstantPoolEntry.*;
-import static org.testifj.lang.decompile.ConstantPoolEntryTag.UTF8;
+import static org.testifj.lang.classfile.ConstantPoolEntry.*;
+import static org.testifj.lang.classfile.ConstantPoolEntryTag.UTF8;
 
 public final class DefaultConstantPool implements ConstantPool {
 

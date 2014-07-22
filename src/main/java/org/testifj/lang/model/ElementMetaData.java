@@ -1,17 +1,13 @@
 package org.testifj.lang.model;
 
-import java.util.Map;
-
 public interface ElementMetaData {
 
-    public static final String LINE_NUMBER = "LineNumber";
+    boolean hasProgramCounter();
 
-    public static final String PROGRAM_COUNTER = "pc";
+    int getProgramCounter();
 
-    void setAttribute(String key, Object value);
+    boolean hasLineNumber();
 
-    Object getAttribute(String key);
-
-    Map<String, Object> getAttributes();
+    int getLineNumber();
 
 }

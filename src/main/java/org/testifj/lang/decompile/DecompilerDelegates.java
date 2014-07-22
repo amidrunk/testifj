@@ -12,7 +12,7 @@ public final class DecompilerDelegates {
 
         return new ForQueryContinuation<R>() {
             @Override
-            public DecompilerDelegate apply(DecompilerTransformation<R> transformation) {
+            public DecompilerDelegate apply(DecompilerElementDelegate<R> transformation) {
                 assert transformation != null : "Transformation can't be null";
 
                 return new DecompilerDelegate() {
@@ -31,7 +31,7 @@ public final class DecompilerDelegates {
 
     public interface ForQueryContinuation<R> {
 
-        DecompilerDelegate apply(DecompilerTransformation<R> transformation);
+        DecompilerDelegate apply(DecompilerElementDelegate<R> transformation);
 
     }
 

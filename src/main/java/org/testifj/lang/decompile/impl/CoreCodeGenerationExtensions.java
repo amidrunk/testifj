@@ -1,9 +1,10 @@
 package org.testifj.lang.decompile.impl;
 
 import org.testifj.annotations.DSL;
-import org.testifj.lang.*;
 import org.testifj.lang.classfile.ClassFile;
 import org.testifj.lang.classfile.Method;
+import org.testifj.lang.classfile.MethodReference;
+import org.testifj.lang.codegeneration.*;
 import org.testifj.lang.decompile.*;
 import org.testifj.lang.classfile.impl.MethodReferenceImpl;
 import org.testifj.lang.model.*;
@@ -68,11 +69,11 @@ public final class CoreCodeGenerationExtensions {
      * @return Code generator extension for {@link org.testifj.lang.model.ElementType#ALLOCATE}, which
      * corresponds to the {@link org.testifj.lang.classfile.ByteCode#new_} byte code.
      */
-    public static CodeGeneratorExtension<AllocateInstance> allocateInstanceExtension() {
+    public static CodeGeneratorExtension<InstanceAllocation> allocateInstanceExtension() {
         return (context,codePointer,out) -> {
-            final AllocateInstance allocateInstance = codePointer.getElement();
+            final InstanceAllocation instanceAllocation = codePointer.getElement();
 
-            out.append("new ").append(context.getCodeStyle().getTypeName(allocateInstance.getType())).append("<uninitialized>");
+            out.append("new ").append(context.getCodeStyle().getTypeName(instanceAllocation.getType())).append("<uninitialized>");
         };
     }
 
@@ -100,13 +101,13 @@ public final class CoreCodeGenerationExtensions {
      *
      * @return An extension that handles the {@link org.testifj.lang.model.ElementType#CAST} element.
      */
-    public static CodeGeneratorExtension<Cast> castExtension() {
+    public static CodeGeneratorExtension<TypeCast> castExtension() {
         return (context,codePointer,out) -> {
-            final Cast cast = codePointer.getElement();
-            final String targetTypeName = context.getCodeStyle().getTypeName(cast.getType());
+            final TypeCast typeCast = codePointer.getElement();
+            final String targetTypeName = context.getCodeStyle().getTypeName(typeCast.getType());
 
             out.append("(").append(targetTypeName).append(")");
-            context.delegate(codePointer.forElement(cast.getValue()));
+            context.delegate(codePointer.forElement(typeCast.getValue()));
         };
     }
 

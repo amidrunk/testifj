@@ -334,10 +334,34 @@ public class BooleanOperationsRegenerationTest extends TestOnDefaultConfiguratio
     public void logicalAndOperationCanBeRegenerated() {
         final boolean b1 = Boolean.TRUE;
         final boolean b2 = Boolean.TRUE;
-        final boolean b3 = Boolean.TRUE;
         final boolean b = b1 && b2;
 
         expect(regenerate(Caller.adjacent(-2))).toBe("boolean b = b1 && b2");
+    }
+
+    @Test
+    public void logicalOrOperationCanBeRegenerated() {
+        final boolean b1 = Boolean.TRUE;
+        final boolean b2 = Boolean.TRUE;
+        final boolean b = b1 || b2;
+
+        expect(regenerate(Caller.adjacent(-2))).toBe("boolean b = b1 || b2");
+    }
+
+    @Test
+    public void multipleLogicalOperationsCanBeRegenerated() {
+        final boolean b1 = Boolean.TRUE;
+        final boolean b2 = Boolean.TRUE;
+        final boolean b3 = Boolean.TRUE;
+
+        boolean b4 = b1 || b2 && b3;
+        expect(regenerate(Caller.adjacent(-1))).toBe("boolean b4 = b1 || b2 && b3");
+
+        boolean b5 = b1 && b2 || b3;
+        expect(regenerate(Caller.adjacent(-1))).toBe("boolean b5 = b1 && b2 || b3");
+
+        boolean b6 = b1 && b2 || b3 && b4;
+        expect(regenerate(Caller.adjacent(-1))).toBe("boolean b6 = b1 && b2 || b3 && b4");
     }
 
     public static final class ExampleClass {

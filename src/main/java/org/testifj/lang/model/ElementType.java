@@ -12,7 +12,6 @@ public enum ElementType {
     FIELD_REFERENCE,
     VARIABLE_ASSIGNMENT,
     LAMBDA,
-    JUMP,
     BRANCH,
     NEW,
     NEW_ARRAY,
@@ -20,9 +19,7 @@ public enum ElementType {
     FIELD_ASSIGNMENT,
     CAST,
     ARRAY_LOAD,
-    UNRESOLVED_VARIABLE_REFERENCE,
     INCREMENT,
-    ARRAY_ELEMENT_REFERENCE,
     ALLOCATE,
     GOTO,
     COMPARE;

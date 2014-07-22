@@ -5,7 +5,6 @@ import org.testifj.lang.model.impl.*;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
-import java.util.Objects;
 
 @DSL
 public final class AST {
@@ -178,12 +177,12 @@ public final class AST {
     public static CastContinuation cast(Expression value) {
         assert value != null : "Value can't be null";
 
-        return type -> new CastImpl(value, type);
+        return type -> new TypeCastImpl(value, type);
     }
 
     public interface CastContinuation {
 
-        Cast to(Type type);
+        TypeCast to(Type type);
 
     }
 

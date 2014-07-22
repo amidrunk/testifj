@@ -1,28 +1,28 @@
 package org.testifj.lang.model.impl;
 
+import org.testifj.lang.model.ElementMetaData;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.Goto;
 
 public final class GotoImpl extends AbstractElement implements Goto {
 
-    private final int programCounter;
+    private final int targetProgramCounter;
 
-    private final int relativeOffset;
-
-    public GotoImpl(int programCounter, int relativeOffset) {
-        assert programCounter >= 0 : "Program counter must be positive";
-
-        this.programCounter = programCounter;
-        this.relativeOffset = relativeOffset;
+    public GotoImpl(int targetProgramCounter) {
+        this(targetProgramCounter, null);
     }
 
-    public int getProgramCounter() {
-        return programCounter;
+    public GotoImpl(int targetProgramCounter, ElementMetaData elementMetaData) {
+        super(elementMetaData);
+
+        assert targetProgramCounter >= 0 : "Target program counter must be positive";
+
+        this.targetProgramCounter = targetProgramCounter;
     }
 
     @Override
-    public int getRelativeOffset() {
-        return relativeOffset;
+    public int getTargetProgramCounter() {
+        return targetProgramCounter;
     }
 
     @Override
@@ -37,24 +37,21 @@ public final class GotoImpl extends AbstractElement implements Goto {
 
         GotoImpl aGoto = (GotoImpl) o;
 
-        if (programCounter != aGoto.programCounter) return false;
-        if (relativeOffset != aGoto.relativeOffset) return false;
+        if (targetProgramCounter != aGoto.targetProgramCounter) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        int result = programCounter;
-        result = 31 * result + relativeOffset;
+        int result = targetProgramCounter;
         return result;
     }
 
     @Override
     public String toString() {
         return "GotoImpl{" +
-                "programCounter=" + programCounter +
-                ", relativeOffset=" + relativeOffset +
+                "targetProgramCounter=" + targetProgramCounter +
                 '}';
     }
 }

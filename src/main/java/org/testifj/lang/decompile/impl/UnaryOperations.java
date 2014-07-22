@@ -135,7 +135,7 @@ public final class UnaryOperations implements DecompilerDelegation {
      * @return A selector that matches <code>[X, increment(variable=X, affix=undefined)]</code>.
      */
     private DecompilationStateSelector stackContainsPostfixIncrementOfVariable() {
-        final ModelQuery<DecompilationContext, Increment> query = currentValue()
+        final ModelQuery<DecompilationContext, Increment> query = peek()
                 .as(Increment.class)
                 .where(affixIsUndefined());
 
@@ -188,7 +188,7 @@ public final class UnaryOperations implements DecompilerDelegation {
 
             final Optional<BinaryOperator> increment = lastStatement().as(VariableAssignment.class)
                     .where(isAssignmentTo(loadedVariable))
-                    .get(assignedValue()).as(Cast.class)
+                    .get(assignedValue()).as(TypeCast.class)
                     .get(castValue()).as(BinaryOperator.class)
                     .where(leftOperand().is(equalTo(loadedVariable)))
                     .and(rightOperand().as(Constant.class).is(equalTo(constant(1))))
@@ -226,7 +226,7 @@ public final class UnaryOperations implements DecompilerDelegation {
     private DecompilerDelegate correctPostfixByteCodeIncrement() {
         return (context, codeStream, byteCode) -> {
             final Optional<BinaryOperator> result = lastStatement().as(VariableAssignment.class)
-                    .get(assignedValue()).as(Cast.class)
+                    .get(assignedValue()).as(TypeCast.class)
                     .get(castValue()).as(BinaryOperator.class)
                     .where(leftOperand().is(equalTo(context.getStack().peek())))
                     .and(rightOperand().is(equalTo(constant(1))))

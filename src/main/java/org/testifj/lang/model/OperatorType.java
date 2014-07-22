@@ -12,6 +12,8 @@ public enum OperatorType {
     GE,
     LT,
     GT,
-    LE
+    LE,
+    AND,
+    OR
 
 }

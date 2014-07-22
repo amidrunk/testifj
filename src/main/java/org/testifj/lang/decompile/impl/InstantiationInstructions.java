@@ -5,10 +5,10 @@ import org.testifj.lang.classfile.ClassFileFormatException;
 import org.testifj.lang.decompile.DecompilerConfiguration;
 import org.testifj.lang.decompile.DecompilerDelegate;
 import org.testifj.lang.decompile.DecompilerDelegation;
-import org.testifj.lang.model.AllocateInstance;
+import org.testifj.lang.model.InstanceAllocation;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.MethodCall;
-import org.testifj.lang.model.impl.AllocateInstanceImpl;
+import org.testifj.lang.model.impl.InstanceAllocationImpl;
 import org.testifj.lang.model.impl.NewInstanceImpl;
 
 public final class InstantiationInstructions implements DecompilerDelegation {
@@ -21,10 +21,10 @@ public final class InstantiationInstructions implements DecompilerDelegation {
             final MethodCall methodCall = (MethodCall) context.peek();
 
             if (methodCall.getMethodName().equals("<init>") && methodCall.getTargetInstance().getElementType() == ElementType.ALLOCATE) {
-                final AllocateInstance allocateInstance = (AllocateInstance) methodCall.getTargetInstance();
+                final InstanceAllocation instanceAllocation = (InstanceAllocation) methodCall.getTargetInstance();
 
                 context.pop();
-                context.push(new NewInstanceImpl(allocateInstance.getType(), methodCall.getSignature(), methodCall.getParameters()));
+                context.push(new NewInstanceImpl(instanceAllocation.getType(), methodCall.getSignature(), methodCall.getParameters()));
             }
         });
     }
@@ -33,7 +33,7 @@ public final class InstantiationInstructions implements DecompilerDelegation {
         return (context, code, byteCode) -> {
             final String className = context.getMethod().getClassFile().getConstantPool().getClassName(code.nextUnsignedShort());
 
-            context.push(new AllocateInstanceImpl(context.resolveType(className)));
+            context.push(new InstanceAllocationImpl(context.resolveType(className)));
 
             // Ignore the dup and model the constructor as returning an initialized instance instead
             if (code.nextInstruction() != ByteCode.dup) {

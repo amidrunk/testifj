@@ -2,6 +2,7 @@ package org.testifj.lang.decompile.impl;
 
 import org.testifj.lang.InvocationTargetRuntimeException;
 import org.testifj.Procedure;
+import org.testifj.lang.decompile.ProgramCounter;
 
 import java.util.Iterator;
 import java.util.LinkedList;

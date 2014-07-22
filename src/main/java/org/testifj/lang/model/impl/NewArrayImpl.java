@@ -1,9 +1,6 @@
 package org.testifj.lang.model.impl;
 
-import org.testifj.lang.model.ArrayInitializer;
-import org.testifj.lang.model.ArrayStore;
-import org.testifj.lang.model.Expression;
-import org.testifj.lang.model.NewArray;
+import org.testifj.lang.model.*;
 
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -20,6 +17,12 @@ public final class NewArrayImpl extends AbstractElement implements NewArray {
     private final List<ArrayInitializer> initializers;
 
     public NewArrayImpl(Type arrayType, Type componentType, Expression length, List<ArrayInitializer> initializers) {
+        this(arrayType, componentType, length, initializers, null);
+    }
+
+    public NewArrayImpl(Type arrayType, Type componentType, Expression length, List<ArrayInitializer> initializers, ElementMetaData metaData) {
+        super(metaData);
+
         assert arrayType != null : "Array type can't be null";
         assert componentType != null : "Component type can't be null";
         assert length != null : "Length can't be null";

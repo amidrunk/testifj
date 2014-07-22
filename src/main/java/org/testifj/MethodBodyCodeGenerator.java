@@ -1,11 +1,11 @@
 package org.testifj;
 
 import org.testifj.lang.classfile.Method;
-import org.testifj.lang.decompile.CodeGenerator;
+import org.testifj.lang.codegeneration.CodeGenerator;
 import org.testifj.lang.decompile.CodePointer;
 import org.testifj.lang.decompile.CodeStream;
 import org.testifj.lang.decompile.Decompiler;
-import org.testifj.lang.decompile.impl.CodePointerCodeGenerator;
+import org.testifj.lang.codegeneration.impl.CodePointerCodeGenerator;
 import org.testifj.lang.decompile.impl.CodePointerImpl;
 import org.testifj.lang.decompile.impl.DecompilerImpl;
 import org.testifj.lang.decompile.impl.InputStreamCodeStream;

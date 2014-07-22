@@ -1,6 +1,7 @@
 package org.testifj.lang.model.impl;
 
 import org.testifj.lang.model.BinaryOperator;
+import org.testifj.lang.model.ElementMetaData;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.OperatorType;
 
@@ -17,6 +18,12 @@ public final class BinaryOperatorImpl extends AbstractElement implements BinaryO
     private final Type resultType;
 
     public BinaryOperatorImpl(Expression leftOperand, OperatorType operatorType, Expression rightOperand, Type resultType) {
+        this(leftOperand, operatorType, rightOperand, resultType, null);
+    }
+
+    public BinaryOperatorImpl(Expression leftOperand, OperatorType operatorType, Expression rightOperand, Type resultType, ElementMetaData metaData) {
+        super(metaData);
+
         assert leftOperand != null : "Left operand can't be null";
         assert operatorType != null : "Operator type can't be null";
         assert rightOperand != null : "Right operand can't be null";

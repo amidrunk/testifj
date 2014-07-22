@@ -8,20 +8,20 @@ public final class TransformedStack<S, T> implements Stack<S> {
 
     private final Stack<T> targetStack;
 
-    private final Function<S, T> sourceToTarget;
+    private final Function<S, T> acceptTransform;
 
-    private final Function<T, S> targetToSource;
+    private final Function<T, S> retrieveTransform;
 
     private final List<StackListenerDelegate> stackListeners = new LinkedList<>();
 
-    public TransformedStack(Stack<T> targetStack, Function<S, T> sourceToTarget, Function<T, S> targetToSource) {
+    public TransformedStack(Stack<T> targetStack, Function<S, T> acceptTransform, Function<T, S> retrieveTransform) {
         assert targetStack != null : "Target stack can't be null";
-        assert sourceToTarget != null : "Source to target converter can't be null";
-        assert targetToSource != null : "Target source source converter can't be null";
+        assert acceptTransform != null : "Source to target converter can't be null";
+        assert retrieveTransform != null : "Target source source converter can't be null";
 
         this.targetStack = targetStack;
-        this.sourceToTarget = sourceToTarget;
-        this.targetToSource = targetToSource;
+        this.acceptTransform = acceptTransform;
+        this.retrieveTransform = retrieveTransform;
     }
 
     @Override
@@ -50,22 +50,22 @@ public final class TransformedStack<S, T> implements Stack<S> {
 
     @Override
     public void push(S element) {
-        targetStack.push(sourceToTarget.apply(element));
+        targetStack.push(acceptTransform.apply(element));
     }
 
     @Override
     public S pop() {
-        return targetToSource.apply(targetStack.pop());
+        return retrieveTransform.apply(targetStack.pop());
     }
 
     @Override
     public S peek() {
-        return targetToSource.apply(targetStack.peek());
+        return retrieveTransform.apply(targetStack.peek());
     }
 
     @Override
     public void insert(int index, S element) {
-        targetStack.insert(index, sourceToTarget.apply(element));
+        targetStack.insert(index, acceptTransform.apply(element));
     }
 
     @Override
@@ -85,7 +85,7 @@ public final class TransformedStack<S, T> implements Stack<S> {
         return new AbstractList<S>() {
             @Override
             public S get(int index) {
-                return targetToSource.apply(targetList.get(index));
+                return retrieveTransform.apply(targetList.get(index));
             }
 
             @Override
@@ -97,7 +97,7 @@ public final class TransformedStack<S, T> implements Stack<S> {
 
     @Override
     public Stream<S> stream() {
-        return targetStack.stream().map(targetToSource);
+        return targetStack.stream().map(retrieveTransform);
     }
 
     @Override
@@ -107,12 +107,12 @@ public final class TransformedStack<S, T> implements Stack<S> {
 
     @Override
     public S swap(S newElement) {
-        return targetToSource.apply(targetStack.swap(sourceToTarget.apply(newElement)));
+        return retrieveTransform.apply(targetStack.swap(acceptTransform.apply(newElement)));
     }
 
     @Override
     public Iterator<S> iterator() {
-        return Iterators.collect(targetStack.iterator(), targetToSource);
+        return Iterators.collect(targetStack.iterator(), retrieveTransform);
     }
 
     @Override
@@ -122,9 +122,9 @@ public final class TransformedStack<S, T> implements Stack<S> {
 
         TransformedStack that = (TransformedStack) o;
 
-        if (!sourceToTarget.equals(that.sourceToTarget)) return false;
+        if (!acceptTransform.equals(that.acceptTransform)) return false;
         if (!targetStack.equals(that.targetStack)) return false;
-        if (!targetToSource.equals(that.targetToSource)) return false;
+        if (!retrieveTransform.equals(that.retrieveTransform)) return false;
 
         return true;
     }
@@ -132,8 +132,8 @@ public final class TransformedStack<S, T> implements Stack<S> {
     @Override
     public int hashCode() {
         int result = targetStack.hashCode();
-        result = 31 * result + sourceToTarget.hashCode();
-        result = 31 * result + targetToSource.hashCode();
+        result = 31 * result + acceptTransform.hashCode();
+        result = 31 * result + retrieveTransform.hashCode();
         return result;
     }
 
@@ -141,8 +141,8 @@ public final class TransformedStack<S, T> implements Stack<S> {
     public String toString() {
         return "TransformedStack{" +
                 "targetStack=" + targetStack +
-                ", sourceToTarget=" + sourceToTarget +
-                ", targetToSource=" + targetToSource +
+                ", acceptTransform=" + acceptTransform +
+                ", retrieveTransform=" + retrieveTransform +
                 '}';
     }
 
@@ -156,22 +156,22 @@ public final class TransformedStack<S, T> implements Stack<S> {
 
         @Override
         public void onElementPushed(Stack<T> stack, T element) {
-            targetStackListener.onElementPushed(TransformedStack.this, targetToSource.apply(element));
+            targetStackListener.onElementPushed(TransformedStack.this, retrieveTransform.apply(element));
         }
 
         @Override
         public void onElementPopped(Stack<T> stack, T element) {
-            targetStackListener.onElementPopped(TransformedStack.this, targetToSource.apply(element));
+            targetStackListener.onElementPopped(TransformedStack.this, retrieveTransform.apply(element));
         }
 
         @Override
         public void onElementInserted(Stack<T> stack, T element, int index) {
-            targetStackListener.onElementInserted(TransformedStack.this, targetToSource.apply(element), index);
+            targetStackListener.onElementInserted(TransformedStack.this, retrieveTransform.apply(element), index);
         }
 
         @Override
         public void onElementSwapped(Stack<T> stack, T oldElement, T newElement) {
-            targetStackListener.onElementSwapped(TransformedStack.this, targetToSource.apply(oldElement), targetToSource.apply(newElement));
+            targetStackListener.onElementSwapped(TransformedStack.this, retrieveTransform.apply(oldElement), retrieveTransform.apply(newElement));
         }
     }
 }

@@ -57,13 +57,14 @@ public interface ModelQuery<S, R> {
 
     interface WhereContinuation<S, R> extends ModelQuery<S, R> {
 
-        default WhereContinuation<S, R> and(Predicate<R> predicate) {
+        default WhereContinuation<S, R> and(Predicate<? extends R> predicate) {
             return where(predicate);
         }
 
     }
 
-    default WhereContinuation<S, R> where(Predicate<R> predicate) {
+    @SuppressWarnings("unchecked")
+    default WhereContinuation<S, R> where(Predicate<? extends R> predicate) {
         assert predicate != null : "Predicate can't be null";
 
         return from -> {
@@ -73,7 +74,7 @@ public interface ModelQuery<S, R> {
                 return result;
             }
 
-            if (!predicate.test(result.get())) {
+            if (!((Predicate) predicate).test(result.get())) {
                 return Optional.empty();
             }
 

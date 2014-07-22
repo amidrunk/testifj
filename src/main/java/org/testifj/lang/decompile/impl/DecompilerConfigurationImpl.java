@@ -2,11 +2,10 @@ package org.testifj.lang.decompile.impl;
 
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.decompile.*;
-import org.testifj.lang.model.ModelQuery;
+import org.testifj.lang.model.*;
 import org.testifj.util.Iterators;
 import org.testifj.util.Priority;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -24,12 +23,21 @@ public final class DecompilerConfigurationImpl implements DecompilerConfiguratio
 
     private final DecompilerDelegateAdapter<DecompilerDelegate>[][] correctionalDecompilerEnhancements;
 
+    private final DecompilerDelegateAdapter<ModelTransformation>[][] modelTransformationAdapters;
+
+    private final ModelTransformation[][] modelTransformations;
+
     private DecompilerConfigurationImpl(DecompilerDelegateAdapter<DecompilerDelegate>[][] decompilerExtensions,
                                         DecompilerDelegateAdapter<DecompilerDelegate>[][] advisoryDecompilerEnhancements,
-                                        DecompilerDelegateAdapter<DecompilerDelegate>[][] correctionalDecompilerEnhancements) {
+                                        DecompilerDelegateAdapter<DecompilerDelegate>[][] correctionalDecompilerEnhancements,
+                                        DecompilerDelegateAdapter<ModelTransformation>[][] modelTransformationAdapters) {
         this.decompilerExtensions = decompilerExtensions;
         this.advisoryDecompilerEnhancements = advisoryDecompilerEnhancements;
         this.correctionalDecompilerEnhancements = correctionalDecompilerEnhancements;
+        this.modelTransformationAdapters = modelTransformationAdapters;
+        this.modelTransformations = Arrays.stream(modelTransformationAdapters)
+                .map(adapters -> adapters == null ? new ModelTransformation[0] : Arrays.stream(adapters).map(DecompilerDelegateAdapter::getDelegate).toArray(ModelTransformation[]::new))
+                .toArray(ModelTransformation[][]::new);
     }
 
     @Override
@@ -64,6 +72,12 @@ public final class DecompilerConfigurationImpl implements DecompilerConfiguratio
 
     @Override
     @SuppressWarnings("unchecked")
+    public ModelTransformation<Element, Element>[] getTransformations(ElementType elementType) {
+        return modelTransformations[elementType.ordinal()];
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
     public DecompilerConfiguration merge(DecompilerConfiguration other) {
         assert other != null : "Other can't be null";
         assert other instanceof DecompilerConfigurationImpl : "Decompiler configuration type not supported";
@@ -92,6 +106,26 @@ public final class DecompilerConfigurationImpl implements DecompilerConfiguratio
         merger.accept(mergedConfigurationBuilder::after, correctionalDecompilerEnhancements);
         merger.accept(mergedConfigurationBuilder::after, secondConfiguration.correctionalDecompilerEnhancements);
 
+        final ElementType[] elementTypes = ElementType.values();
+
+        final Merger modelTransformationMerger = (extend, modelTransformationAdapters) -> {
+            for (DecompilerDelegateAdapter[] adapters : modelTransformationAdapters) {
+                if (adapters != null) {
+                    for (DecompilerDelegateAdapter adapter : adapters) {
+                        final ModelQueryTransformation modelQueryTransformation = (ModelQueryTransformation) adapter.getDelegate();
+
+                        mergedConfigurationBuilder.map(elementTypes[adapter.getByteCode()])
+                                .forQuery(modelQueryTransformation.getModelQuery())
+                                .withPriority(adapter.getPriority())
+                                .to(modelQueryTransformation.getTargetTransformation());
+                    }
+                }
+            }
+        };
+
+        modelTransformationMerger.accept(mergedConfigurationBuilder::on, modelTransformationAdapters);
+        modelTransformationMerger.accept(mergedConfigurationBuilder::on, secondConfiguration.modelTransformationAdapters);
+
         return mergedConfigurationBuilder.build();
     }
 
@@ -100,10 +134,11 @@ public final class DecompilerConfigurationImpl implements DecompilerConfiguratio
      * simplify declaration of closure.
      */
     @FunctionalInterface
-    interface Merger extends BiConsumer<Function<Integer, ExtendContinuation>, DecompilerDelegateAdapter[][]> {}
+    interface Merger extends BiConsumer<Function<Integer, ExtendContinuation>, DecompilerDelegateAdapter[][]> {
+    }
 
     private Iterator<DecompilerDelegate> selectEnhancements(DecompilerDelegateAdapter<DecompilerDelegate>[][] source,
-                                                               DecompilationContext context, int byteCode) {
+                                                            DecompilationContext context, int byteCode) {
         assert context != null : "Context can't be null";
         assert ByteCode.isValid(byteCode) : "Byte code is not valid";
 
@@ -131,11 +166,56 @@ public final class DecompilerConfigurationImpl implements DecompilerConfiguratio
 
         private final DecompilerDelegateAdapter<DecompilerDelegate>[][] correctionalDecompilerEnhancements = new DecompilerDelegateAdapter[256][];
 
+        private final DecompilerDelegateAdapter<ModelTransformation>[][] modelTransformations = new DecompilerDelegateAdapter[ElementType.values().length][];
+
         public DecompilerConfiguration build() {
             return new DecompilerConfigurationImpl(
                     decompilerExtensions,
                     advisoryDecompilerEnhancements,
-                    correctionalDecompilerEnhancements);
+                    correctionalDecompilerEnhancements,
+                    modelTransformations);
+        }
+
+        @Override
+        public OnElementTypeContinuation map(ElementType elementType) {
+            assert elementType != null : "Element type can't be null";
+
+            return new OnElementTypeContinuation() {
+                @Override
+                public <R extends Element> ForQueryContinuationWithPriority<R> forQuery(ModelQuery<Element, R> query) {
+                    assert query != null : "Query can't be null";
+
+                    return new ForQueryContinuationWithPriority<R>() {
+
+                        private Priority priority = Priority.DEFAULT;
+
+                        @Override
+                        public ForQueryContinuationWithoutPriority<R> withPriority(Priority priority) {
+                            assert priority != null : "Priority can't be null";
+                            this.priority = priority;
+                            return this;
+                        }
+
+                        @Override
+                        public DecompilerConfiguration.Builder to(ModelTransformation<R, ? extends Element> transformation) {
+                            assert transformation != null : "Transformation can't be null";
+
+                            final int index = elementType.ordinal();
+
+                            priorityInsert(
+                                    modelTransformations,
+                                    index,
+                                    new DecompilerDelegateAdapter(
+                                            index,
+                                            priority,
+                                            DecompilationStateSelector.ALL,
+                                            new ModelQueryTransformation(query, transformation)));
+
+                            return Builder.this;
+                        }
+                    };
+                }
+            };
         }
 
         @Override
@@ -207,9 +287,9 @@ public final class DecompilerConfigurationImpl implements DecompilerConfiguratio
 
             private DecompilationStateSelector decompilationStateSelector = DecompilationStateSelector.ALL;
 
-            private DecompilerExtensionBuilder(Builder builder, int[] byteCodes, DecompilerDelegateAdapter<T>[][] targetArray) {
+            private DecompilerExtensionBuilder(Builder builder, int[] indexes, DecompilerDelegateAdapter<T>[][] targetArray) {
                 this.builder = builder;
-                this.byteCodes = byteCodes;
+                this.byteCodes = indexes;
                 this.targetArray = targetArray;
             }
 
@@ -227,34 +307,37 @@ public final class DecompilerConfigurationImpl implements DecompilerConfiguratio
 
             @Override
             public DecompilerConfiguration.Builder then(T extension) {
-                for (int byteCode : byteCodes) {
-                    final DecompilerDelegateAdapter<T>[] existingExtensions = targetArray[byteCode];
-                    final DecompilerDelegateAdapter<T> newAdapter = new DecompilerDelegateAdapter<>(byteCode, priority, decompilationStateSelector, extension);
-
-                    if (existingExtensions == null) {
-                        targetArray[byteCode] = new DecompilerDelegateAdapter[]{newAdapter};
-                    } else {
-                        final DecompilerDelegateAdapter<T>[] newExtensions = Arrays.copyOf(
-                                existingExtensions,
-                                existingExtensions.length + 1,
-                                DecompilerDelegateAdapter[].class);
-
-                        for (int i = 0; i < newExtensions.length; i++) {
-                            if (newExtensions[i] == null || priority.ordinal() > newExtensions[i].getPriority().ordinal()) {
-                                System.arraycopy(newExtensions, i, newExtensions, i + 1, newExtensions.length - 1 - i);
-                                newExtensions[i] = newAdapter;
-                                break;
-                            }
-                        }
-
-                        targetArray[byteCode] = newExtensions;
-                    }
+                for (int index : byteCodes) {
+                    priorityInsert(targetArray, index, new DecompilerDelegateAdapter<>(index, priority, decompilationStateSelector, extension));
                 }
 
                 return builder;
             }
         }
+    }
 
+    @SuppressWarnings("unchecked")
+    private static <T> void priorityInsert(DecompilerDelegateAdapter<T>[][] array, int index, DecompilerDelegateAdapter<T> adapter) {
+        final DecompilerDelegateAdapter<T>[] existingExtensions = array[index];
+
+        if (existingExtensions == null) {
+            array[index] = new DecompilerDelegateAdapter[]{adapter};
+        } else {
+            final DecompilerDelegateAdapter<T>[] newExtensions = Arrays.copyOf(
+                    existingExtensions,
+                    existingExtensions.length + 1,
+                    DecompilerDelegateAdapter[].class);
+
+            for (int i = 0; i < newExtensions.length; i++) {
+                if (newExtensions[i] == null || adapter.getPriority().ordinal() > newExtensions[i].getPriority().ordinal()) {
+                    System.arraycopy(newExtensions, i, newExtensions, i + 1, newExtensions.length - 1 - i);
+                    newExtensions[i] = adapter;
+                    break;
+                }
+            }
+
+            array[index] = newExtensions;
+        }
     }
 
 }

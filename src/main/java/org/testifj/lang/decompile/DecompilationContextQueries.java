@@ -2,7 +2,7 @@ package org.testifj.lang.decompile;
 
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.ModelQuery;
-import org.testifj.lang.model.Sequence;
+import org.testifj.util.Sequence;
 import org.testifj.lang.model.Statement;
 
 import java.util.List;
@@ -82,7 +82,7 @@ public final class DecompilationContextQueries {
         return PREVIOUS_VALUE;
     }
 
-    public static ModelQuery<DecompilationContext, Expression> currentValue() {
+    public static ModelQuery<DecompilationContext, Expression> peek() {
         return CURRENT_VALUE;
     }
 

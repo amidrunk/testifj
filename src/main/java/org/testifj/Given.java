@@ -1,5 +1,6 @@
 package org.testifj;
 
+import org.testifj.annotations.DSL;
 import org.testifj.delegate.ExpectationDelegate;
 import org.testifj.delegate.ExpectationVerification;
 import org.testifj.delegate.GivenThenExpectation;
@@ -39,6 +40,7 @@ import java.util.Arrays;
  * }
  *
  */
+@DSL
 @SuppressWarnings("unchecked")
 public final class Given {
 

@@ -2,7 +2,7 @@ package org.testifj.lang.decompile.impl;
 
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.classfile.ClassFileFormatException;
-import org.testifj.lang.decompile.DecompilerConfiguration;
+import org.testifj.lang.decompile.DecompilerConfigurationBuilder;
 import org.testifj.lang.decompile.DecompilerDelegate;
 import org.testifj.lang.decompile.DecompilerDelegation;
 import org.testifj.lang.model.InstanceAllocation;
@@ -13,7 +13,7 @@ import org.testifj.lang.model.impl.NewInstanceImpl;
 
 public final class InstantiationInstructions implements DecompilerDelegation {
 
-    public void configure(DecompilerConfiguration.Builder configurationBuilder) {
+    public void configure(DecompilerConfigurationBuilder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";
 
         configurationBuilder.on(ByteCode.new_).then(newInstance());

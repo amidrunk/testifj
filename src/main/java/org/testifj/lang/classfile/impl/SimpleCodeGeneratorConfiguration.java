@@ -2,7 +2,7 @@ package org.testifj.lang.classfile.impl;
 
 import org.testifj.lang.codegeneration.CodeGenerationContext;
 import org.testifj.lang.codegeneration.CodeGeneratorConfiguration;
-import org.testifj.lang.codegeneration.CodeGeneratorExtension;
+import org.testifj.lang.codegeneration.CodeGeneratorDelegate;
 import org.testifj.lang.codegeneration.ElementSelector;
 import org.testifj.lang.decompile.*;
 import org.testifj.lang.model.Element;
@@ -20,7 +20,7 @@ public final class SimpleCodeGeneratorConfiguration implements CodeGeneratorConf
 
     @Override
     @SuppressWarnings("unchecked")
-    public CodeGeneratorExtension<? extends Element> getExtension(CodeGenerationContext context, CodePointer<? extends Element> codePointer) {
+    public CodeGeneratorDelegate<? extends Element> getExtension(CodeGenerationContext context, CodePointer<? extends Element> codePointer) {
         assert codePointer != null : "Code pointer can't be null";
 
         CodeGeneratorExtensionCandidate candidate = extensionCandidates[codePointer.getElement().getElementType().ordinal()];
@@ -42,7 +42,7 @@ public final class SimpleCodeGeneratorConfiguration implements CodeGeneratorConf
 
         @Override
         public <E extends Element> CodeGeneratorConfiguration.Builder extend(ElementSelector<E> elementSelector,
-                                                                             CodeGeneratorExtension<E> extension) {
+                                                                             CodeGeneratorDelegate<E> extension) {
             assert elementSelector != null : "Element type can't be null";
             assert extension != null : "Extension can't be null";
 
@@ -77,15 +77,15 @@ public final class SimpleCodeGeneratorConfiguration implements CodeGeneratorConf
 
         private final ElementSelector<? extends Element> elementElementSelector;
 
-        private final CodeGeneratorExtension<? extends Element> codeGeneratorExtension;
+        private final CodeGeneratorDelegate<? extends Element> codeGeneratorDelegate;
 
         private Optional<CodeGeneratorExtensionCandidate> nextCandidate;
 
         private CodeGeneratorExtensionCandidate(ElementSelector<? extends Element> elementElementSelector,
-                                                CodeGeneratorExtension<? extends Element> codeGeneratorExtension,
+                                                CodeGeneratorDelegate<? extends Element> codeGeneratorDelegate,
                                                 Optional<CodeGeneratorExtensionCandidate> nextCandidate) {
             this.elementElementSelector = elementElementSelector;
-            this.codeGeneratorExtension = codeGeneratorExtension;
+            this.codeGeneratorDelegate = codeGeneratorDelegate;
             this.nextCandidate = nextCandidate;
         }
 
@@ -93,8 +93,8 @@ public final class SimpleCodeGeneratorConfiguration implements CodeGeneratorConf
             return elementElementSelector;
         }
 
-        public CodeGeneratorExtension<? extends Element> extension() {
-            return codeGeneratorExtension;
+        public CodeGeneratorDelegate<? extends Element> extension() {
+            return codeGeneratorDelegate;
         }
 
         public Optional<CodeGeneratorExtensionCandidate> next() {

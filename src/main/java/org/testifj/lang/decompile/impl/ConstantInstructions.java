@@ -12,7 +12,7 @@ import java.lang.reflect.Type;
 public final class ConstantInstructions implements DecompilerDelegation {
 
     @Override
-    public void configure(DecompilerConfiguration.Builder decompilerConfigurationBuilder) {
+    public void configure(DecompilerConfigurationBuilder decompilerConfigurationBuilder) {
         assert decompilerConfigurationBuilder != null : "Decompiler configuration builder can't be null";
 
         decompilerConfigurationBuilder.on(ByteCode.aconst_null).then(aconst_null());

@@ -11,7 +11,7 @@ import java.util.List;
 public final class StackInstructions implements DecompilerDelegation {
 
     @Override
-    public void configure(DecompilerConfiguration.Builder decompilerConfigurationBuilder) {
+    public void configure(DecompilerConfigurationBuilder decompilerConfigurationBuilder) {
         assert decompilerConfigurationBuilder != null : "Decompilation configuration builder can't be null";
 
         decompilerConfigurationBuilder.on(ByteCode.pop).then(pop());

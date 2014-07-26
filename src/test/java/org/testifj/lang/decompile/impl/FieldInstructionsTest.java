@@ -12,6 +12,7 @@ import org.testifj.lang.decompile.CodeStream;
 import org.testifj.lang.classfile.ConstantPool;
 import org.testifj.lang.decompile.DecompilationContext;
 import org.testifj.lang.decompile.DecompilerConfiguration;
+import org.testifj.lang.decompile.DecompilerConfigurationBuilder;
 import org.testifj.lang.model.AST;
 import org.testifj.lang.model.Constant;
 import org.testifj.lang.model.Expression;
@@ -125,7 +126,7 @@ public class FieldInstructionsTest {
     }
 
     private DecompilerConfiguration configuration() {
-        final DecompilerConfiguration.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
+        final DecompilerConfigurationBuilder configurationBuilder = DecompilerConfigurationImpl.newBuilder();
 
         new FieldInstructions().configure(configurationBuilder);
 

@@ -454,7 +454,7 @@ public class StackInstructionsTest {
     }
 
     private org.testifj.lang.decompile.DecompilerConfiguration configuration() {
-        final DecompilerConfigurationImpl.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
+        final DecompilerConfigurationBuilder configurationBuilder = DecompilerConfigurationImpl.newBuilder();
         stackInstructions.configure(configurationBuilder);
         return configurationBuilder.build();
     }

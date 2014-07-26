@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.decompile.CodeStream;
 import org.testifj.lang.decompile.DecompilationContext;
+import org.testifj.lang.decompile.DecompilerConfigurationBuilder;
 
 import java.io.IOException;
 
@@ -45,7 +46,7 @@ public class VariousInstructionsTest {
     }
 
     private org.testifj.lang.decompile.DecompilerConfiguration configuration() {
-        final DecompilerConfigurationImpl.Builder builder = new DecompilerConfigurationImpl.Builder();
+        final DecompilerConfigurationBuilder builder = DecompilerConfigurationImpl.newBuilder();
         variousInstructions.configure(builder);
         return builder.build();
     }

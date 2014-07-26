@@ -30,7 +30,7 @@ import static org.testifj.matchers.core.OptionalThatIs.present;
 @SuppressWarnings("unchecked")
 public class DecompilerConfigurationImplTest {
 
-    private final DecompilerConfigurationImpl.Builder builder = new DecompilerConfigurationImpl.Builder();
+    private final DecompilerConfigurationBuilder builder = DecompilerConfigurationImpl.newBuilder();
     private final DecompilerConfiguration emptyConfiguration = builder.build();
     private final DecompilationContext decompilationContext = mock(DecompilationContext.class);
     private final DecompilerDelegate extension1 = mock(DecompilerDelegate.class, "extension1");
@@ -68,8 +68,6 @@ public class DecompilerConfigurationImplTest {
 
     @Test
     public void onShouldNotAcceptInvalidArguments() {
-        final DecompilerConfigurationImpl.Builder builder = this.builder;
-
         expect(() -> builder.on(-1)).toThrow(AssertionError.class);
         expect(() -> builder.on(257)).toThrow(AssertionError.class);
         expect(() -> builder.on(100).then(null)).toThrow(AssertionError.class);
@@ -234,11 +232,11 @@ public class DecompilerConfigurationImplTest {
 
     @Test
     public void mergeShouldCreateUnionOfNonIntersectingExtensions() {
-        final DecompilerConfiguration configuration1 = new DecompilerConfigurationImpl.Builder()
+        final DecompilerConfiguration configuration1 = DecompilerConfigurationImpl.newBuilder()
                 .on(ByteCode.iadd).then(extension1)
                 .build();
 
-        final DecompilerConfiguration configuration2 = new DecompilerConfigurationImpl.Builder()
+        final DecompilerConfiguration configuration2 = DecompilerConfigurationImpl.newBuilder()
                 .on(ByteCode.isub).then(extension2)
                 .build();
 
@@ -250,11 +248,11 @@ public class DecompilerConfigurationImplTest {
 
     @Test
     public void mergeShouldOrganizeEqualExtensionsInPriorityOrder() {
-        final DecompilerConfiguration configuration1 = new DecompilerConfigurationImpl.Builder()
+        final DecompilerConfiguration configuration1 = DecompilerConfigurationImpl.newBuilder()
                 .on(ByteCode.iadd).then(extension1)
                 .build();
 
-        final DecompilerConfiguration configuration2 = new DecompilerConfigurationImpl.Builder()
+        final DecompilerConfiguration configuration2 = DecompilerConfigurationImpl.newBuilder()
                 .on(ByteCode.iadd).then(extension2)
                 .build();
 
@@ -269,11 +267,11 @@ public class DecompilerConfigurationImplTest {
 
     @Test
     public void mergeShouldMergeAdvisoryEnhancements() {
-        final DecompilerConfiguration configuration1 = new DecompilerConfigurationImpl.Builder()
+        final DecompilerConfiguration configuration1 = DecompilerConfigurationImpl.newBuilder()
                 .before(ByteCode.iadd).then(enhancement1)
                 .build();
 
-        final DecompilerConfiguration configuration2 = new DecompilerConfigurationImpl.Builder()
+        final DecompilerConfiguration configuration2 = DecompilerConfigurationImpl.newBuilder()
                 .before(ByteCode.isub).then(enhancement2)
                 .build();
 
@@ -285,11 +283,11 @@ public class DecompilerConfigurationImplTest {
 
     @Test
     public void mergeShouldOrganizeOverlappingAdvisoryEnhancementsInPriorityOrder() {
-        final DecompilerConfiguration configuration1 = new DecompilerConfigurationImpl.Builder()
+        final DecompilerConfiguration configuration1 = DecompilerConfigurationImpl.newBuilder()
                 .before(ByteCode.iadd).then(enhancement1)
                 .build();
 
-        final DecompilerConfiguration configuration2 = new DecompilerConfigurationImpl.Builder()
+        final DecompilerConfiguration configuration2 = DecompilerConfigurationImpl.newBuilder()
                 .before(ByteCode.iadd).then(enhancement2)
                 .build();
 
@@ -304,11 +302,11 @@ public class DecompilerConfigurationImplTest {
 
     @Test
     public void mergeShouldMergeCorrectionalEnhancements() {
-        final DecompilerConfiguration configuration1 = new DecompilerConfigurationImpl.Builder()
+        final DecompilerConfiguration configuration1 = DecompilerConfigurationImpl.newBuilder()
                 .after(ByteCode.iadd).then(enhancement1)
                 .build();
 
-        final DecompilerConfiguration configuration2 = new DecompilerConfigurationImpl.Builder()
+        final DecompilerConfiguration configuration2 = DecompilerConfigurationImpl.newBuilder()
                 .after(ByteCode.isub).then(enhancement2)
                 .build();
 
@@ -320,11 +318,11 @@ public class DecompilerConfigurationImplTest {
 
     @Test
     public void mergeShouldOrganizeOverlappingCorrectionalEnhancementsInPriorityOrder() {
-        final DecompilerConfiguration configuration1 = new DecompilerConfigurationImpl.Builder()
+        final DecompilerConfiguration configuration1 = DecompilerConfigurationImpl.newBuilder()
                 .after(ByteCode.iadd).then(enhancement1)
                 .build();
 
-        final DecompilerConfiguration configuration2 = new DecompilerConfigurationImpl.Builder()
+        final DecompilerConfiguration configuration2 = DecompilerConfigurationImpl.newBuilder()
                 .after(ByteCode.iadd).then(enhancement2)
                 .build();
 
@@ -339,7 +337,7 @@ public class DecompilerConfigurationImplTest {
 
     @Test
     public void advisoryDecompilerEnhancementCanBeConfiguredForMultipleInstructions() {
-        final DecompilerConfiguration configuration = new DecompilerConfigurationImpl.Builder()
+        final DecompilerConfiguration configuration = DecompilerConfigurationImpl.newBuilder()
                 .before(ByteCode.nop, ByteCode.dup).then(enhancement1)
                 .build();
 
@@ -349,7 +347,7 @@ public class DecompilerConfigurationImplTest {
 
     @Test
     public void correctionalDecompilerEnhancementsCanBeConfiguredForMultipleInstructions() {
-        final DecompilerConfiguration configuration = new DecompilerConfigurationImpl.Builder()
+        final DecompilerConfiguration configuration = DecompilerConfigurationImpl.newBuilder()
                 .after(ByteCode.nop, ByteCode.dup).then(enhancement1)
                 .build();
 
@@ -362,7 +360,7 @@ public class DecompilerConfigurationImplTest {
     public void singleTransformationForElementTypeCanBeConfigured() {
         final ModelTransformation expectedTransformation = mock(ModelTransformation.class);
 
-        final DecompilerConfiguration configuration = new DecompilerConfigurationImpl.Builder()
+        final DecompilerConfiguration configuration = DecompilerConfigurationImpl.newBuilder()
                 .map(ElementType.CONSTANT).forQuery(value().where(runtimeType().is(ModelQueries.equalTo(String.class)))).to(expectedTransformation)
                 .build();
 
@@ -391,7 +389,7 @@ public class DecompilerConfigurationImplTest {
         final ModelTransformation transformation1 = mock(ModelTransformation.class, withSettings().defaultAnswer(a -> Optional.of(a.getArguments()[0])));
         final ModelTransformation transformation2 = mock(ModelTransformation.class, withSettings().defaultAnswer(a -> Optional.of(a.getArguments()[0])));
 
-        final DecompilerConfiguration configuration = new DecompilerConfigurationImpl.Builder()
+        final DecompilerConfiguration configuration = DecompilerConfigurationImpl.newBuilder()
                 .map(ElementType.CONSTANT).forQuery(value()).to(transformation1)
                 .map(ElementType.CONSTANT).forQuery(value()).withPriority(Priority.HIGH).to(transformation2)
                 .build();
@@ -409,11 +407,11 @@ public class DecompilerConfigurationImplTest {
         final ModelTransformation transformation1 = mock(ModelTransformation.class, withSettings().name("t1").defaultAnswer(a -> Optional.of(a.getArguments()[0])));
         final ModelTransformation transformation2 = mock(ModelTransformation.class, withSettings().name("t2").defaultAnswer(a -> Optional.of(a.getArguments()[0])));
 
-        final DecompilerConfiguration configuration1 = new DecompilerConfigurationImpl.Builder()
+        final DecompilerConfiguration configuration1 = DecompilerConfigurationImpl.newBuilder()
                 .map(ElementType.CONSTANT).forQuery(value()).to(transformation2)
                 .build();
 
-        final DecompilerConfiguration configuration2 = new DecompilerConfigurationImpl.Builder()
+        final DecompilerConfiguration configuration2 = DecompilerConfigurationImpl.newBuilder()
                 .map(ElementType.CONSTANT).forQuery(value()).withPriority(Priority.HIGH).to(transformation1)
                 .build();
 
@@ -435,7 +433,7 @@ public class DecompilerConfigurationImplTest {
 
     @Test
     public void modelQueryConfigurationShouldNotAcceptInvalidArguments() {
-        final DecompilerConfigurationImpl.Builder builder = new DecompilerConfigurationImpl.Builder();
+        final DecompilerConfigurationBuilder builder = DecompilerConfigurationImpl.newBuilder();
 
         expect(() -> builder.map((ElementType) null)).toThrow(AssertionError.class);
         expect(() -> builder.map(ElementType.CONSTANT).forQuery(null)).toThrow(AssertionError.class);

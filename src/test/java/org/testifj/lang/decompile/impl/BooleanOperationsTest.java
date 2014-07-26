@@ -256,7 +256,7 @@ public class BooleanOperationsTest {
     }
 
     private DecompilerConfiguration configuration() {
-        final DecompilerConfigurationImpl.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
+        final DecompilerConfigurationBuilder configurationBuilder = DecompilerConfigurationImpl.newBuilder();
         booleanOperations.configure(configurationBuilder);
         return configurationBuilder.build();
     }

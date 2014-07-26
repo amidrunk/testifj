@@ -6,6 +6,7 @@ import org.testifj.lang.CodeStreamTestUtils;
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.decompile.DecompilationContext;
 import org.testifj.lang.decompile.DecompilerConfiguration;
+import org.testifj.lang.decompile.DecompilerConfigurationBuilder;
 import org.testifj.lang.model.Expression;
 import org.testifj.util.SingleThreadedStack;
 
@@ -243,7 +244,7 @@ public class BinaryOperationsTest {
     }
 
     private DecompilerConfiguration configuration() {
-        final DecompilerConfiguration.Builder builder = new DecompilerConfigurationImpl.Builder();
+        final DecompilerConfigurationBuilder builder = DecompilerConfigurationImpl.newBuilder();
         delegation.configure(builder);
         return builder.build();
     }

@@ -10,6 +10,7 @@ import org.testifj.lang.classfile.Method;
 import org.testifj.lang.classfile.impl.LocalVariableImpl;
 import org.testifj.lang.decompile.DecompilationContext;
 import org.testifj.lang.decompile.DecompilerConfiguration;
+import org.testifj.lang.decompile.DecompilerConfigurationBuilder;
 import org.testifj.lang.decompile.DecompilerDelegate;
 import org.testifj.lang.model.AST;
 
@@ -36,7 +37,7 @@ public class VariableInstructionsTest {
 
     @Before
     public void setup() {
-        final DecompilerConfiguration.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
+        final DecompilerConfigurationBuilder configurationBuilder = DecompilerConfigurationImpl.newBuilder();
 
         new VariableInstructions().configure(configurationBuilder);
 

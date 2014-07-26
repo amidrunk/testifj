@@ -225,7 +225,7 @@ public class UnaryOperationsTest {
     }
 
     private DecompilerConfiguration configuration() {
-        final DecompilerConfigurationImpl.Builder builder = new DecompilerConfigurationImpl.Builder();
+        final DecompilerConfigurationBuilder builder = DecompilerConfigurationImpl.newBuilder();
         unaryOperations.configure(builder);
         return builder.build();
     }

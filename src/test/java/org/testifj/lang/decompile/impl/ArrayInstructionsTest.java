@@ -3,10 +3,7 @@ package org.testifj.lang.decompile.impl;
 import org.junit.Test;
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.classfile.ClassFileFormatException;
-import org.testifj.lang.decompile.CodeStream;
-import org.testifj.lang.decompile.DecompilationContext;
-import org.testifj.lang.decompile.DecompilerConfiguration;
-import org.testifj.lang.decompile.DecompilerDelegate;
+import org.testifj.lang.decompile.*;
 import org.testifj.lang.model.AST;
 import org.testifj.lang.model.Constant;
 import org.testifj.lang.model.Expression;
@@ -275,7 +272,7 @@ public class ArrayInstructionsTest {
     }
 
     private DecompilerConfiguration configuration() {
-        final DecompilerConfiguration.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
+        final DecompilerConfigurationBuilder configurationBuilder = DecompilerConfigurationImpl.newBuilder();
 
         new ArrayInstructions().configure(configurationBuilder);
 

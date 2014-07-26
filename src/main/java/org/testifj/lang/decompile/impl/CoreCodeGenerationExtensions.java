@@ -42,7 +42,7 @@ public final class CoreCodeGenerationExtensions {
         configurationBuilder.extend(selectInitializedNewArray(), newInitializedArrayExtension());
     }
 
-    public static CodeGeneratorExtension<Increment> increment() {
+    public static CodeGeneratorDelegate<Increment> increment() {
         return (context,codePointer,out) -> {
             final Increment increment = codePointer.getElement();
             final Affix affix = increment.getAffix();
@@ -69,7 +69,7 @@ public final class CoreCodeGenerationExtensions {
      * @return Code generator extension for {@link org.testifj.lang.model.ElementType#ALLOCATE}, which
      * corresponds to the {@link org.testifj.lang.classfile.ByteCode#new_} byte code.
      */
-    public static CodeGeneratorExtension<InstanceAllocation> allocateInstanceExtension() {
+    public static CodeGeneratorDelegate<InstanceAllocation> allocateInstanceExtension() {
         return (context,codePointer,out) -> {
             final InstanceAllocation instanceAllocation = codePointer.getElement();
 
@@ -83,7 +83,7 @@ public final class CoreCodeGenerationExtensions {
      *
      * @return A code generator extension for handling array element access.
      */
-    public static CodeGeneratorExtension<ArrayLoad> arrayLoadExtension() {
+    public static CodeGeneratorDelegate<ArrayLoad> arrayLoadExtension() {
         return (context,codePointer,out) -> {
             final ArrayLoad arrayLoad = codePointer.getElement();
 
@@ -101,7 +101,7 @@ public final class CoreCodeGenerationExtensions {
      *
      * @return An extension that handles the {@link org.testifj.lang.model.ElementType#CAST} element.
      */
-    public static CodeGeneratorExtension<TypeCast> castExtension() {
+    public static CodeGeneratorDelegate<TypeCast> castExtension() {
         return (context,codePointer,out) -> {
             final TypeCast typeCast = codePointer.getElement();
             final String targetTypeName = context.getCodeStyle().getTypeName(typeCast.getType());
@@ -185,7 +185,7 @@ public final class CoreCodeGenerationExtensions {
         }));
     }
 
-    public static CodeGeneratorExtension<MethodCall> innerClassFieldAccessExtension() {
+    public static CodeGeneratorDelegate<MethodCall> innerClassFieldAccessExtension() {
         return (context, codePointer, out) -> {
             final MethodCall methodCall = codePointer.getElement();
             final ClassFile innerClassClassFile = context.getClassFileResolver().resolveClassFile(methodCall.getTargetType());
@@ -245,7 +245,7 @@ public final class CoreCodeGenerationExtensions {
      * @return A code generator extension that handles {@link org.testifj.lang.model.NewArray}-elements
      * that has no initializers.
      */
-    public static CodeGeneratorExtension<NewArray> newUninitializedArrayExtension() {
+    public static CodeGeneratorDelegate<NewArray> newUninitializedArrayExtension() {
         return (context, codePointer, out) -> {
             final NewArray newArray = codePointer.getElement();
 
@@ -255,7 +255,7 @@ public final class CoreCodeGenerationExtensions {
         };
     }
 
-    public static CodeGeneratorExtension<NewArray> newInitializedArrayExtension() {
+    public static CodeGeneratorDelegate<NewArray> newInitializedArrayExtension() {
         return (context, codePointer, out) -> {
             final NewArray newArray = codePointer.getElement();
 
@@ -278,7 +278,7 @@ public final class CoreCodeGenerationExtensions {
      *
      * @return A code generator extension that handles {@link org.testifj.lang.model.ArrayStore}-elements.
      */
-    public static CodeGeneratorExtension<ArrayStore> arrayStoreExtension() {
+    public static CodeGeneratorDelegate<ArrayStore> arrayStoreExtension() {
         return (context, codePointer, out) -> {
             final ArrayStore arrayStore = codePointer.getElement();
 
@@ -290,7 +290,7 @@ public final class CoreCodeGenerationExtensions {
         };
     }
 
-    public static CodeGeneratorExtension<Constant> constant() {
+    public static CodeGeneratorDelegate<Constant> constant() {
         return (context, codePointer, out) -> {
             final Type type = codePointer.getElement().getType();
             final Object constant = codePointer.getElement().getConstant();
@@ -309,19 +309,19 @@ public final class CoreCodeGenerationExtensions {
         };
     }
 
-    public static CodeGeneratorExtension<Return> ret() {
+    public static CodeGeneratorDelegate<Return> ret() {
         return (context, codePointer, out) -> {
             out.append("return");
         };
     }
 
-    public static CodeGeneratorExtension<LocalVariableReference> variableReference() {
+    public static CodeGeneratorDelegate<LocalVariableReference> variableReference() {
         return (context, codePointer, out) -> {
             out.append(codePointer.getElement().getName());
         };
     }
 
-    public static CodeGeneratorExtension<ReturnValue> returnValue() {
+    public static CodeGeneratorDelegate<ReturnValue> returnValue() {
         return (context, codePointer, out) -> {
             out.append("return ");
             context.delegate(codePointer.forElement(codePointer.getElement().getValue()));
@@ -381,7 +381,7 @@ public final class CoreCodeGenerationExtensions {
      * @return A code generator extension that translates Boolean.valueOf(boolean) to an
      * implicit boolean boxing.
      */
-    public static CodeGeneratorExtension<MethodCall> boxBooleanExtension() {
+    public static CodeGeneratorDelegate<MethodCall> boxBooleanExtension() {
         return (context, codePointer, out) -> {
             final Expression parameter = codePointer.getElement().getParameters().get(0);
 
@@ -405,7 +405,7 @@ public final class CoreCodeGenerationExtensions {
      *
      * @return A code generator extension for static calls.
      */
-    public static CodeGeneratorExtension<MethodCall> staticMethodCallExtension() {
+    public static CodeGeneratorDelegate<MethodCall> staticMethodCallExtension() {
         return (context, codePointer, out) -> {
             final MethodCall methodCall = codePointer.getElement();
 
@@ -423,7 +423,7 @@ public final class CoreCodeGenerationExtensions {
      *
      * @return A code generator extension for method invocations on an instance.
      */
-    public static CodeGeneratorExtension<MethodCall> instanceMethodCallExtension() {
+    public static CodeGeneratorDelegate<MethodCall> instanceMethodCallExtension() {
         return (context, codePointer, out) -> {
             final MethodCall methodCall = codePointer.getElement();
             final Expression targetInstance = methodCall.getTargetInstance();
@@ -473,7 +473,7 @@ public final class CoreCodeGenerationExtensions {
      *
      * @return A code generator extension that handles DSL method calls.
      */
-    public static CodeGeneratorExtension<MethodCall> dslMethodCallExtension() {
+    public static CodeGeneratorDelegate<MethodCall> dslMethodCallExtension() {
         return CoreCodeGenerationExtensions::appendMethodCall;
     }
 
@@ -502,7 +502,7 @@ public final class CoreCodeGenerationExtensions {
         return ElementSelector.<MethodCall>forType(ElementType.METHOD_CALL).where(isPrimitiveBoxCall());
     }
 
-    public static CodeGeneratorExtension<MethodCall> primitiveBoxCallExtension() {
+    public static CodeGeneratorDelegate<MethodCall> primitiveBoxCallExtension() {
         return (context, codePointer, out) -> {
             context.delegate(codePointer.forElement(codePointer.getElement().getParameters().get(0)));
         };

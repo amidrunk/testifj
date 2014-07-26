@@ -13,7 +13,7 @@ import java.util.Stack;
 
 public final class InvokeDynamicInstructions implements DecompilerDelegation {
 
-    public void configure(DecompilerConfiguration.Builder configurationBuilder) {
+    public void configure(DecompilerConfigurationBuilder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";
 
         configurationBuilder.on(ByteCode.invokedynamic).then(invokedynamic());

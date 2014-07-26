@@ -56,10 +56,10 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
 
     @SuppressWarnings("unchecked")
     private void append(CodeGenerationContext context, CodePointer codePointer, PrintWriter out) {
-        final CodeGeneratorExtension extension = coreConfiguration.getExtension(context, codePointer);
+        final CodeGeneratorDelegate extension = coreConfiguration.getExtension(context, codePointer);
 
         if (extension != null) {
-            extension.call(context, codePointer, out);
+            extension.apply(context, codePointer, out);
             return;
         }
 

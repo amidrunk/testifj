@@ -15,7 +15,7 @@ import java.io.IOException;
 public final class BinaryOperations implements DecompilerDelegation {
 
     @Override
-    public void configure(DecompilerConfiguration.Builder decompilerConfigurationBuilder) {
+    public void configure(DecompilerConfigurationBuilder decompilerConfigurationBuilder) {
         assert decompilerConfigurationBuilder != null : "Decompiler configuration builder can't be null";
 
         decompilerConfigurationBuilder.on(ByteCode.iadd).then(iadd());

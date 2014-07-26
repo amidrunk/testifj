@@ -200,7 +200,7 @@ public class MethodCallInstructionsTest {
     }
 
     private DecompilerConfiguration configuration() {
-        final DecompilerConfiguration.Builder builder = new DecompilerConfigurationImpl.Builder();
+        final DecompilerConfigurationBuilder builder = DecompilerConfigurationImpl.newBuilder();
 
         new MethodCallInstructions().configure(builder);
 

@@ -22,15 +22,17 @@ public final class CoreDecompilerDelegation implements DecompilerDelegation {
     };
 
     @Override
-    public void configure(DecompilerConfiguration.Builder configurationBuilder) {
+    public void configure(DecompilerConfigurationBuilder configurationBuilder) {
         for (DecompilerDelegation delegation : delegations) {
             delegation.configure(configurationBuilder);
         }
     }
 
     public static DecompilerConfiguration configuration() {
-        final DecompilerConfigurationImpl.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
+        final DecompilerConfigurationBuilder configurationBuilder = DecompilerConfigurationImpl.newBuilder();
+
         new CoreDecompilerDelegation().configure(configurationBuilder);
+
         return configurationBuilder.build();
     }
 }

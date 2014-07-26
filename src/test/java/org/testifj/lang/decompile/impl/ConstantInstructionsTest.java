@@ -284,7 +284,7 @@ public class ConstantInstructionsTest {
     }
 
     private DecompilerConfiguration configuration() {
-        final DecompilerConfigurationImpl.Builder builder = new DecompilerConfigurationImpl.Builder();
+        final DecompilerConfigurationBuilder builder = DecompilerConfigurationImpl.newBuilder();
 
         delegation.configure(builder);
 

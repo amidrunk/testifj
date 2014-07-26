@@ -3,7 +3,7 @@ package org.testifj.lang.decompile.impl;
 import org.junit.Test;
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.decompile.DecompilationContext;
-import org.testifj.lang.decompile.DecompilerConfiguration;
+import org.testifj.lang.decompile.DecompilerConfigurationBuilder;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -21,7 +21,7 @@ public class InvokeDynamicInstructionsTest {
 
     @Test
     public void configureShouldExtendBuilderWithDynamicInvokeSupport() {
-        final DecompilerConfiguration.Builder builder = new DecompilerConfigurationImpl.Builder();
+        final DecompilerConfigurationBuilder builder = DecompilerConfigurationImpl.newBuilder();
 
         new InvokeDynamicInstructions().configure(builder);
 

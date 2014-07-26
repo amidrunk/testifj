@@ -20,7 +20,7 @@ import static org.testifj.lang.model.ModelQueries.*;
 public final class UnaryOperations implements DecompilerDelegation {
 
     @Override
-    public void configure(DecompilerConfiguration.Builder decompilerConfigurationBuilder) {
+    public void configure(DecompilerConfigurationBuilder decompilerConfigurationBuilder) {
         assert decompilerConfigurationBuilder != null : "Decompilation configuration builder can't be null";
 
         decompilerConfigurationBuilder.after(ByteCode.longStoreInstructions())

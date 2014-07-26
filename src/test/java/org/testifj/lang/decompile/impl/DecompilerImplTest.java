@@ -94,7 +94,7 @@ public class DecompilerImplTest {
     }
 
     private Decompiler decompilerWithDelegate(int instruction, DecompilerDelegate delegate) {
-        return new DecompilerImpl(new DecompilerConfigurationImpl.Builder()
+        return new DecompilerImpl(DecompilerConfigurationImpl.newBuilder()
                     .on(instruction).then(delegate)
                     .build());
     }
@@ -123,7 +123,7 @@ public class DecompilerImplTest {
         final DecompilerDelegate enhancement = mock(DecompilerDelegate.class);
         final DecompilerDelegate extension = mock(DecompilerDelegate.class);
 
-        final DecompilerConfiguration configuration = new DecompilerConfigurationImpl.Builder()
+        final DecompilerConfiguration configuration = DecompilerConfigurationImpl.newBuilder()
                 .before(ByteCode.nop).then(enhancement)
                 .on(ByteCode.nop).then(extension)
                 .build();
@@ -142,7 +142,7 @@ public class DecompilerImplTest {
     public void correctionalDecompilerEnhancementShouldBeCalledAfterInstructionIsProcessed() throws IOException {
         final DecompilerDelegate extension = mock(DecompilerDelegate.class, "delegate");
         final DecompilerDelegate enhancement = mock(DecompilerDelegate.class, "enhancement");
-        final DecompilerConfiguration configuration = new DecompilerConfigurationImpl.Builder()
+        final DecompilerConfiguration configuration = DecompilerConfigurationImpl.newBuilder()
                 .on(ByteCode.nop).then(extension)
                 .after(ByteCode.nop).then(enhancement)
                 .build();
@@ -158,7 +158,7 @@ public class DecompilerImplTest {
     @Test
     public void configuredDecompilerEnhancementShouldBeCalledAfterInstruction() throws IOException {
         final DecompilerDelegate enhancement = mock(DecompilerDelegate.class, "enhancement");
-        final DecompilerConfiguration configuration = new DecompilerConfigurationImpl.Builder()
+        final DecompilerConfiguration configuration = DecompilerConfigurationImpl.newBuilder()
                 .after(ByteCode.istore_1).then(enhancement)
                 .build();
 
@@ -176,7 +176,7 @@ public class DecompilerImplTest {
     @Test
     public void compilerExtensionCanOverrideByteCodeHandling() throws IOException {
         final DecompilerDelegate extension = mock(DecompilerDelegate.class);
-        final DecompilerConfiguration configuration = new DecompilerConfigurationImpl.Builder()
+        final DecompilerConfiguration configuration = DecompilerConfigurationImpl.newBuilder()
                 .on(ByteCode.iconst_0).then(extension)
                 .build();
         final DecompilerImpl decompiler = new DecompilerImpl(configuration);

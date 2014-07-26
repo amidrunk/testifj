@@ -4,13 +4,10 @@ import org.junit.Test;
 import org.testifj.Caller;
 import org.testifj.lang.classfile.Method;
 import org.testifj.lang.classfile.impl.DefaultConstantPool;
-import org.testifj.lang.decompile.CodePointer;
+import org.testifj.lang.decompile.*;
 import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.classfile.ClassFile;
 import org.testifj.lang.classfile.ConstantPoolEntry;
-import org.testifj.lang.decompile.DecompilationContext;
-import org.testifj.lang.decompile.DecompilerConfiguration;
-import org.testifj.lang.decompile.ProgramCounter;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.NewInstance;
@@ -86,7 +83,7 @@ public class InstantiationInstructionsTest {
     }
 
     private DecompilerConfiguration configuration() {
-        final DecompilerConfiguration.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
+        final DecompilerConfigurationBuilder configurationBuilder = DecompilerConfigurationImpl.newBuilder();
 
         new InstantiationInstructions().configure(configurationBuilder);
 

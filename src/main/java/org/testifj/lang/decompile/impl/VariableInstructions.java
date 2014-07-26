@@ -13,7 +13,7 @@ import static org.testifj.lang.model.AST.constant;
 
 public final class VariableInstructions implements DecompilerDelegation {
 
-    public void configure(DecompilerConfiguration.Builder configurationBuilder) {
+    public void configure(DecompilerConfigurationBuilder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";
 
         configurationBuilder.on(iload, lload, fload, dload, aload).then(load());

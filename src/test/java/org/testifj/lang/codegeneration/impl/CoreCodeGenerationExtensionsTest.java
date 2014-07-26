@@ -44,7 +44,7 @@ public class CoreCodeGenerationExtensionsTest {
     private final CodeGeneratorConfiguration configuration = coreConfiguration();
 
     private final CodeGenerationDelegate codeGenerationDelegate = (context, codePointer) -> {
-        configuration.getExtension(context, codePointer).call(context, codePointer, out);
+        configuration.getExtension(context, codePointer).apply(context, codePointer, out);
     };
 
     private final CodeStyle codeStyle = mock(CodeStyle.class);
@@ -374,12 +374,12 @@ public class CoreCodeGenerationExtensionsTest {
     }
 
     private String codeFor(CodePointerImpl codePointer) {
-        final CodeGeneratorExtension extension = coreConfiguration().getExtension(context, codePointer);
+        final CodeGeneratorDelegate extension = coreConfiguration().getExtension(context, codePointer);
 
         expect(extension).not().toBe(equalTo(null));
 
         baos.reset();
-        extension.call(context, codePointer, out);
+        extension.apply(context, codePointer, out);
         out.flush();
 
         return baos.toString();

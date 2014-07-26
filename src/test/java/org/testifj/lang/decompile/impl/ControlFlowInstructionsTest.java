@@ -9,6 +9,7 @@ import org.testifj.lang.classfile.ByteCode;
 import org.testifj.lang.classfile.ClassFileFormatException;
 import org.testifj.lang.decompile.DecompilationContext;
 import org.testifj.lang.decompile.DecompilerConfiguration;
+import org.testifj.lang.decompile.DecompilerConfigurationBuilder;
 import org.testifj.lang.decompile.ProgramCounter;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.LocalVariableReference;
@@ -149,7 +150,7 @@ public class ControlFlowInstructionsTest {
     }
 
     private DecompilerConfiguration configuration() {
-        final DecompilerConfigurationImpl.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
+        final DecompilerConfigurationBuilder configurationBuilder = DecompilerConfigurationImpl.newBuilder();
         controlFlowInstructions.configure(configurationBuilder);
         return configurationBuilder.build();
     }

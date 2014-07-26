@@ -28,7 +28,7 @@ import static org.testifj.lang.decompile.DecompilerDelegates.forQuery;
 public final class ControlFlowInstructions implements DecompilerDelegation {
 
     @Override
-    public void configure(DecompilerConfiguration.Builder configurationBuilder) {
+    public void configure(DecompilerConfigurationBuilder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";
 
         configurationBuilder.on(ByteCode.return_).then(return_());

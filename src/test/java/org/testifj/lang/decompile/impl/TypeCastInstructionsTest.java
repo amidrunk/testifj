@@ -189,7 +189,7 @@ public class TypeCastInstructionsTest {
     }
 
     private DecompilerConfiguration configuration() {
-        final DecompilerConfiguration.Builder configurationBuilder = new DecompilerConfigurationImpl.Builder();
+        final DecompilerConfigurationBuilder configurationBuilder = DecompilerConfigurationImpl.newBuilder();
 
         new CastInstructions().configure(configurationBuilder);
 

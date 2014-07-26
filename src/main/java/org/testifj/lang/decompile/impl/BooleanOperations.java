@@ -7,7 +7,6 @@ import org.testifj.lang.model.impl.*;
 import org.testifj.util.Lists;
 import org.testifj.util.Pair;
 import org.testifj.util.Priority;
-import org.testifj.util.Sequence;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -38,7 +37,7 @@ public final class BooleanOperations implements DecompilerDelegation {
                 .and(leftComparativeOperand().is(ofRuntimeType(boolean.class)));
 
     @Override
-    public void configure(DecompilerConfiguration.Builder configurationBuilder) {
+    public void configure(DecompilerConfigurationBuilder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";
 
         configurationBuilder.on(ByteCode.lcmp).then(lcmp());

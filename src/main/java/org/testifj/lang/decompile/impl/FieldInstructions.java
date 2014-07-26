@@ -24,7 +24,7 @@ public final class FieldInstructions implements DecompilerDelegation {
      *
      * @param configurationBuilder The configuration builder to configure.
      */
-    public void configure(DecompilerConfiguration.Builder configurationBuilder) {
+    public void configure(DecompilerConfigurationBuilder configurationBuilder) {
         assert configurationBuilder != null : "Configuration builder can't be null";
 
         configurationBuilder.on(ByteCode.putfield).then(putfield());

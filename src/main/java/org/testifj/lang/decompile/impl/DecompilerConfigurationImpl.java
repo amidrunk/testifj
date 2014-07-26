@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import static org.testifj.lang.decompile.DecompilerConfiguration.Builder.ExtendContinuation;
+import static org.testifj.lang.decompile.DecompilerConfigurationBuilder.ExtendContinuation;
 import static org.testifj.util.Iterators.collect;
 import static org.testifj.util.Iterators.empty;
 import static org.testifj.util.Iterators.filter;
@@ -83,7 +83,7 @@ public final class DecompilerConfigurationImpl implements DecompilerConfiguratio
         assert other instanceof DecompilerConfigurationImpl : "Decompiler configuration type not supported";
 
         final DecompilerConfigurationImpl secondConfiguration = (DecompilerConfigurationImpl) other;
-        final DecompilerConfiguration.Builder mergedConfigurationBuilder = new Builder();
+        final DecompilerConfigurationBuilder mergedConfigurationBuilder = new Builder();
 
         final Merger merger = (extend, decompilerDelegateAdapters) -> {
             for (DecompilerDelegateAdapter<DecompilerDelegate>[] extensionsForByteCode : decompilerDelegateAdapters) {
@@ -157,8 +157,12 @@ public final class DecompilerConfigurationImpl implements DecompilerConfiguratio
         return (byteCode & ~0xFF) == 0;
     }
 
+    public static DecompilerConfigurationBuilder newBuilder() {
+        return new Builder();
+    }
+
     @SuppressWarnings("unchecked")
-    public static class Builder implements DecompilerConfiguration.Builder {
+    private static class Builder implements DecompilerConfigurationBuilder {
 
         private final DecompilerDelegateAdapter<DecompilerDelegate>[][] decompilerExtensions = new DecompilerDelegateAdapter[256][];
 
@@ -197,7 +201,7 @@ public final class DecompilerConfigurationImpl implements DecompilerConfiguratio
                         }
 
                         @Override
-                        public DecompilerConfiguration.Builder to(ModelTransformation<R, ? extends Element> transformation) {
+                        public DecompilerConfigurationBuilder to(ModelTransformation<R, ? extends Element> transformation) {
                             assert transformation != null : "Transformation can't be null";
 
                             final int index = elementType.ordinal();
@@ -306,7 +310,7 @@ public final class DecompilerConfigurationImpl implements DecompilerConfiguratio
             }
 
             @Override
-            public DecompilerConfiguration.Builder then(T extension) {
+            public DecompilerConfigurationBuilder then(T extension) {
                 for (int index : byteCodes) {
                     priorityInsert(targetArray, index, new DecompilerDelegateAdapter<>(index, priority, decompilationStateSelector, extension));
                 }

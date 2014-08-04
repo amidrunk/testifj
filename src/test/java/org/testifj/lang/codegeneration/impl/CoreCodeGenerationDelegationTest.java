@@ -12,7 +12,6 @@ import org.testifj.lang.classfile.impl.SimpleTypeResolver;
 import org.testifj.lang.codegeneration.*;
 import org.testifj.lang.decompile.*;
 import org.testifj.lang.decompile.impl.CodePointerImpl;
-import org.testifj.lang.decompile.impl.CoreCodeGenerationExtensions;
 import org.testifj.lang.decompile.impl.DecompilerImpl;
 import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.*;
@@ -30,21 +29,21 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
-import static org.testifj.lang.decompile.impl.CoreCodeGenerationExtensions.selectInnerClassFieldAccess;
+import static org.testifj.lang.codegeneration.impl.CoreCodeGenerationDelegation.selectInnerClassFieldAccess;
 import static org.testifj.lang.model.AST.call;
 import static org.testifj.lang.model.AST.constant;
 import static org.testifj.lang.model.AST.local;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
 @SuppressWarnings("unchecked")
-public class CoreCodeGenerationExtensionsTest {
+public class CoreCodeGenerationDelegationTest {
 
     private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
     private final PrintWriter out = new PrintWriter(baos);
     private final CodeGeneratorConfiguration configuration = coreConfiguration();
 
     private final CodeGenerationDelegate codeGenerationDelegate = (context, codePointer) -> {
-        configuration.getExtension(context, codePointer).apply(context, codePointer, out);
+        configuration.getDelegate(context, codePointer).apply(context, codePointer, out);
     };
 
     private final CodeStyle codeStyle = mock(CodeStyle.class);
@@ -58,6 +57,8 @@ public class CoreCodeGenerationExtensionsTest {
 
     private final Method method = mock(Method.class);
 
+    private final CoreCodeGenerationDelegation delegation = new CoreCodeGenerationDelegation();
+
     @Before
     public void setup() {
         doAnswer(invocationOnMock -> ((Class) invocationOnMock.getArguments()[0]).getSimpleName())
@@ -67,7 +68,7 @@ public class CoreCodeGenerationExtensionsTest {
 
     @Test
     public void configureShouldNotAcceptNullConfigurationBuilder() {
-        expect(() -> CoreCodeGenerationExtensions.configure(null)).toThrow(AssertionError.class);
+        expect(() -> delegation.configure(null)).toThrow(AssertionError.class);
     }
 
     @Test
@@ -120,7 +121,7 @@ public class CoreCodeGenerationExtensionsTest {
 
     @Test
     public void selectBooleanBoxCallShouldSelectBooleanValueOfMethod() {
-        final ElementSelector<MethodCall> selector = CoreCodeGenerationExtensions.selectBooleanBoxCall();
+        final ElementSelector<MethodCall> selector = CoreCodeGenerationDelegation.selectBooleanBoxCall();
         final CodePointerImpl<MethodCall> codePointer = new CodePointerImpl<>(method,
                 AST.call(Boolean.class, "valueOf", MethodSignature.parse("(Z)Ljava/lang/Boolean;"), constant(0)));
 
@@ -130,7 +131,7 @@ public class CoreCodeGenerationExtensionsTest {
 
     @Test
     public void isDSLMethodCallShouldReturnTrueIfTargetTypeHasDSLAnnotation() {
-        final boolean isDSLCall = CoreCodeGenerationExtensions.isDSLMethodCall().test(new CodePointerImpl<>(method,
+        final boolean isDSLCall = CoreCodeGenerationDelegation.isDSLMethodCall().test(new CodePointerImpl<>(method,
                 AST.call(Expect.class, "expect", ExpectValueContinuation.class, local("foo", Object.class, 1))));
 
         expect(isDSLCall).toBe(true);
@@ -138,7 +139,7 @@ public class CoreCodeGenerationExtensionsTest {
 
     @Test
     public void isDSLMethodCallShouldReturnFalseIfTargetTypeDoesNotHaveDSLAnnotation() {
-        final boolean isDSLCall = CoreCodeGenerationExtensions.isDSLMethodCall().test(new CodePointerImpl<>(method,
+        final boolean isDSLCall = CoreCodeGenerationDelegation.isDSLMethodCall().test(new CodePointerImpl<>(method,
                 AST.call(String.class, "valueOf", String.class, constant("foo"))));
 
         expect(isDSLCall).toBe(false);
@@ -146,7 +147,7 @@ public class CoreCodeGenerationExtensionsTest {
 
     @Test
     public void isDSLMethodCallShouldReturnFalseIfTargetTypeIsNotAClass() {
-        final boolean isDSLMethodCall = CoreCodeGenerationExtensions.isDSLMethodCall().test(new CodePointerImpl<>(method,
+        final boolean isDSLMethodCall = CoreCodeGenerationDelegation.isDSLMethodCall().test(new CodePointerImpl<>(method,
                 AST.call(mock(Type.class), "foo", String.class, constant(1))));
 
         expect(isDSLMethodCall).toBe(false);
@@ -154,7 +155,7 @@ public class CoreCodeGenerationExtensionsTest {
 
     @Test
     public void selectDSLCallShouldSelectMethodCallWhereTypeHasDSLAnnotation() {
-        final boolean isDSLMethodCall = CoreCodeGenerationExtensions.selectDSLMethodCall().matches(new CodePointerImpl<>(
+        final boolean isDSLMethodCall = CoreCodeGenerationDelegation.selectDSLMethodCall().matches(new CodePointerImpl<>(
                 method, AST.call(Expect.class, "expect", ExpectValueContinuation.class, local("foo", Object.class, 1))
         ));
 
@@ -192,7 +193,7 @@ public class CoreCodeGenerationExtensionsTest {
                 constant(1), Collections.emptyList()));
 
         given(codePointer).then(it -> {
-            expect(CoreCodeGenerationExtensions.selectUninitializedNewArray().matches(codePointer)).toBe(true);
+            expect(CoreCodeGenerationDelegation.selectUninitializedNewArray().matches(codePointer)).toBe(true);
         });
     }
 
@@ -202,7 +203,7 @@ public class CoreCodeGenerationExtensionsTest {
                 constant(1), Arrays.asList(new ArrayInitializerImpl(0, constant("foo")))));
 
         given(codePointer).then(it -> {
-            expect(CoreCodeGenerationExtensions.selectUninitializedNewArray().matches(codePointer)).toBe(false);
+            expect(CoreCodeGenerationDelegation.selectUninitializedNewArray().matches(codePointer)).toBe(false);
         });
     }
 
@@ -212,7 +213,7 @@ public class CoreCodeGenerationExtensionsTest {
                 constant(1), Arrays.asList(new ArrayInitializerImpl(0, constant("foo")))));
 
         given(codePointer).then(it -> {
-            expect(CoreCodeGenerationExtensions.selectInitializedNewArray().matches(codePointer)).toBe(true);
+            expect(CoreCodeGenerationDelegation.selectInitializedNewArray().matches(codePointer)).toBe(true);
         });
     }
 
@@ -222,7 +223,7 @@ public class CoreCodeGenerationExtensionsTest {
                 constant(1), Collections.emptyList()));
 
         given(codePointer).then(it -> {
-            expect(CoreCodeGenerationExtensions.selectInitializedNewArray().matches(codePointer)).toBe(false);
+            expect(CoreCodeGenerationDelegation.selectInitializedNewArray().matches(codePointer)).toBe(false);
         });
     }
 
@@ -246,7 +247,7 @@ public class CoreCodeGenerationExtensionsTest {
 
     @Test
     public void isPrimitiveBoxCallShouldReturnTrueForBoxMethods() {
-        final Predicate<CodePointer<MethodCall>> primitiveBoxCall = CoreCodeGenerationExtensions.isPrimitiveBoxCall();
+        final Predicate<CodePointer<MethodCall>> primitiveBoxCall = CoreCodeGenerationDelegation.isPrimitiveBoxCall();
 
         expect(primitiveBoxCall.test(codePointer(AST.call(Byte.class, "valueOf",
                 MethodSignature.parse("(B)Ljava/lang/Byte;"), constant(1))))).toBe(true);
@@ -266,14 +267,14 @@ public class CoreCodeGenerationExtensionsTest {
 
     @Test
     public void isPrimitiveBoxCallShouldReturnFalseForInstanceMethod() {
-        final Predicate<CodePointer<MethodCall>> primitiveBoxCall = CoreCodeGenerationExtensions.isPrimitiveBoxCall();
+        final Predicate<CodePointer<MethodCall>> primitiveBoxCall = CoreCodeGenerationDelegation.isPrimitiveBoxCall();
 
         expect(primitiveBoxCall.test(codePointer(AST.call(constant(1), "valueOf", Integer.class, constant(1))))).toBe(false);
     }
 
     @Test
     public void isPrimitiveBoxCallShouldReturnFalseForNonMatchingStaticMethod() {
-        final Predicate<CodePointer<MethodCall>> primitiveBoxCall = CoreCodeGenerationExtensions.isPrimitiveBoxCall();
+        final Predicate<CodePointer<MethodCall>> primitiveBoxCall = CoreCodeGenerationDelegation.isPrimitiveBoxCall();
 
         expect(primitiveBoxCall.test(codePointer(AST.call(Integer.class, "valueOf", Integer.class, constant(1), constant(10))))).toBe(false);
     }
@@ -374,7 +375,7 @@ public class CoreCodeGenerationExtensionsTest {
     }
 
     private String codeFor(CodePointerImpl codePointer) {
-        final CodeGeneratorDelegate extension = coreConfiguration().getExtension(context, codePointer);
+        final CodeGeneratorDelegate extension = coreConfiguration().getDelegate(context, codePointer);
 
         expect(extension).not().toBe(equalTo(null));
 
@@ -386,9 +387,9 @@ public class CoreCodeGenerationExtensionsTest {
     }
 
     private CodeGeneratorConfiguration coreConfiguration() {
-        final SimpleCodeGeneratorConfiguration.Builder builder = new SimpleCodeGeneratorConfiguration.Builder();
-        CoreCodeGenerationExtensions.configure(builder);
-        return builder.build();
+        final CodeGeneratorConfigurer configurer = SimpleCodeGeneratorConfiguration.configurer();
+        new CoreCodeGenerationDelegation().configure(configurer);
+        return configurer.configuration();
     }
 
 }

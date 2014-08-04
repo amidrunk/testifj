@@ -31,11 +31,11 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
     }
 
     private static CodeGeneratorConfiguration coreConfiguration() {
-        final CodeGeneratorConfiguration.Builder configurationBuilder = new SimpleCodeGeneratorConfiguration.Builder();
+        final CodeGeneratorConfigurer configurationBuilder = SimpleCodeGeneratorConfiguration.configurer();
 
-        CoreCodeGenerationExtensions.configure(configurationBuilder);
+        new CoreCodeGenerationDelegation().configure(configurationBuilder);
 
-        return configurationBuilder.build();
+        return configurationBuilder.configuration();
     }
 
     @Override
@@ -56,19 +56,16 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
 
     @SuppressWarnings("unchecked")
     private void append(CodeGenerationContext context, CodePointer codePointer, PrintWriter out) {
-        final CodeGeneratorDelegate extension = coreConfiguration.getExtension(context, codePointer);
+        final CodeGeneratorDelegate delegate = coreConfiguration.getDelegate(context, codePointer);
 
-        if (extension != null) {
-            extension.apply(context, codePointer, out);
+        if (delegate != null) {
+            delegate.apply(context, codePointer, out);
             return;
         }
 
         final Element element = codePointer.getElement();
 
         switch (element.getElementType()) {
-            case METHOD_CALL:
-                append(context, codePointer, (MethodCall) element, out);
-                break;
             case BINARY_OPERATOR:
                 append(context, codePointer, (BinaryOperator) element, out);
                 break;
@@ -116,70 +113,6 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
         context.delegate(codePointer.forElement(compare.getLeftOperand()));
         out.print(" ::= ");
         context.delegate(codePointer.forElement(compare.getRightOperand()));
-    }
-
-    private void append(CodeGenerationContext context, CodePointer codePointer, MethodCall methodCall, PrintWriter out) {
-        if (methodCall.getMethodName().startsWith("access$")) {
-            final Expression instance = methodCall.getParameters().get(0);
-            final ClassFile classFile;
-
-            try (InputStream in = getClass().getResourceAsStream('/' + instance.getType().getTypeName().replace('.', '/') + ".class")) {
-                classFile = new ClassFileReaderImpl().read(in);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-
-            final Method accessMethod = classFile.getMethods().stream().filter(m -> m.getName().equals(methodCall.getMethodName())).findFirst().get();
-
-            try (CodeStream code = new InputStreamCodeStream(accessMethod.getCode().getCode())) {
-                final Element[] elements = decompiler.parse(accessMethod, code);
-                final FieldReference fieldReference = (FieldReference) ((ReturnValue) elements[0]).getValue();
-
-                append(context, codePointer.forElement(instance), out);
-                out.append(".");
-                out.append(fieldReference.getFieldName());
-                return;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-
-        final Expression targetInstance = methodCall.getTargetInstance();
-        final List<Expression> parameters = methodCall.getParameters();
-
-        if (targetInstance == null) {
-            final Element unBoxed = unbox(methodCall);
-
-            if (unBoxed != null) {
-                append(context, codePointer.forElement(unBoxed), out);
-                return;
-            }
-
-            // Don't append class prefix for DSL-calls
-            if (!isDSLCall(methodCall)) {
-                out.append(simpleTypeName(methodCall.getTargetType())).append(".");
-            }
-        } else {
-            // Don't add "this"-references
-            if (targetInstance.getElementType() != ElementType.VARIABLE_REFERENCE
-                    || !((LocalVariableReference) targetInstance).getName().equals("this")) {
-                append(context, codePointer.forElement(targetInstance), out);
-                out.append(".");
-            }
-        }
-
-        out.append(methodCall.getMethodName()).append("(");
-
-        for (Iterator<Expression> i = parameters.iterator(); i.hasNext(); ) {
-            append(context, codePointer.forElement(i.next()), out);
-
-            if (i.hasNext()) {
-                out.append(", ");
-            }
-        }
-
-        out.append(")");
     }
 
     private String simpleTypeName(Type type) {

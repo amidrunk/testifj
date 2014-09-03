@@ -2,6 +2,7 @@ package org.testifj.integrationtest;
 
 import org.testifj.Caller;
 import org.testifj.Procedure;
+import org.testifj.lang.codegeneration.impl.JavaSyntaxCodeGeneration;
 import org.testifj.lang.decompile.CallerDecompiler;
 import org.testifj.lang.classfile.ClassFileReader;
 import org.testifj.lang.decompile.CodePointer;
@@ -25,7 +26,7 @@ public abstract class TestOnDefaultConfiguration {
 
     private final CallerDecompiler callerDecompiler = new CallerDecompilerImpl(classFileReader, decompiler);
 
-    private final CodePointerCodeGenerator codeGenerator = new CodePointerCodeGenerator(decompiler);
+    private final CodePointerCodeGenerator codeGenerator = new CodePointerCodeGenerator(decompiler, JavaSyntaxCodeGeneration.configuration());
 
     protected String regenerate(Caller caller) {
         final CodePointer[] codePointers;

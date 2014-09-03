@@ -1,6 +1,7 @@
 package org.testifj;
 
 import org.testifj.delegate.*;
+import org.testifj.lang.codegeneration.impl.JavaSyntaxCodeGeneration;
 import org.testifj.lang.decompile.CallerDecompiler;
 import org.testifj.lang.classfile.ClassFileReader;
 import org.testifj.lang.decompile.Decompiler;
@@ -53,7 +54,7 @@ public final class Configuration {
         final Decompiler decompiler = new DecompilerImpl();
         final ClassFileReader classFileReader = new ClassFileReaderImpl();
         final CallerDecompiler callerDecompiler = new CallerDecompilerImpl(classFileReader, decompiler);
-        final CodePointerCodeGenerator codePointerCodeGenerator = new CodePointerCodeGenerator(decompiler);
+        final CodePointerCodeGenerator codePointerCodeGenerator = new CodePointerCodeGenerator(decompiler, JavaSyntaxCodeGeneration.configuration());
 
         final ServiceContext serviceContext = ServiceContextImpl.newBuilder()
                 .registerComponent(expectationDelegate)

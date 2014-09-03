@@ -2,11 +2,15 @@ package org.testifj.lang.codegeneration.impl;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.InOrder;
+import org.mockito.Mockito;
 import org.testifj.BasicDescription;
 import org.testifj.Description;
-import org.testifj.lang.decompile.CodePointer;
 import org.testifj.lang.classfile.Method;
-import org.testifj.lang.codegeneration.impl.CodePointerCodeGenerator;
+import org.testifj.lang.classfile.impl.SimpleCodeGeneratorConfiguration;
+import org.testifj.lang.codegeneration.*;
+import org.testifj.lang.decompile.CodePointer;
+import org.testifj.lang.decompile.Decompiler;
 import org.testifj.lang.decompile.impl.CodePointerImpl;
 import org.testifj.lang.model.AST;
 import org.testifj.lang.model.ArrayInitializer;
@@ -14,28 +18,71 @@ import org.testifj.lang.model.Element;
 import org.testifj.lang.model.ElementType;
 import org.testifj.lang.model.impl.*;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 import static org.testifj.Caller.adjacent;
 import static org.testifj.Expect.expect;
 import static org.testifj.lang.ClassModelTestUtils.code;
 import static org.testifj.lang.model.AST.constant;
 import static org.testifj.lang.model.AST.local;
 
+@SuppressWarnings("unchecked")
 public class CodePointerCodeGeneratorTest {
 
     private final CodePointerCodeGenerator describer = new CodePointerCodeGenerator();
 
     private final Method method = mock(Method.class);
+    private final Decompiler decompiler = mock(Decompiler.class);
+    private final CodeGeneratorDelegate exampleDelegate = mock(CodeGeneratorDelegate.class);
+    private final CodeGeneratorAdvice exampleAdvice = mock(CodeGeneratorAdvice.class);
 
     @Test
-    public void constructorShouldNotAcceptNullCodeDescriber() {
-        expect(() -> new CodePointerCodeGenerator(null)).toThrow(AssertionError.class);
+    public void constructorShouldNotAcceptInvalidArguments() {
+        expect(() -> new CodePointerCodeGenerator(null, mock(CodeGeneratorConfiguration.class))).toThrow(AssertionError.class);
+        expect(() -> new CodePointerCodeGenerator(mock(Decompiler.class), null)).toThrow(AssertionError.class);
     }
+
+    @Test
+    public void aroundAdviceShouldBeCalledForMatchingElement() {
+        final CodePointerCodeGenerator codeGenerator = new CodePointerCodeGenerator(decompiler, SimpleCodeGeneratorConfiguration.configurer()
+                .on(ElementSelector.forType(ElementType.CONSTANT)).then(exampleDelegate)
+                .around(ElementSelector.forType(ElementType.CONSTANT)).then(exampleAdvice)
+                .configuration());
+
+        doAnswer(answer -> {
+            ((CodeGeneratorPointcut) answer.getArguments()[2])
+                    .proceed((CodeGenerationContext) answer.getArguments()[0], (CodePointer) answer.getArguments()[1]);
+            return null;
+        }).when(exampleAdvice).apply(any(), any(), any());
+
+        final CodePointer codePointer = pointer(constant(1));
+
+        generatedCode(codeGenerator, codePointer);
+
+        final InOrder inOrder = inOrder(exampleDelegate, exampleAdvice);
+
+        inOrder.verify(exampleAdvice).apply(any(), Mockito.eq(codePointer), any());
+        inOrder.verify(exampleDelegate).apply(any(), Mockito.eq(codePointer), any());
+    }
+
+    private String generatedCode(CodePointerCodeGenerator codeGenerator, CodePointer codePointer) {
+        final ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        final PrintWriter writer = new PrintWriter(bout);
+
+        codeGenerator.generateCode(codePointer, writer);
+
+        writer.flush();
+
+        return bout.toString();
+    }
+
+    // TODO: move these to some integration test catageory
 
     @Test
     public void returnCanBeDescribed() {

@@ -31,7 +31,10 @@ public final class IteratorThatIs {
                     return false;
                 }
 
-                if (!Objects.equals(instance.next(), elements[index++])) {
+                final T actualElement = instance.next();
+                final T expectedElement = elements[index++];
+
+                if (!Objects.equals(actualElement, expectedElement)) {
                     return false;
                 }
             }

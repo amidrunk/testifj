@@ -6,6 +6,16 @@ import java.util.Optional;
 
 public final class Methods {
 
+    public static Optional<Method> findMethodForNameAndLineNumber(ClassFile classFile, String methodName, int lineNumber) {
+        assert classFile != null : "Class file can't be null";
+        assert methodName != null && !methodName.isEmpty() : "Method name can't be null or empty";
+        assert lineNumber >= 0 : "Line number must be positive";
+
+
+
+        return Optional.empty();
+    }
+
     public static Optional<Method> findMethodForLineNumber(ClassFile classFile, int lineNumber) {
         assert classFile != null : "Class file can't be null";
         assert lineNumber >= 0 : "Line number must be positive";

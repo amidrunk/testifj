@@ -4,16 +4,21 @@ import org.testifj.lang.codegeneration.*;
 import org.testifj.lang.decompile.*;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.ElementType;
+import org.testifj.util.Iterators;
+import org.testifj.util.SuppliedIterator;
 
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public final class SimpleCodeGeneratorConfiguration implements CodeGeneratorConfiguration {
 
-    private CodeGeneratorExtensionCandidate[] extensionCandidates;
+    private CodeGeneratorDelegateCandidate[] extensionCandidates;
 
-    private CodeGeneratorAdvice[] advices;
+    private CodeGeneratorAdviceCandidate[] advices;
 
-    private SimpleCodeGeneratorConfiguration(CodeGeneratorExtensionCandidate[] extensionCandidates, CodeGeneratorAdvice[] advices) {
+    private SimpleCodeGeneratorConfiguration(CodeGeneratorDelegateCandidate[] extensionCandidates,
+                                             CodeGeneratorAdviceCandidate[] advices) {
         this.extensionCandidates = extensionCandidates;
         this.advices = advices;
     }
@@ -23,7 +28,7 @@ public final class SimpleCodeGeneratorConfiguration implements CodeGeneratorConf
     public CodeGeneratorDelegate<? extends Element> getDelegate(CodeGenerationContext context, CodePointer<? extends Element> codePointer) {
         assert codePointer != null : "Code pointer can't be null";
 
-        CodeGeneratorExtensionCandidate candidate = extensionCandidates[codePointer.getElement().getElementType().ordinal()];
+        CodeGeneratorDelegateCandidate candidate = extensionCandidates[codePointer.getElement().getElementType().ordinal()];
 
         while (candidate != null) {
             if (candidate.selector().matches((CodePointer) codePointer)) {
@@ -37,22 +42,30 @@ public final class SimpleCodeGeneratorConfiguration implements CodeGeneratorConf
     }
 
     @Override
-    public CodeGeneratorAdvice<? extends Element> getAdvice(CodeGenerationContext context, CodePointer<? extends Element> codePointer) {
+    @SuppressWarnings("unchecked")
+    public Iterator<CodeGeneratorAdvice<? extends Element>> getAdvices(CodeGenerationContext context, CodePointer<? extends Element> codePointer) {
         assert context != null : "Context can't be null";
         assert codePointer != null : "Code pointer can't be null";
 
-        return null;
+        final CodeGeneratorAdviceCandidate firstCandidate = advices[codePointer.getElement().getElementType().ordinal()];
+
+        if (firstCandidate == null) {
+            return Iterators.empty();
+        }
+
+        return firstCandidate.iterator(candidate -> candidate.selector().matches((CodePointer) codePointer));
     }
 
     public static CodeGeneratorConfigurer configurer() {
         return new Configurer();
     }
 
+    @SuppressWarnings("unchecked")
     private static final class Configurer implements CodeGeneratorConfigurer {
 
-        private final CodeGeneratorExtensionCandidate[] extensionCandidates = new CodeGeneratorExtensionCandidate[ElementType.values().length];
+        private final CodeGeneratorDelegateCandidate[] extensionCandidates = new CodeGeneratorDelegateCandidate[ElementType.values().length];
 
-        private final CodeGeneratorAdvice[][] advices = new CodeGeneratorAdvice[ElementType.values().length][];
+        private final CodeGeneratorAdviceCandidate[] advices = new CodeGeneratorAdviceCandidate[ElementType.values().length];
 
         @Override
         public <E extends Element> OnContinuation<E> on(ElementSelector<E> elementSelector) {
@@ -60,54 +73,65 @@ public final class SimpleCodeGeneratorConfiguration implements CodeGeneratorConf
                 assert elementSelector != null : "Element type can't be null";
                 assert delegate != null : "Extension can't be null";
 
-                final ElementType elementType = elementSelector.getElementType();
-                final CodeGeneratorExtensionCandidate newCandidate = new CodeGeneratorExtensionCandidate(
+                final CodeGeneratorDelegateCandidate newCandidate = new CodeGeneratorDelegateCandidate(
                         elementSelector,
                         delegate,
-                        Optional.<CodeGeneratorExtensionCandidate>empty());
+                        Optional.<CodeGeneratorDelegateCandidate>empty());
 
-                CodeGeneratorExtensionCandidate existingCandidate = extensionCandidates[elementType.ordinal()];
-
-                if (existingCandidate == null) {
-                    extensionCandidates[elementType.ordinal()] = newCandidate;
-                } else {
-                    while (existingCandidate.next().isPresent()) {
-                        existingCandidate = existingCandidate.next().get();
-                    }
-
-                    existingCandidate.next(newCandidate);
-                }
+                insert(extensionCandidates, elementSelector.getElementType().ordinal(), newCandidate);
 
                 return this;
             };
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public <E extends Element> AroundContinuation<E> around(ElementSelector<E> elementSelector) {
-            final int index = elementSelector.getElementType().ordinal();
+            return advice -> {
+                final CodeGeneratorAdviceCandidate newCandidate = new CodeGeneratorAdviceCandidate(
+                        elementSelector, advice,
+                        Optional.<CodeGeneratorAdviceCandidate>empty()
+                );
 
-            return null;
+                insert(advices, elementSelector.getElementType().ordinal(), newCandidate);
+
+                return this;
+            };
         }
 
         @Override
         public CodeGeneratorConfiguration configuration() {
-            return new SimpleCodeGeneratorConfiguration(extensionCandidates, null);
+            return new SimpleCodeGeneratorConfiguration(extensionCandidates, advices);
+        }
+
+        private void insert(CodeGeneratorExtensionCandidate[] extensionCandidates, int index, CodeGeneratorExtensionCandidate newCandidate) {
+            CodeGeneratorExtensionCandidate<?, CodeGeneratorExtensionCandidate> existingCandidate = extensionCandidates[index];
+
+            if (existingCandidate == null) {
+                extensionCandidates[index] = newCandidate;
+            } else {
+                while (existingCandidate.next().isPresent()) {
+                    existingCandidate = existingCandidate.next().get();
+                }
+
+                existingCandidate.next(newCandidate);
+            }
         }
     }
 
-    private static final class CodeGeneratorExtensionCandidate {
+    private static abstract class CodeGeneratorExtensionCandidate<E, T extends CodeGeneratorExtensionCandidate> {
 
         private final ElementSelector<? extends Element> elementElementSelector;
 
-        private final CodeGeneratorDelegate<? extends Element> codeGeneratorDelegate;
+        private final E extension;
 
-        private Optional<CodeGeneratorExtensionCandidate> nextCandidate;
+        private Optional<T> nextCandidate;
 
         private CodeGeneratorExtensionCandidate(ElementSelector<? extends Element> elementElementSelector,
-                                                CodeGeneratorDelegate<? extends Element> codeGeneratorDelegate,
-                                                Optional<CodeGeneratorExtensionCandidate> nextCandidate) {
+                                                E extension,
+                                                Optional<T> nextCandidate) {
             this.elementElementSelector = elementElementSelector;
-            this.codeGeneratorDelegate = codeGeneratorDelegate;
+            this.extension = extension;
             this.nextCandidate = nextCandidate;
         }
 
@@ -115,18 +139,64 @@ public final class SimpleCodeGeneratorConfiguration implements CodeGeneratorConf
             return elementElementSelector;
         }
 
-        public CodeGeneratorDelegate<? extends Element> extension() {
-            return codeGeneratorDelegate;
+        public E extension() {
+            return extension;
         }
 
-        public Optional<CodeGeneratorExtensionCandidate> next() {
+        public Optional<T> next() {
             return nextCandidate;
         }
 
-        public void next(CodeGeneratorExtensionCandidate candidate) {
+        public void next(T candidate) {
             this.nextCandidate = Optional.of(candidate);
         }
 
+        @SuppressWarnings("unchecked")
+        public Iterator<E> iterator(Predicate<T> predicate) {
+            return new SuppliedIterator<E>(new Supplier<Optional<E>>() {
+
+                private T currentCandidate = (T) CodeGeneratorExtensionCandidate.this;
+
+                @Override
+                public Optional<E> get() {
+                    while (currentCandidate != null && !predicate.test(currentCandidate)) {
+                        final Optional<T> next = currentCandidate.next();
+
+                        if (!next.isPresent()) {
+                            return Optional.empty();
+                        }
+
+                        currentCandidate = next.get();
+                    }
+
+                    if (currentCandidate == null) {
+                        return Optional.empty();
+                    }
+
+                    final Optional<E> result = Optional.of((E) currentCandidate.extension());
+
+                    currentCandidate = (T) currentCandidate.next().orElse(null);
+
+                    return result;
+                }
+            });
+        }
+    }
+
+    private static final class CodeGeneratorDelegateCandidate extends CodeGeneratorExtensionCandidate<CodeGeneratorDelegate<? extends Element>, CodeGeneratorDelegateCandidate> {
+        private CodeGeneratorDelegateCandidate(ElementSelector<? extends Element> elementElementSelector,
+                                               CodeGeneratorDelegate<? extends Element> extension,
+                                               Optional<CodeGeneratorDelegateCandidate> nextCandidate) {
+            super(elementElementSelector, extension, nextCandidate);
+        }
+    }
+
+    private static final class CodeGeneratorAdviceCandidate extends CodeGeneratorExtensionCandidate<CodeGeneratorAdvice<? extends Element>, CodeGeneratorAdviceCandidate> {
+        private CodeGeneratorAdviceCandidate(ElementSelector<? extends Element> elementElementSelector,
+                                             CodeGeneratorAdvice<? extends Element> extension,
+                                             Optional<CodeGeneratorAdviceCandidate> nextCandidate) {
+            super(elementElementSelector, extension, nextCandidate);
+        }
     }
 
 }

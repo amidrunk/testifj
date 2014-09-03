@@ -3,6 +3,7 @@ package org.testifj.lang.decompile.impl;
 import org.testifj.lang.classfile.*;
 import org.testifj.lang.classfile.impl.SimpleTypeResolver;
 import org.testifj.lang.codegeneration.impl.CodePointerCodeGenerator;
+import org.testifj.lang.codegeneration.impl.JavaSyntaxCodeGeneration;
 import org.testifj.lang.decompile.*;
 import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.DefaultModelFactory;
@@ -31,7 +32,7 @@ public final class DecompilerImpl implements Decompiler {
         assert configuration != null : "Configuration can't be null";
 
         this.configuration = configuration;
-        this.debugCodeGenerator = new CodePointerCodeGenerator(this);
+        this.debugCodeGenerator = new CodePointerCodeGenerator(this, JavaSyntaxCodeGeneration.configuration());
     }
 
     private void debug(DecompilationContext context, int lineNumber, int byteCode) {

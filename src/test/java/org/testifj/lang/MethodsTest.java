@@ -4,10 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.testifj.lang.classfile.*;
-import org.testifj.lang.classfile.impl.ExceptionTableEntryImpl;
-import org.testifj.lang.classfile.impl.LineNumberTableImpl;
-import org.testifj.lang.classfile.impl.LocalVariableImpl;
-import org.testifj.lang.classfile.impl.LocalVariableTableImpl;
+import org.testifj.lang.classfile.impl.*;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -130,5 +127,35 @@ public class MethodsTest {
 
         expect(Methods.findLocalVariableForIndexAndPC(methodWithLineNumbers1, 0, 0)).toBe(optionalOf(variable1));
         expect(Methods.findLocalVariableForIndexAndPC(methodWithLineNumbers1, 0, 11)).toBe(optionalOf(variable2));
+    }
+
+    @Test
+    public void findMethodForNameAndLineNumberShouldNotAcceptInvalidArguments() {
+        expect(() -> Methods.findMethodForNameAndLineNumber(null, "foo", 1234)).toThrow(AssertionError.class);
+        expect(() -> Methods.findMethodForNameAndLineNumber(classFile, null, 1234)).toThrow(AssertionError.class);
+        expect(() -> Methods.findMethodForNameAndLineNumber(classFile, "", 1234)).toThrow(AssertionError.class);
+        expect(() -> Methods.findMethodForNameAndLineNumber(classFile, "", 1234)).toThrow(AssertionError.class);
+        expect(() -> Methods.findMethodForNameAndLineNumber(classFile, "foo", -1)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void findMethodForNameAndLineNumberShouldReturnNonPresentOptionalIfNoMatchingMethodNameExists() {
+        when(classFile.getMethods()).thenReturn(Arrays.asList(method("foo", 0, 10)));
+
+        expect(Methods.findMethodForNameAndLineNumber(classFile, "bar", 2)).not().toBe(present());
+    }
+
+    private Method method(String name, int firstLineNumber, int lastLineNumber) {
+        final Method method = mock(Method.class);
+        final LineNumberTable lineNumberTable = mock(LineNumberTable.class);
+
+        when(lineNumberTable.getEntries()).thenReturn(Arrays.asList(
+                new LineNumberTableEntryImpl(0, firstLineNumber),
+                new LineNumberTableEntryImpl(0, lastLineNumber)
+            ));
+        when(method.getName()).thenReturn(name);
+        when(method.getLineNumberTable()).thenReturn(Optional.of(lineNumberTable));
+
+        return method;
     }
 }

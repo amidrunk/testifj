@@ -11,14 +11,22 @@ import org.testifj.lang.decompile.impl.CodePointerImpl;
 import org.testifj.lang.model.Constant;
 import org.testifj.lang.model.Element;
 import org.testifj.lang.model.ElementType;
+import org.testifj.matchers.core.CollectionThatIs;
+import org.testifj.matchers.core.IteratorThatIs;
 
 import java.io.PrintWriter;
+import java.util.Iterator;
+import java.util.List;
 
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 import static org.testifj.Expect.expect;
+import static org.testifj.Given.given;
 import static org.testifj.lang.model.AST.constant;
 import static org.testifj.lang.model.ElementType.CONSTANT;
+import static org.testifj.matchers.core.CollectionThatIs.empty;
+import static org.testifj.matchers.core.IteratorThatIs.emptyIterator;
+import static org.testifj.matchers.core.IteratorThatIs.iteratorOf;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
 @SuppressWarnings("unchecked")
@@ -124,24 +132,49 @@ public class SimpleCodeGeneratorConfigurationTest {
                 .configuration();
 
         final CodePointer codePointer = new CodePointerImpl<>(method, constant(1));
-        final CodeGeneratorAdvice<? extends Element> actualAdvice = configuration.getAdvice(context, codePointer);
+        final Iterator<CodeGeneratorAdvice<? extends Element>> advices = configuration.getAdvices(context, codePointer);
 
-        actualAdvice.apply(context, codePointer);
-
-        verify(expectedAdvice).apply(eq(context), eq(codePointer));
+        expect(advices).toBe(iteratorOf(expectedAdvice));
     }
 
     @Test
-    public void getAdviceShouldReturnNullIfNoAdviceExists() {
-        expect(configurer.configuration().getAdvice(context, new CodePointerImpl<>(method, constant(1)))).toBe(equalTo(null));
+    public void multipleAroundAdvicesCanBeConfigured() {
+        final CodeGeneratorAdvice advice1 = mock(CodeGeneratorAdvice.class, "advice1");
+        final CodeGeneratorAdvice advice2 = mock(CodeGeneratorAdvice.class, "advice2");
+
+        final CodeGeneratorConfiguration configuration = configurer
+                .around(ElementSelector.forType(CONSTANT)).then(advice1)
+                .around(ElementSelector.forType(CONSTANT)).then(advice2)
+                .configuration();
+
+        given(configuration.getAdvices(context, new CodePointerImpl<>(method, constant(1)))).then(advices -> {
+            expect(advices).toBe(iteratorOf(advice1, advice2));
+        });
+    }
+
+    @Test
+    public void getAdvicesShouldNotReturnAdviceIfElementSelectorDoesNotMatch() {
+        final CodeGeneratorAdvice expectedAdvice = mock(CodeGeneratorAdvice.class);
+        final CodeGeneratorConfiguration configuration = configurer
+                .around(ElementSelector.forType(CONSTANT).where(cp -> false)).then(expectedAdvice)
+                .configuration();
+
+        final Iterator<CodeGeneratorAdvice<? extends Element>> advices = configuration
+                .getAdvices(context, new CodePointerImpl<>(method, constant(1)));
+
+        expect(advices).toBe(emptyIterator());
+    }
+
+    @Test
+    public void getAdviceShouldReturnEmptyListIfNoAdvicesExists() {
+        expect(configurer.configuration().getAdvices(context, new CodePointerImpl<>(method, constant(1)))).toBe(emptyIterator());
     }
 
     @Test
     public void getAdviceShouldNotAcceptInvalidArguments() {
         final CodeGeneratorConfiguration configuration = configurer.configuration();
 
-        expect(() -> configuration.getAdvice(null, mock(CodePointer.class))).toThrow(AssertionError.class);
-        expect(() -> configuration.getAdvice(context, null)).toThrow(AssertionError.class);
+        expect(() -> configuration.getAdvices(null, mock(CodePointer.class))).toThrow(AssertionError.class);
+        expect(() -> configuration.getAdvices(context, null)).toThrow(AssertionError.class);
     }
-
 }

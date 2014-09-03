@@ -1,9 +1,6 @@
 package org.testifj.lang.decompile.impl;
 
-import org.testifj.lang.classfile.ByteCode;
-import org.testifj.lang.classfile.ClassFileFormatException;
-import org.testifj.lang.classfile.InterfaceMethodRefDescriptor;
-import org.testifj.lang.classfile.MethodRefDescriptor;
+import org.testifj.lang.classfile.*;
 import org.testifj.lang.decompile.*;
 import org.testifj.lang.model.Expression;
 import org.testifj.lang.model.Signature;
@@ -79,11 +76,27 @@ public final class MethodCallInstructions implements DecompilerDelegation {
         return new DecompilerDelegate() {
             @Override
             public void apply(DecompilationContext context, CodeStream codeStream, int byteCode) throws IOException {
-                final MethodRefDescriptor methodRefDescriptor = context
+                final ConstantPool constantPool = context
                         .getMethod()
                         .getClassFile()
-                        .getConstantPool()
-                        .getMethodRefDescriptor(codeStream.nextUnsignedShort());
+                        .getConstantPool();
+
+                final int index = codeStream.nextUnsignedShort();
+                final ConstantPoolEntry constantPoolEntry = constantPool.getEntry(index);
+                final MethodRefDescriptor methodRefDescriptor;
+
+                switch (constantPoolEntry.getTag()) {
+                    case METHOD_REF:
+                        methodRefDescriptor = constantPool.getMethodRefDescriptor(index);
+                        break;
+                    case INTERFACE_METHOD_REF:
+                        // Static method in interface (added to Java 1.8)
+                        methodRefDescriptor = constantPool.getInterfaceMethodRefDescriptor(index);
+                        break;
+                    default:
+                        throw new ClassFileFormatException("Invalid constant pool entry at index " + index
+                                + " for invokestatic: "+ constantPoolEntry);
+                }
 
                 invoke(context, methodRefDescriptor, true);
             }

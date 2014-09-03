@@ -10,7 +10,6 @@ import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.ConstantImpl;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -19,23 +18,18 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
 
     private final Decompiler decompiler;
 
-    private final CodeGeneratorConfiguration coreConfiguration = coreConfiguration();
+    private final CodeGeneratorConfiguration configuration;
 
     public CodePointerCodeGenerator() {
-        this(new DecompilerImpl());
+        this(new DecompilerImpl(), JavaSyntaxCodeGeneration.configuration());
     }
 
-    public CodePointerCodeGenerator(Decompiler decompiler) {
+    public CodePointerCodeGenerator(Decompiler decompiler, CodeGeneratorConfiguration configuration) {
         assert decompiler != null : "Byte code parser can't be null";
+        assert configuration != null : "Configuration can't be null";
+
         this.decompiler = decompiler;
-    }
-
-    private static CodeGeneratorConfiguration coreConfiguration() {
-        final CodeGeneratorConfigurer configurationBuilder = SimpleCodeGeneratorConfiguration.configurer();
-
-        new CoreCodeGenerationDelegation().configure(configurationBuilder);
-
-        return configurationBuilder.configuration();
+        this.configuration = configuration;
     }
 
     @Override
@@ -56,45 +50,71 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
 
     @SuppressWarnings("unchecked")
     private void append(CodeGenerationContext context, CodePointer codePointer, PrintWriter out) {
-        final CodeGeneratorDelegate delegate = coreConfiguration.getDelegate(context, codePointer);
+        final CodeGeneratorDelegate delegate = configuration.getDelegate(context, codePointer);
+        final Iterator<CodeGeneratorAdvice<? extends Element>> advices = configuration.getAdvices(context, codePointer);
+        final CodeGeneratorPointcut pointcut = new CodeGeneratorPointcut() {
+            @Override
+            public void proceed(CodeGenerationContext context, CodePointer codePointer) {
+                if (delegate != null) {
+                    delegate.apply(context, codePointer, out);
+                    return;
+                }
 
-        if (delegate != null) {
-            delegate.apply(context, codePointer, out);
-            return;
-        }
+                final Element element = codePointer.getElement();
 
-        final Element element = codePointer.getElement();
+                switch (element.getElementType()) {
+                    case BINARY_OPERATOR:
+                        append(context, codePointer, (BinaryOperator) element, out);
+                        break;
+                    case UNARY_OPERATOR:
+                        append(context, codePointer, (UnaryOperator) element, out);
+                        break;
+                    case FIELD_REFERENCE:
+                        append(context, codePointer, (FieldReference) element, out);
+                        break;
+                    case VARIABLE_ASSIGNMENT:
+                        append(context, codePointer, (VariableAssignment) element, out);
+                        break;
+                    case LAMBDA:
+                        append(context, codePointer, (Lambda) element, out);
+                        break;
+                    case NEW:
+                        append(context, codePointer, (NewInstance) element, out);
+                        break;
+                    case COMPARE:
+                        append(context, codePointer, (Compare) element, out);
+                        break;
+                    case BRANCH:
+                        append(context, codePointer, (Branch) element, out);
+                        break;
+                    case GOTO:
+                        append(context, codePointer, (Goto) element, out);
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Unsupported element: " + element);
+                }
+            }
+        };
 
-        switch (element.getElementType()) {
-            case BINARY_OPERATOR:
-                append(context, codePointer, (BinaryOperator) element, out);
-                break;
-            case UNARY_OPERATOR:
-                append(context, codePointer, (UnaryOperator) element, out);
-                break;
-            case FIELD_REFERENCE:
-                append(context, codePointer, (FieldReference) element, out);
-                break;
-            case VARIABLE_ASSIGNMENT:
-                append(context, codePointer, (VariableAssignment) element, out);
-                break;
-            case LAMBDA:
-                append(context, codePointer, (Lambda) element, out);
-                break;
-            case NEW:
-                append(context, codePointer, (NewInstance) element, out);
-                break;
-            case COMPARE:
-                append(context, codePointer, (Compare) element, out);
-                break;
-            case BRANCH:
-                append(context, codePointer, (Branch) element, out);
-                break;
-            case GOTO:
-                append(context, codePointer, (Goto) element, out);
-                break;
-            default:
-                throw new IllegalArgumentException("Unsupported element: " + element);
+        if (!advices.hasNext()) {
+            pointcut.proceed(context, codePointer);
+        } else {
+            final CodeGeneratorAdvice<? extends Element> advice = advices.next();
+
+            if (!advices.hasNext()) {
+                advice.apply(context, codePointer, pointcut);
+            } else {
+                advice.apply(context, codePointer, new CodeGeneratorPointcut() {
+                    @Override
+                    public void proceed(CodeGenerationContext context, CodePointer codePointer) {
+                        if (!advices.hasNext()) {
+                            pointcut.proceed(context, codePointer);
+                        } else {
+                            advices.next().apply(context, codePointer, this);
+                        }
+                    }
+                });
+            }
         }
     }
 
@@ -358,7 +378,7 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
     private void append(CodeGenerationContext context, CodePointer codePointer, NewInstance newInstance, PrintWriter out) {
         out.append("new ").append(simpleTypeName(newInstance.getType())).append("(");
 
-        for (Iterator<Expression> i =newInstance.getParameters().iterator(); i.hasNext(); ) {
+        for (Iterator<Expression> i = newInstance.getParameters().iterator(); i.hasNext(); ) {
             append(context, codePointer.forElement(i.next()), out);
 
             if (i.hasNext()) {

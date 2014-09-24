@@ -197,7 +197,7 @@ public final class DefaultMethod implements Method {
                 .toArray(LineNumberTableEntry[]::new);
 
         if (entriesForLineNumber.length == 0) {
-            throw new IllegalStateException("No code exists at " + getClassFile().getName() + "." + getName() + ":" + lineNumbers);
+            throw new IllegalStateException("No code exists at " + lineNumbers + " " + getClassFile().getName() + "::" + getName());
         }
 
         final LineNumberTableEntry[] allEntries = lineNumberTable.getEntries().stream()

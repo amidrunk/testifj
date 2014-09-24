@@ -50,10 +50,6 @@ public final class Caller {
         return Optional.empty();
     }
 
-    public int getCallerStackTraceIndex() {
-        return callerStackTraceIndex;
-    }
-
     public int getLineNumber() {
         return getCallerStackTraceElement().getLineNumber();
     }

@@ -104,6 +104,7 @@ public final class CallerDecompilerImpl implements CallerDecompiler {
     private Method resolveMethodFromClassFile(ClassFile classFile, Caller caller) {
         return classFile.getMethods().stream()
                 .filter(m -> m.getName().equals(caller.getCallerStackTraceElement().getMethodName()))
+                .filter(m -> Methods.containsLineNumber(m, caller.getLineNumber()))
                 .map(m -> {
                     if (!m.isLambdaBackingMethod()) {
                         return m;

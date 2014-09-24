@@ -39,6 +39,7 @@ public final class JavaSyntaxCodeGeneration implements CodeGeneratorDelegation {
         configurer.on(ElementSelector.forType(ElementType.ARRAY_LOAD)).then(arrayLoad());
         configurer.on(ElementSelector.forType(ElementType.ALLOCATE)).then(allocateInstance());
         configurer.on(ElementSelector.forType(ElementType.INCREMENT)).then(increment());
+        configurer.on(ElementSelector.forType(ElementType.BINARY_OPERATOR)).then(binaryOperator());
 
         configurer.on(selectBooleanBoxCall()).then(boxBoolean());
         configurer.on(selectPrimitiveBoxCall()).then(primitiveBoxCall());
@@ -48,6 +49,82 @@ public final class JavaSyntaxCodeGeneration implements CodeGeneratorDelegation {
         configurer.on(selectStaticMethodCall()).then(staticMethodCall());
         configurer.on(selectUninitializedNewArray()).then(newUninitializedArray());
         configurer.on(selectInitializedNewArray()).then(newInitializedArray());
+    }
+
+    public static CodeGeneratorDelegate<BinaryOperator> binaryOperator() {
+        return new CodeGeneratorDelegate<BinaryOperator>() {
+            @Override
+            public void apply(CodeGenerationContext context, CodePointer<BinaryOperator> codePointer, PrintWriter out) {
+                final String operator;
+
+                switch (codePointer.getElement().getOperatorType()) {
+                    case PLUS:
+                        operator = "+";
+                        break;
+                    case NE:
+                        operator = "!=";
+                        break;
+                    case MINUS:
+                        operator = "-";
+                        break;
+                    case MULTIPLY:
+                        operator = "*";
+                        break;
+                    case DIVIDE:
+                        operator = "/";
+                        break;
+                    case MODULO:
+                        operator = "%";
+                        break;
+                    case EQ:
+                        operator = "==";
+                        break;
+                    case GE:
+                        operator = ">=";
+                        break;
+                    case LT:
+                        operator = "<";
+                        break;
+                    case GT:
+                        operator = ">";
+                        break;
+                    case LE:
+                        operator = "<=";
+                        break;
+                    case AND:
+                        operator = "&&";
+                        break;
+                    case OR:
+                        operator = "||";
+                        break;
+                    case LSHIFT:
+                        operator = "<<";
+                        break;
+                    case RSHIFT:
+                        operator = ">>";
+                        break;
+                    case UNSIGNED_RSHIFT:
+                        operator = ">>>";
+                        break;
+                    case BITWISE_AND:
+                        operator = "&";
+                        break;
+                    case BITWISE_OR:
+                        operator = "|";
+                        break;
+                    case XOR:
+                        operator = "^";
+                        break;
+                    default:
+                        throw new CodeGenerationException("Operator type is not supported: "
+                                + codePointer.getElement().getOperatorType());
+                }
+
+                context.delegate(codePointer.forElement(codePointer.getElement().getLeftOperand()));
+                out.append(" ").append(operator).append(" ");
+                context.delegate(codePointer.forElement(codePointer.getElement().getRightOperand()));
+            }
+        };
     }
 
     public static CodeGeneratorDelegate<Increment> increment() {

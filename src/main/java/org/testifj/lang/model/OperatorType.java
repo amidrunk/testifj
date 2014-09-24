@@ -7,6 +7,7 @@ public enum OperatorType {
     MINUS,
     MULTIPLY,
     DIVIDE,
+    MODULO,
     EQ,
     NOT,
     GE,
@@ -14,6 +15,12 @@ public enum OperatorType {
     GT,
     LE,
     AND,
-    OR
+    OR,
+    LSHIFT,
+    RSHIFT,
+    UNSIGNED_RSHIFT,
+    BITWISE_AND,
+    BITWISE_OR,
+    XOR
 
 }

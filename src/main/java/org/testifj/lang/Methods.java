@@ -65,4 +65,23 @@ public final class Methods {
                 .findFirst();
     }
 
+    public static boolean containsLineNumber(Method method, int lineNumber) {
+        assert method != null : "Method can't be null";
+        assert lineNumber >= 0 : "Line number must be positive";
+
+        final Optional<LineNumberTable> lineNumberTable = method.getLineNumberTable();
+
+        if (!lineNumberTable.isPresent()) {
+            throw new IllegalArgumentException("Method contains no line number table");
+        }
+
+        for (LineNumberTableEntry entry : lineNumberTable.get().getEntries()) {
+            if (entry.getLineNumber() == lineNumber) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 }

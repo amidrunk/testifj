@@ -153,6 +153,62 @@ public final class AST {
         return binaryOperator(left, OperatorType.DIVIDE, right, resultType);
     }
 
+    public static BinaryOperator mod(Expression left, Expression right, Type resultType) {
+        return binaryOperator(left, OperatorType.MODULO, right, resultType);
+    }
+
+    public static BinaryOperator lshift(Expression left, Expression right, Type resultType) {
+        return binaryOperator(left, OperatorType.LSHIFT, right, resultType);
+    }
+
+    public static BinaryOperator rshift(Expression left, Expression right, Type resultType) {
+        return binaryOperator(left, OperatorType.RSHIFT, right, resultType);
+    }
+
+    public static BinaryOperator unsignedRightShift(Expression left, Expression right, Type resultType) {
+        return binaryOperator(left, OperatorType.UNSIGNED_RSHIFT, right, resultType);
+    }
+
+    public static BinaryOperator ne(Expression left, Expression right) {
+        return binaryOperator(left, OperatorType.NE, right, boolean.class);
+    }
+
+    public static BinaryOperator ge(Expression left, Expression right) {
+        return binaryOperator(left, OperatorType.GE, right, boolean.class);
+    }
+
+    public static BinaryOperator gt(Expression left, Expression right) {
+        return binaryOperator(left, OperatorType.GT, right, boolean.class);
+    }
+
+    public static BinaryOperator le(Expression left, Expression right) {
+        return binaryOperator(left, OperatorType.LE, right, boolean.class);
+    }
+
+    public static BinaryOperator lt(Expression left, Expression right) {
+        return binaryOperator(left, OperatorType.LT, right, boolean.class);
+    }
+
+    public static BinaryOperator and(Expression left, Expression right) {
+        return binaryOperator(left, OperatorType.AND, right, boolean.class);
+    }
+
+    public static BinaryOperator or(Expression left, Expression right) {
+        return binaryOperator(left, OperatorType.OR, right, boolean.class);
+    }
+
+    public static BinaryOperator bitwiseAnd(Expression left, Expression right, Type resultType) {
+        return binaryOperator(left, OperatorType.BITWISE_AND, right, resultType);
+    }
+
+    public static BinaryOperator bitwiseOr(Expression left, Expression right, Type resultType) {
+        return binaryOperator(left, OperatorType.BITWISE_OR, right, resultType);
+    }
+
+    public static BinaryOperator xor(Expression left, Expression right, Type resultType) {
+        return binaryOperator(left, OperatorType.XOR, right, resultType);
+    }
+
     public static BinaryOperator binaryOperator(Expression left, OperatorType operatorType, Expression right, Type resultType) {
         assert left != null : "Left operand can't be null";
         assert operatorType != null : "Operator type can't be null";

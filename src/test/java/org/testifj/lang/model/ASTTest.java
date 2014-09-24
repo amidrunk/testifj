@@ -2,7 +2,6 @@ package org.testifj.lang.model;
 
 import org.junit.Test;
 import org.testifj.lang.model.impl.*;
-import org.testifj.matchers.core.ObjectThatIs;
 
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -380,5 +379,141 @@ public class ASTTest {
         expect(constant(true)).toBe(new ConstantImpl(true, boolean.class));
         expect(constant(false)).toBe(new ConstantImpl(false, boolean.class));
     }
+
+    @Test
+    public void modShouldReturnModuloOperation() {
+        expect(AST.mod(constant(1), constant(2), int.class)).toBe(new BinaryOperatorImpl(
+                constant(1),
+                OperatorType.MODULO,
+                constant(2),
+                int.class));
+    }
+
+    @Test
+    public void lshiftShouldReturnBinaryLeftShiftOperator() {
+        expect(AST.lshift(constant(1), constant(2), int.class)).toBe(new BinaryOperatorImpl(
+                constant(1),
+                OperatorType.LSHIFT,
+                constant(2),
+                int.class));
+    }
+
+    @Test
+    public void rshiftShouldReturnBinaryRightShiftOperator() {
+        expect(AST.rshift(constant(1), constant(2), int.class)).toBe(new BinaryOperatorImpl(
+                constant(1),
+                OperatorType.RSHIFT,
+                constant(2),
+                int.class));
+    }
+
+    @Test
+    public void unsignedRshiftShouldReturnBinaryRightShiftOperator() {
+        expect(AST.unsignedRightShift(constant(1), constant(2), int.class)).toBe(new BinaryOperatorImpl(
+                constant(1),
+                OperatorType.UNSIGNED_RSHIFT,
+                constant(2),
+                int.class));
+    }
+
+    @Test
+    public void neShouldCreateBinaryOperatorWithNEOperator() {
+        expect(AST.ne(constant(1), constant(2))).toBe(new BinaryOperatorImpl(
+                constant(1),
+                OperatorType.NE,
+                constant(2),
+                boolean.class));
+    }
+
+    @Test
+    public void eqShouldCreateBinaryOperatorWithEQOperator() {
+        expect(AST.eq(constant(1), constant(2))).toBe(new BinaryOperatorImpl(
+                constant(1),
+                OperatorType.EQ,
+                constant(2),
+                boolean.class));
+    }
+
+    @Test
+    public void geShouldCreateBinaryOperatorWithGEOperator() {
+        expect(AST.ge(constant(1), constant(2))).toBe(new BinaryOperatorImpl(
+                constant(1),
+                OperatorType.GE,
+                constant(2),
+                boolean.class));
+    }
+
+    @Test
+    public void gtShouldCreateBinaryOperatorWithGTOperator() {
+        expect(AST.gt(constant(1), constant(2))).toBe(new BinaryOperatorImpl(
+                constant(1),
+                OperatorType.GT,
+                constant(2),
+                boolean.class));
+    }
+
+    @Test
+    public void leShouldCreateBinaryOperatorWithLEOperator() {
+        expect(AST.le(constant(1), constant(2))).toBe(new BinaryOperatorImpl(
+                constant(1),
+                OperatorType.LE,
+                constant(2),
+                boolean.class));
+    }
+
+    @Test
+    public void ltShouldCreateBinaryOperatorWithLTOperator() {
+        expect(AST.lt(constant(1), constant(2))).toBe(new BinaryOperatorImpl(
+                constant(1),
+                OperatorType.LT,
+                constant(2),
+                boolean.class));
+    }
+
+    @Test
+    public void andShouldCreateBinaryOperatorWithAndOperator() {
+        expect(AST.and(constant(1), constant(2))).toBe(new BinaryOperatorImpl(
+                constant(1),
+                OperatorType.AND,
+                constant(2),
+                boolean.class));
+    }
+
+    @Test
+    public void orShouldCreateBinaryOperatorWithOrOperator() {
+        expect(AST.or(constant(1), constant(2))).toBe(new BinaryOperatorImpl(
+                constant(1),
+                OperatorType.OR,
+                constant(2),
+                boolean.class));
+    }
+
+    @Test
+    public void bitwiseAndShouldCreateBinaryOperatorWithAndOperator() {
+        expect(AST.bitwiseAnd(constant(1), constant(2), int.class)).toBe(new BinaryOperatorImpl(
+                constant(1),
+                OperatorType.BITWISE_AND,
+                constant(2),
+                int.class));
+    }
+
+    @Test
+    public void bitwiseOrShouldCreateBinaryOperatorWithOrOperator() {
+        expect(AST.bitwiseOr(constant(1), constant(2), int.class)).toBe(new BinaryOperatorImpl(
+                constant(1),
+                OperatorType.BITWISE_OR,
+                constant(2),
+                int.class));
+    }
+
+    @Test
+    public void xorShouldCreateBinaryOperatorWithXorOperator() {
+        expect(AST.xor(constant(1), constant(2), int.class)).toBe(new BinaryOperatorImpl(
+                constant(1),
+                OperatorType.XOR,
+                constant(2),
+                int.class));
+    }
+
 
 }

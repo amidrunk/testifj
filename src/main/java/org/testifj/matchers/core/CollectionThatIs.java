@@ -14,6 +14,11 @@ public final class CollectionThatIs {
         return instance -> instance != null && instance.isEmpty();
     }
 
+    public static <E, C extends Collection<E>> Matcher<C> ofSize(int size) {
+        assert size >= 0 : "Size must be positive";
+        return collection -> collection != null && collection.size() == size;
+    }
+
     @SafeVarargs
     public static <E, T extends Collection<? extends E>> Matcher<T> collectionWithElements(Matcher<E>... matchers) {
         assert matchers != null : "Matchers can't be null";

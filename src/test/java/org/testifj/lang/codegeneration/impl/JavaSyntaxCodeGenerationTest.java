@@ -354,8 +354,26 @@ public class JavaSyntaxCodeGenerationTest {
     }
 
     @Test
-    public void binaryOperatorShouldBeSupported() {
-        expect(codeFor(plus(constant(1), constant(2)))).toBe("1 + 2");
+    public void binaryOperatorsShouldBeSupported() {
+        expect(codeFor(add(constant(1), constant(2), int.class))).toBe("1 + 2");
+        expect(codeFor(sub(constant(1), constant(2), int.class))).toBe("1 - 2");
+        expect(codeFor(mul(constant(1), constant(2), int.class))).toBe("1 * 2");
+        expect(codeFor(div(constant(1), constant(2), int.class))).toBe("1 / 2");
+        expect(codeFor(mod(constant(1), constant(2), int.class))).toBe("1 % 2");
+        expect(codeFor(lshift(constant(1), constant(2), int.class))).toBe("1 << 2");
+        expect(codeFor(rshift(constant(1), constant(2), int.class))).toBe("1 >> 2");
+        expect(codeFor(unsignedRightShift(constant(1), constant(2), int.class))).toBe("1 >>> 2");
+        expect(codeFor(eq(constant(1), constant(2)))).toBe("1 == 2");
+        expect(codeFor(ne(constant(1), constant(2)))).toBe("1 != 2");
+        expect(codeFor(lt(constant(1), constant(2)))).toBe("1 < 2");
+        expect(codeFor(le(constant(1), constant(2)))).toBe("1 <= 2");
+        expect(codeFor(gt(constant(1), constant(2)))).toBe("1 > 2");
+        expect(codeFor(ge(constant(1), constant(2)))).toBe("1 >= 2");
+        expect(codeFor(and(constant(1), constant(2)))).toBe("1 && 2");
+        expect(codeFor(or(constant(1), constant(2)))).toBe("1 || 2");
+        expect(codeFor(bitwiseAnd(constant(1), constant(2), int.class))).toBe("1 & 2");
+        expect(codeFor(bitwiseOr(constant(1), constant(2), int.class))).toBe("1 | 2");
+        expect(codeFor(xor(constant(1), constant(2), int.class))).toBe("1 ^ 2");
     }
 
     private static class Inner {

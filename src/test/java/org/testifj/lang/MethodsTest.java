@@ -7,6 +7,7 @@ import org.testifj.lang.classfile.*;
 import org.testifj.lang.classfile.impl.*;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.Mockito.mock;
@@ -140,9 +141,43 @@ public class MethodsTest {
 
     @Test
     public void findMethodForNameAndLineNumberShouldReturnNonPresentOptionalIfNoMatchingMethodNameExists() {
-        when(classFile.getMethods()).thenReturn(Arrays.asList(method("foo", 0, 10)));
+        final List<Method> methods = Arrays.asList(method("foo", 0, 10));
+
+        when(classFile.getMethods()).thenReturn(methods);
 
         expect(Methods.findMethodForNameAndLineNumber(classFile, "bar", 2)).not().toBe(present());
+    }
+
+    @Test
+    public void containsLineNumberShouldNotAcceptInvalidArguments() {
+        expect(() -> Methods.containsLineNumber(null, 1234)).toThrow(AssertionError.class);
+        expect(() -> Methods.containsLineNumber(mock(Method.class), -1)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void containsLineNumberShouldFailIfMethodDoesNotContainLineNumberTable() {
+        final Method method = mock(Method.class);
+
+        when(method.getLineNumberTable()).thenReturn(Optional.empty());
+
+        expect(() -> Methods.containsLineNumber(method, 100)).toThrow(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void containsLineNumberShouldReturnTrueIfLineNumberTableContainsLineNumber() {
+        final Method method = mock(Method.class);
+        final LineNumberTable table = mock(LineNumberTable.class);
+
+        when(table.getEntries()).thenReturn(Arrays.asList(
+                new LineNumberTableEntryImpl(0, 10),
+                new LineNumberTableEntryImpl(5, 11)));
+
+        when(method.getLineNumberTable()).thenReturn(Optional.of(table));
+
+        expect(Methods.containsLineNumber(method, 9)).toBe(false);
+        expect(Methods.containsLineNumber(method, 10)).toBe(true);
+        expect(Methods.containsLineNumber(method, 11)).toBe(true);
+        expect(Methods.containsLineNumber(method, 12)).toBe(false);
     }
 
     private Method method(String name, int firstLineNumber, int lastLineNumber) {

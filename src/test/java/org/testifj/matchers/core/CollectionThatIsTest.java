@@ -16,6 +16,7 @@ import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
 import static org.testifj.matchers.core.CollectionThatIs.collectionOf;
 import static org.testifj.matchers.core.CollectionThatIs.collectionWithElements;
+import static org.testifj.matchers.core.CollectionThatIs.ofSize;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 
 @SuppressWarnings("unchecked")
@@ -93,6 +94,30 @@ public class CollectionThatIsTest {
     @Test
     public void collectionOfWithMatchersShouldMatchIfAllMatchersMatch() {
         expect(collectionWithElements(equalTo("foo"), equalTo("bar")).matches(Arrays.asList("foo", "bar"))).toBe(true);
+    }
+
+    @Test
+    public void ofSizeShouldNotAcceptNegativeSize() {
+        expect(() -> ofSize(-1)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void ofSizeShouldNotMatchNullCollection() {
+        expect(ofSize(2).matches(null)).not().toBe(true);
+    }
+
+    @Test
+    public void ofSizeShouldNotMatchCollectionOfDifferentSize() {
+        expect(ofSize(1).matches(Arrays.asList("foo", "bar"))).toBe(false);
+        expect(ofSize(2).matches(Arrays.asList("foo"))).toBe(false);
+    }
+
+    @Test
+    public void ofSizeShouldMatchCollectionWithEqualSize() {
+        expect(ofSize(0).matches(Collections.emptyList())).toBe(true);
+        expect(ofSize(1).matches(Arrays.asList("foo"))).toBe(true);
+        expect(ofSize(2).matches(Arrays.asList("foo", "bar"))).toBe(true);
+        expect(ofSize(3).matches(Arrays.asList("foo", "bar", "baz"))).toBe(true);
     }
 
 }

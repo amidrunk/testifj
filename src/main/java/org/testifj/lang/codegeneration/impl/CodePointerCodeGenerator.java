@@ -63,9 +63,6 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
                 final Element element = codePointer.getElement();
 
                 switch (element.getElementType()) {
-                    case BINARY_OPERATOR:
-                        append(context, codePointer, (BinaryOperator) element, out);
-                        break;
                     case UNARY_OPERATOR:
                         append(context, codePointer, (UnaryOperator) element, out);
                         break;
@@ -157,6 +154,7 @@ public final class CodePointerCodeGenerator implements CodeGenerator<CodePointer
         }
     }
 
+    @Deprecated
     private void append(CodeGenerationContext context, CodePointer codePointer, BinaryOperator binaryOperator, PrintWriter out) {
         append(context, codePointer.forElement(binaryOperator.getLeftOperand()), out);
 

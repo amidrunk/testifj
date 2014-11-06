@@ -160,6 +160,11 @@ public final class Expect {
         default void withMessage(Matcher<String> matcher) {
             where((e) -> matcher.matches(e.getMessage()));
         }
+
+        @SuppressWarnings("unchecked")
+        default <C extends Throwable> void withCause(Matcher<C> matcher) {
+            where((e) -> matcher.matches((C) e.getCause()));
+        }
     }
 
     /**

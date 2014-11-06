@@ -15,8 +15,11 @@ public abstract class Specification {
         return Collections.unmodifiableList(descriptions);
     }
 
-    protected void describe(String targetName, Action<Specifier> procedure) {
-        descriptions.add(new SpecificationDescription(targetName, procedure));
+    protected void describe(String targetName, Action<Specifier> action) {
+        assert targetName != null && !targetName.isEmpty() : "Target name can't be null or empty";
+        assert action != null : "Action can't be null";
+
+        descriptions.add(new SpecificationDescription(targetName, action));
     }
 
 }

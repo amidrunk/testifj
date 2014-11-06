@@ -12,13 +12,16 @@ import java.util.Arrays;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.argThat;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
 import static org.testifj.matchers.core.CollectionThatIs.collectionOf;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 import static org.testifj.matchers.core.ObjectThatIs.instanceOf;
 import static org.testifj.matchers.core.StringShould.containString;
+import static org.testifj.matchers.core.StringThatIs.stringContaining;
 
 public class ExpectTest {
 
@@ -250,6 +253,42 @@ public class ExpectTest {
         }
 
         expect(failed).toBe(true);
+    }
+
+    @Test
+    public void withCauseShouldFailIfMatcherFails() {
+        final Exception cause = new RuntimeException();
+        final Matcher matcher = mock(Matcher.class);
+
+        when(matcher.matches(eq(cause))).thenReturn(false);
+
+        boolean failed = true;
+
+        try {
+            expect(() -> {
+                throw new RuntimeException(cause);
+            }).toThrow(RuntimeException.class).withCause(matcher);
+
+            failed = false;
+        } catch (AssertionError e) {
+        }
+
+        expect(failed).toBe(true);
+        verify(matcher).matches(cause);
+    }
+
+    @Test
+    public void withCauseShouldSucceedIfMatcherMatches() {
+        final Exception cause = new RuntimeException();
+        final Matcher matcher = mock(Matcher.class);
+
+        when(matcher.matches(eq(cause))).thenReturn(true);
+
+        expect(() -> {
+            throw new RuntimeException(cause);
+        }).toThrow(RuntimeException.class).withCause(matcher);
+
+        verify(matcher).matches(eq(cause));
     }
 
     private BaseMatcher<ExpectationFailure> isExpectedExceptionFailure(final Class<? extends Throwable> expectedException) {

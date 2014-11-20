@@ -5,7 +5,7 @@ import org.testifj.Matcher;
 
 import java.util.Optional;
 
-public final class ExpectToExpectation implements Expectation {
+public final class ExpectToExpectation implements ValueComplianceExpectation {
 
     private final Caller caller;
 

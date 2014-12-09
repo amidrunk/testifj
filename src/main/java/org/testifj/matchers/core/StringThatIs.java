@@ -1,7 +1,9 @@
 package org.testifj.matchers.core;
 
 import org.testifj.Matcher;
+import org.testifj.annotations.DSL;
 
+@DSL
 public final class StringThatIs {
 
     public static Matcher<String> stringContaining(String subString) {

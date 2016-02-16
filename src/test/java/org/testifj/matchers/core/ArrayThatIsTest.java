@@ -32,18 +32,18 @@ public class ArrayThatIsTest {
 
     @Test
     public void intArrayOfShouldNotMatchArrayWithDifferentContents() {
-        expect(ArrayThatIs.arrayOf(1, 2, 3).matches(new int[]{1})).toBe(false);
-        expect(ArrayThatIs.arrayOf(1, 2, 3).matches(new int[]{1, 3, 3})).toBe(false);
-        expect(ArrayThatIs.arrayOf(1, 2, 3).matches(new int[]{1, 2, 2})).toBe(false);
-        expect(ArrayThatIs.arrayOf(1, 2, 3).matches(new int[]{1, 2, 3, 4})).toBe(false);
+        expect(ArrayThatIs.<int[]>arrayOf(1, 2, 3).matches(new int[]{1})).toBe(false);
+        expect(ArrayThatIs.<int[]>arrayOf(1, 2, 3).matches(new int[]{1, 3, 3})).toBe(false);
+        expect(ArrayThatIs.<int[]>arrayOf(1, 2, 3).matches(new int[]{1, 2, 2})).toBe(false);
+        expect(ArrayThatIs.<int[]>arrayOf(1, 2, 3).matches(new int[]{1, 2, 3, 4})).toBe(false);
     }
 
     @Test
     public void intArrayOfShouldMatchArrayWithEqualContents() {
-        expect(ArrayThatIs.arrayOf(new int[0]).matches(new int[]{})).toBe(true);
-        expect(ArrayThatIs.arrayOf(1).matches(new int[]{1})).toBe(true);
-        expect(ArrayThatIs.arrayOf(1, 2).matches(new int[]{1, 2})).toBe(true);
-        expect(ArrayThatIs.arrayOf(1, 2, 3).matches(new int[]{1, 2, 3})).toBe(true);
+        expect(ArrayThatIs.<int[]>arrayOf(new int[0]).matches(new int[]{})).toBe(true);
+        expect(ArrayThatIs.<int[]>arrayOf(1).matches(new int[]{1})).toBe(true);
+        expect(ArrayThatIs.<int[]>arrayOf(1, 2).matches(new int[]{1, 2})).toBe(true);
+        expect(ArrayThatIs.<int[]>arrayOf(1, 2, 3).matches(new int[]{1, 2, 3})).toBe(true);
     }
 
     @Test

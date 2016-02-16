@@ -120,7 +120,10 @@ public final class Lambdas {
         for (int i = 0; i < enclosedVariables.size(); i++) {
             final LocalVariableReference localVariableReference = enclosedVariables.get(i);
 
-            localVariables.add(new LocalVariableImpl(-1, -1, localVariableReference.getName(), localVariableReference.getType(), localVariableOffset + i));
+            // Change in the compiler results in variable being present in the local variable table
+            if (!localVariables.stream().filter(lv -> lv.getName().equals(localVariableReference.getName())).findAny().isPresent()) {
+                localVariables.add(new LocalVariableImpl(-1, -1, localVariableReference.getName(), localVariableReference.getType(), localVariableOffset + i));
+            }
         }
 
         Collections.sort(localVariables, (v1, v2) -> v1.getIndex() - v2.getIndex());

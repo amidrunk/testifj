@@ -79,7 +79,7 @@ public class LambdasTest {
 
         final Caller caller = Caller.adjacent(-4);
         final Method backingMethod = ClassModelTestUtils.classFileOf(getClass()).getMethods().stream()
-                .filter(m -> m.hasCodeForLineNumber(caller.getCallerStackTraceElement().getLineNumber()))
+                .filter(m -> m.hasCodeForLineNumber(caller.getLineNumber()))
                 .findFirst().get();
 
         final CodePointer<Lambda> declarationCodePointer = Lambdas.getLambdaDeclarationForMethod(decompiler, backingMethod).get();

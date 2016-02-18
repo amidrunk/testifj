@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.Optional;
 
 // TODO: Make ... better...
-public final class Caller {
+// TODO: Rename, it's not a caller it's a CallStack or something
+public final class Caller implements CodeLocation {
 
     public static final int CALLER_STACK_TRACE_INDEX = 2;
 
@@ -30,8 +31,27 @@ public final class Caller {
         return stackTraceElements.get(callerStackTraceIndex);
     }
 
-    public Caller getCaller() {
-        return new Caller(stackTraceElements, callerStackTraceIndex + 1);
+    @Override
+    public String getClassName() {
+        return stackTraceElements.get(callerStackTraceIndex).getClassName();
+    }
+
+    @Override
+    public String getMethodName() {
+        return stackTraceElements.get(callerStackTraceIndex).getMethodName();
+    }
+
+    @Override
+    public String getFileName() {
+        return stackTraceElements.get(callerStackTraceIndex).getFileName();
+    }
+
+    public Optional<CodeLocation> getCaller() {
+        if (callerStackTraceIndex == stackTraceElements.size() - 1) {
+            return Optional.empty();
+        } else {
+            return Optional.of(new Caller(stackTraceElements, callerStackTraceIndex + 1));
+        }
     }
 
     public Optional<Caller> scan(Predicate<StackTraceElement> predicate) {
@@ -50,6 +70,7 @@ public final class Caller {
         return Optional.empty();
     }
 
+    @Override
     public int getLineNumber() {
         return getCallerStackTraceElement().getLineNumber();
     }

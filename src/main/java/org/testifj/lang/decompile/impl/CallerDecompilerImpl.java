@@ -48,14 +48,14 @@ public final class CallerDecompilerImpl implements CallerDecompiler {
     }
 
     private CodePointer[] codeForCaller(Caller caller, DecompilationProgressCallback callback) throws IOException {
-        final ClassFile classFile = loadClassFile(caller.getCallerStackTraceElement().getClassName());
+        final ClassFile classFile = loadClassFile(caller.getClassName());
 
         if (classFile == null) {
             return null;
         }
 
         final Method method = resolveMethodFromClassFile(classFile, caller);
-        final Range codeRange = method.getCodeRangeForLineNumber(caller.getCallerStackTraceElement().getLineNumber());
+        final Range codeRange = method.getCodeRangeForLineNumber(caller.getLineNumber());
 
         try (CodeStream code = new InputStreamCodeStream(method.getCode().getCode())) {
             code.skip(codeRange.getFrom());
@@ -103,7 +103,7 @@ public final class CallerDecompilerImpl implements CallerDecompiler {
 
     private Method resolveMethodFromClassFile(ClassFile classFile, Caller caller) {
         return classFile.getMethods().stream()
-                .filter(m -> m.getName().equals(caller.getCallerStackTraceElement().getMethodName()))
+                .filter(m -> m.getName().equals(caller.getMethodName()))
                 .filter(m -> Methods.containsLineNumber(m, caller.getLineNumber()))
                 .map(m -> {
                     if (!m.isLambdaBackingMethod()) {

@@ -3,8 +3,11 @@ package org.testifj;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
@@ -50,9 +53,9 @@ public class CallerTest {
     public void getCallerShouldReturnCallerOfCaller() {
         final Caller caller = createCaller();
 
-        given(caller.getCaller()).then(it -> {
-            expect(it.getCallerStackTraceElement().getClassName()).toBe(getClass().getName());
-            expect(it.getCallerStackTraceElement().getMethodName()).toBe("getCallerShouldReturnCallerOfCaller");
+        given(caller.getCaller().get()).then(it -> {
+            expect(it.getClassName()).toBe(getClass().getName());
+            expect(it.getMethodName()).toBe("getCallerShouldReturnCallerOfCaller");
         });
     }
 
@@ -79,9 +82,27 @@ public class CallerTest {
         expect(result.get().getCallerStackTraceElement().getMethodName()).toBe("scanShouldReturnFirstMatchingStackTraceElement");
     }
 
+    @Test
+    public void locationOfCodeShouldBeAvailableInCaller() {
+        final Caller caller = Caller.me();
+
+        assertEquals("org.testifj.CallerTest", caller.getClassName());
+        assertEquals("locationOfCodeShouldBeAvailableInCaller", caller.getMethodName());
+        assertEquals(Thread.currentThread().getStackTrace()[1].getLineNumber() - 4, caller.getLineNumber());
+    }
+
+    @Test
+    public void topCallerShouldHaveNoCaller() {
+        final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        final Caller caller = new Caller(Arrays.asList(stackTrace), stackTrace.length - 1);
+
+        assertFalse(caller.getCaller().isPresent());
+    }
+
     private Caller createCaller() {
         return Caller.me();
     }
 
 
 }
+

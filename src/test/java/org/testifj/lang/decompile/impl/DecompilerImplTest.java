@@ -511,10 +511,10 @@ public class DecompilerImplTest {
         final Element[] elements = Arrays.stream(code(adjacent(-3))).map(CodePointer::getElement).toArray(Element[]::new);
 
         final VariableAssignment variableAssignments = (VariableAssignment) elements[0];
-        expect(variableAssignments.getMetaData().getLineNumber()).toBe(caller.getCallerStackTraceElement().getLineNumber());
+        expect(variableAssignments.getMetaData().getLineNumber()).toBe(caller.getLineNumber());
 
         final Constant value = (Constant) variableAssignments.getValue();
-        expect(value.getMetaData().getLineNumber()).toBe(caller.getCallerStackTraceElement().getLineNumber());
+        expect(value.getMetaData().getLineNumber()).toBe(caller.getLineNumber());
     }
 
     @Test
@@ -621,9 +621,9 @@ public class DecompilerImplTest {
 
     private void decompileCallerWithCallback(Caller caller, DecompilationProgressCallback callback) throws IOException {
         final Decompiler decompiler = new DecompilerImpl();
-        final Method method = ClassModelTestUtils.methodWithName(getClass(), caller.getCallerStackTraceElement().getMethodName());
+        final Method method = ClassModelTestUtils.methodWithName(getClass(), caller.getMethodName());
 
-        try (CodeStream code = new InputStreamCodeStream(method.getCodeForLineNumber(caller.getCallerStackTraceElement().getLineNumber()))) {
+        try (CodeStream code = new InputStreamCodeStream(method.getCodeForLineNumber(caller.getLineNumber()))) {
             decompiler.parse(method, code, callback);
         }
     }

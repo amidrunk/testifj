@@ -19,11 +19,11 @@ public final class ExpectationMatchers {
 
                 final GivenThenExpectation expectation = (GivenThenExpectation) item;
 
-                if (!expectation.getCaller().getCallerStackTraceElement().getClassName().equals(sourceClass.getName())) {
+                if (!expectation.getCaller().getClassName().equals(sourceClass.getName())) {
                     return false;
                 }
 
-                if (!expectation.getCaller().getCallerStackTraceElement().getMethodName().equals(sourceMethod)) {
+                if (!expectation.getCaller().getMethodName().equals(sourceMethod)) {
                     return false;
                 }
 

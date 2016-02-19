@@ -5,7 +5,7 @@ import org.testifj.Action;
 import org.testifj.Caller;
 import org.testifj.ServiceContext;
 import org.testifj.ServiceContextImpl;
-import org.testifj.lang.decompile.impl.CallerDecompilerImpl;
+import org.testifj.lang.decompile.impl.CodeLocationDecompilerImpl;
 import org.testifj.lang.codegeneration.impl.CodePointerCodeGenerator;
 
 import java.util.Collections;
@@ -28,7 +28,7 @@ public class GivenThenExpectationDelegateExtensionTest {
 
     private final ServiceContext serviceContext = ServiceContextImpl.newBuilder()
             .registerComponent(new CodePointerCodeGenerator())
-            .registerComponent(new CallerDecompilerImpl())
+            .registerComponent(new CodeLocationDecompilerImpl())
             .build();
 
     @Test

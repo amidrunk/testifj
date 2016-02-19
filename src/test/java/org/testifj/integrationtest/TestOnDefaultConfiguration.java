@@ -3,11 +3,11 @@ package org.testifj.integrationtest;
 import org.testifj.Caller;
 import org.testifj.Procedure;
 import org.testifj.lang.codegeneration.impl.JavaSyntaxCodeGeneration;
-import org.testifj.lang.decompile.CallerDecompiler;
+import org.testifj.lang.decompile.CodeLocationDecompiler;
 import org.testifj.lang.classfile.ClassFileReader;
 import org.testifj.lang.decompile.CodePointer;
 import org.testifj.lang.decompile.Decompiler;
-import org.testifj.lang.decompile.impl.CallerDecompilerImpl;
+import org.testifj.lang.decompile.impl.CodeLocationDecompilerImpl;
 import org.testifj.lang.classfile.impl.ClassFileReaderImpl;
 import org.testifj.lang.codegeneration.impl.CodePointerCodeGenerator;
 import org.testifj.lang.decompile.impl.DecompilerImpl;
@@ -24,7 +24,7 @@ public abstract class TestOnDefaultConfiguration {
 
     private final ClassFileReader classFileReader = new ClassFileReaderImpl();
 
-    private final CallerDecompiler callerDecompiler = new CallerDecompilerImpl(classFileReader, decompiler);
+    private final CodeLocationDecompiler codeLocationDecompiler = new CodeLocationDecompilerImpl(classFileReader, decompiler);
 
     private final CodePointerCodeGenerator codeGenerator = new CodePointerCodeGenerator(decompiler, JavaSyntaxCodeGeneration.configuration());
 
@@ -32,7 +32,7 @@ public abstract class TestOnDefaultConfiguration {
         final CodePointer[] codePointers;
 
         try {
-            codePointers = callerDecompiler.decompileCaller(caller);
+            codePointers = codeLocationDecompiler.decompileCodeLocation(caller);
         } catch (IOException e) {
             throw new RuntimeException("Failed to decompile caller", e);
         }

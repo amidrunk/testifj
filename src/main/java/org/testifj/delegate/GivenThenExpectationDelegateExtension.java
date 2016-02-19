@@ -2,7 +2,7 @@ package org.testifj.delegate;
 
 import org.testifj.BasicDescription;
 import org.testifj.Description;
-import org.testifj.lang.decompile.CallerDecompiler;
+import org.testifj.lang.decompile.CodeLocationDecompiler;
 import org.testifj.lang.decompile.CodePointer;
 import org.testifj.lang.codegeneration.impl.CodePointerCodeGenerator;
 import org.testifj.lang.model.Expression;
@@ -35,7 +35,7 @@ public final class GivenThenExpectationDelegateExtension implements ExpectationD
         final CodePointer[] codePointers;
 
         try {
-            codePointers = context.get(CallerDecompiler.class).decompileCaller(context.getExpectation().getCaller());
+            codePointers = context.get(CodeLocationDecompiler.class).decompileCodeLocation(context.getExpectation().getCaller());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

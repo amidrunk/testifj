@@ -2,10 +2,9 @@ package org.testifj.lang.decompile.impl;
 
 import org.junit.Test;
 import org.testifj.Caller;
-import org.testifj.lang.decompile.CallerDecompiler;
+import org.testifj.lang.decompile.CodeLocationDecompiler;
 import org.testifj.lang.decompile.CodePointer;
 import org.testifj.lang.classfile.ReferenceKind;
-import org.testifj.lang.decompile.impl.CallerDecompilerImpl;
 import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.LocalVariableReferenceImpl;
 import org.testifj.lang.model.impl.MethodSignature;
@@ -23,14 +22,14 @@ import static org.testifj.matchers.core.OptionalThatIs.present;
 
 public class InvokeDynamicExtensionsDecompilationTest {
 
-    private final CallerDecompiler callerDecompiler = new CallerDecompilerImpl();
+    private final CodeLocationDecompiler codeLocationDecompiler = new CodeLocationDecompilerImpl();
 
     private final TestTarget testTarget = new TestTarget();
 
     @Test
     public void instanceMethodReferenceWithSameSignatureAsInterfaceCanBeDecompiled() throws IOException {
         final Runnable runnable = testTarget::run1;
-        final Element element = Arrays2.single(callerDecompiler.decompileCaller(Caller.adjacent(-1)), CodePointer::getElement);
+        final Element element = Arrays2.single(codeLocationDecompiler.decompileCodeLocation(Caller.adjacent(-1)), CodePointer::getElement);
 
         given(element.as(VariableAssignment.class)).then(assignment -> {
             expect(assignment.getVariableType()).toBe(Runnable.class);
@@ -52,7 +51,7 @@ public class InvokeDynamicExtensionsDecompilationTest {
     @Test
     public void staticMethodReferenceWithSameSignatureAsInterfaceCanBeDecompiled() throws IOException {
         final Runnable runnable = TestTarget::run2;
-        final Element element = Arrays2.single(callerDecompiler.decompileCaller(Caller.adjacent(-1)), CodePointer::getElement);
+        final Element element = Arrays2.single(codeLocationDecompiler.decompileCodeLocation(Caller.adjacent(-1)), CodePointer::getElement);
 
         given(element.as(VariableAssignment.class)).then(assignment -> {
             expect(assignment.getVariableType()).toBe(Runnable.class);
@@ -76,7 +75,7 @@ public class InvokeDynamicExtensionsDecompilationTest {
     public void staticMethodReferenceWithDifferentSignatureFromInterfaceCanBeDecompiled() throws IOException {
         final Function<Element, ElementType> function = Element::getElementType;
 
-        final Element element = Arrays2.single(callerDecompiler.decompileCaller(Caller.adjacent(-2)), CodePointer::getElement);
+        final Element element = Arrays2.single(codeLocationDecompiler.decompileCodeLocation(Caller.adjacent(-2)), CodePointer::getElement);
 
         given(element.as(VariableAssignment.class)).then(assignment -> {
             expect(assignment.getVariableType()).toBe(Function.class);
@@ -99,7 +98,7 @@ public class InvokeDynamicExtensionsDecompilationTest {
     public void lambdaWithVariableAndFieldReference() throws IOException {
         final String str1 = new String("_suffix");
         final Supplier<String> supplier = () -> testTarget.getClass().getName() + str1;
-        final Element element = Arrays2.single(callerDecompiler.decompileCaller(Caller.adjacent(-1)), CodePointer::getElement);
+        final Element element = Arrays2.single(codeLocationDecompiler.decompileCodeLocation(Caller.adjacent(-1)), CodePointer::getElement);
 
         given(element.as(VariableAssignment.class)).then(assignment -> {
             expect(assignment.getVariableType()).toBe(Supplier.class);

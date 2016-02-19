@@ -9,7 +9,7 @@ import org.testifj.lang.classfile.Method;
 import org.testifj.lang.classfile.impl.ClassFileReaderImpl;
 import org.testifj.lang.decompile.CodePointer;
 import org.testifj.lang.decompile.CodeStream;
-import org.testifj.lang.decompile.impl.CallerDecompilerImpl;
+import org.testifj.lang.decompile.impl.CodeLocationDecompilerImpl;
 import org.testifj.lang.codegeneration.impl.CodePointerCodeGenerator;
 import org.testifj.lang.decompile.impl.DecompilerImpl;
 import org.testifj.lang.decompile.impl.InputStreamCodeStream;
@@ -87,7 +87,7 @@ public class ClassModelTestUtils {
 
     public static CodePointer[] code(Caller caller) {
         try {
-            return new CallerDecompilerImpl().decompileCaller(caller);
+            return new CodeLocationDecompilerImpl().decompileCodeLocation(caller);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

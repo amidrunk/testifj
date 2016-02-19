@@ -2,15 +2,13 @@ package org.testifj.lang.decompile.impl;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.testifj.Action;
 import org.testifj.Caller;
 import org.testifj.Matcher;
 import org.testifj.lang.classfile.ReferenceKind;
-import org.testifj.lang.decompile.CallerDecompiler;
+import org.testifj.lang.decompile.CodeLocationDecompiler;
 import org.testifj.lang.decompile.CodePointer;
 import org.testifj.lang.decompile.DecompilationProgressCallback;
-import org.testifj.lang.decompile.impl.CallerDecompilerImpl;
 import org.testifj.lang.model.*;
 import org.testifj.lang.model.impl.*;
 
@@ -27,14 +25,14 @@ import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
 import static org.testifj.matchers.core.CollectionThatIs.empty;
 
-public class CallerDecompilerImplTest {
+public class CodeLocationDecompilerImplTest {
 
-    private final CallerDecompiler callerDecompiler = new CallerDecompilerImpl();
+    private final CodeLocationDecompiler codeLocationDecompiler = new CodeLocationDecompilerImpl();
 
     @Test
     public void decompileCallerShouldNotAcceptInvalidArguments() {
-        expect(() -> callerDecompiler.decompileCaller(null, mock(DecompilationProgressCallback.class))).toThrow(AssertionError.class);
-        expect(() -> callerDecompiler.decompileCaller(me(), null)).toThrow(AssertionError.class);
+        expect(() -> codeLocationDecompiler.decompileCodeLocation(null, mock(DecompilationProgressCallback.class))).toThrow(AssertionError.class);
+        expect(() -> codeLocationDecompiler.decompileCodeLocation(me(), null)).toThrow(AssertionError.class);
     }
 
     @Test
@@ -188,7 +186,7 @@ public class CallerDecompilerImplTest {
     }
 
     private Element[] decompileCaller(Caller caller) throws IOException {
-        return Arrays.stream(callerDecompiler.decompileCaller(caller))
+        return Arrays.stream(codeLocationDecompiler.decompileCodeLocation(caller))
                 .map(CodePointer::getElement)
                 .toArray(Element[]::new);
     }

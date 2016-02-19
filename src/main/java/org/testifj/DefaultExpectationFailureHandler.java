@@ -2,11 +2,11 @@ package org.testifj;
 
 import org.testifj.lang.classfile.ClassFileReader;
 import org.testifj.lang.classfile.impl.ClassFileReaderImpl;
-import org.testifj.lang.decompile.CallerDecompiler;
+import org.testifj.lang.decompile.CodeLocationDecompiler;
 import org.testifj.lang.codegeneration.CodeGenerator;
 import org.testifj.lang.decompile.CodePointer;
 import org.testifj.lang.decompile.Decompiler;
-import org.testifj.lang.decompile.impl.CallerDecompilerImpl;
+import org.testifj.lang.decompile.impl.CodeLocationDecompilerImpl;
 import org.testifj.lang.codegeneration.impl.CodePointerCodeGenerator;
 import org.testifj.lang.decompile.impl.DecompilerImpl;
 import org.testifj.lang.model.Element;
@@ -41,7 +41,7 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
 
     private final DescriptionFormat descriptionFormat;
 
-    private final CallerDecompiler callerDecompiler;
+    private final CodeLocationDecompiler codeLocationDecompiler;
 
     private DefaultExpectationFailureHandler(ClassFileReader classFileReader,
                                              Decompiler decompiler,
@@ -51,7 +51,7 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
         this.decompiler = decompiler;
         this.syntaxElementCodeGenerator = syntaxElementCodeGenerator;
         this.descriptionFormat = descriptionFormat;
-        this.callerDecompiler = new CallerDecompilerImpl(classFileReader, decompiler);
+        this.codeLocationDecompiler = new CodeLocationDecompilerImpl(classFileReader, decompiler);
     }
 
     @Override
@@ -169,7 +169,7 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
         final CodePointer[] codePointers;
 
         try {
-            codePointers = callerDecompiler.decompileCaller(caller);
+            codePointers = codeLocationDecompiler.decompileCodeLocation(caller);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

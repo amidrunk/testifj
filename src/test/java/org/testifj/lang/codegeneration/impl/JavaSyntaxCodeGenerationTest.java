@@ -386,7 +386,7 @@ public class JavaSyntaxCodeGenerationTest {
     }
 
     @Test
-    public void varArgsWithNoOtherArgumentsShouldBeSupportedInStatic() {
+    public void varArgsWithNoOtherArgumentsShouldBeSupportedInStatic2() {
         final String code = codeFor(call(Varargs.class, "varArgs1", void.class,
                 AST.newArray(String[].class, constant("foo"), constant("bar"), constant("baz"))));
 

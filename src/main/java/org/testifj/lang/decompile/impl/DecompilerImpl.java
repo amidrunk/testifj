@@ -32,19 +32,21 @@ public final class DecompilerImpl implements Decompiler {
         assert configuration != null : "Configuration can't be null";
 
         this.configuration = configuration;
-        this.debugCodeGenerator = new CodePointerCodeGenerator(this, JavaSyntaxCodeGeneration.configuration());
+        this.debugCodeGenerator = null; //new CodePointerCodeGenerator(this, JavaSyntaxCodeGeneration.configuration());
     }
 
     private void debug(DecompilationContext context, int lineNumber, int byteCode) {
-        final String stackedExpressions = context.getStackedExpressions().stream()
-                .map(e -> debugCodeGenerator.describe(new CodePointerImpl<>(context.getMethod(), e)).toString())
-                .collect(Collectors.joining(", "));
+        if (debugCodeGenerator != null) {
+            final String stackedExpressions = context.getStackedExpressions().stream()
+                    .map(e -> debugCodeGenerator.describe(new CodePointerImpl<>(context.getMethod(), e)).toString())
+                    .collect(Collectors.joining(", "));
 
-        final String statements = context.getStatements().stream()
-                .map(e -> debugCodeGenerator.describe(new CodePointerImpl<>(context.getMethod(), e)).toString())
-                .collect(Collectors.joining(", "));
+            final String statements = context.getStatements().stream()
+                    .map(e -> debugCodeGenerator.describe(new CodePointerImpl<>(context.getMethod(), e)).toString())
+                    .collect(Collectors.joining(", "));
 
-        System.out.println("\t[" + Strings.rightPad(String.valueOf(lineNumber), 3, ' ') + ", " + Strings.rightPad(String.valueOf(context.getProgramCounter().get()), 3, ' ') + "] " + Strings.rightPad(ByteCode.toString(byteCode), 20, ' ') + " <-- [" + stackedExpressions + " # " + statements + "]");
+            System.out.println("\t[" + Strings.rightPad(String.valueOf(lineNumber), 3, ' ') + ", " + Strings.rightPad(String.valueOf(context.getProgramCounter().get()), 3, ' ') + "] " + Strings.rightPad(ByteCode.toString(byteCode), 20, ' ') + " <-- [" + stackedExpressions + " # " + statements + "]");
+        }
     }
 
     @Override

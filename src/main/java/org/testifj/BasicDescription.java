@@ -22,6 +22,22 @@ public final class BasicDescription implements Description {
         this.parts.add(newPart);
     }
 
+    private BasicDescription(Part newPart, List<Part> parts) {
+        this.parts = new ArrayList<>(parts.size() + 1);
+        this.parts.add(newPart);
+        this.parts.addAll(parts);
+    }
+
+    public Description prependText(String text) {
+        assert text != null : "text can't be null";
+
+        if (text.isEmpty()) {
+            return this;
+        }
+
+        return new BasicDescription(new TextPartImpl(text), parts);
+    }
+
     @Override
     public Description appendText(String text) {
         assert text != null : "Text can't be null";

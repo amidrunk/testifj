@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: org.testifj.lang.decompile.impl.CodeLocationDecompilerImplTest
+-------------------------------------------------------------------------------
+Tests run: 10, Failures: 0, Errors: 0, Skipped: 2, Time elapsed: 0.023 sec

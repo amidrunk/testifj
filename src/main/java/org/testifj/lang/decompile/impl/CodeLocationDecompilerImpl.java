@@ -117,7 +117,7 @@ public final class CodeLocationDecompilerImpl implements CodeLocationDecompiler 
                         // Ignore and hope for the best
                         return m;
                     }
-                }).findFirst().orElseThrow(() -> new IllegalStateException("Method not found"));
+                }).findFirst().orElseThrow(() -> new IllegalStateException("Method '" + codeLocation.getMethodName() + "' not found on line number " + codeLocation.getLineNumber() + " in class '" + classFile.getName() + "'"));
     }
 
     private ClassFile loadClassFile(String className) throws IOException {

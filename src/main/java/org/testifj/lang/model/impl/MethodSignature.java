@@ -4,6 +4,7 @@ import org.testifj.lang.classfile.ClassFileFormatException;
 import org.testifj.lang.model.Signature;
 import org.testifj.util.StringReader;
 
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -33,6 +34,13 @@ public final class MethodSignature implements Signature {
     @Override
     public Type getReturnType() {
         return returnType;
+    }
+
+    @Override
+    public boolean test(Method method) {
+        assert method != null : "method can't be null";
+
+        return MethodSignature.from(method).equals(this);
     }
 
     public static MethodSignature create(Type[] parameters, Type returnType) {
@@ -84,6 +92,12 @@ public final class MethodSignature implements Signature {
         final Type returnType = readType(reader);
 
         return new MethodSignature(spec, parameterTypes.toArray(new Type[parameterTypes.size()]), returnType);
+    }
+
+    public static MethodSignature from(Method method) {
+        assert method != null : "method can't be null";
+
+        return create(method.getParameterTypes(), method.getReturnType());
     }
 
     @Override

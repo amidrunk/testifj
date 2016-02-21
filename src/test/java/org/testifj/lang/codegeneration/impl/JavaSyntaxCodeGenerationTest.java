@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.function.Predicate;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -376,11 +377,43 @@ public class JavaSyntaxCodeGenerationTest {
         expect(codeFor(xor(constant(1), constant(2), int.class))).toBe("1 ^ 2");
     }
 
+    @Test
+    public void varArgsWithNoOtherArgumentsShouldBeSupportedInStatic() {
+        final String code = codeFor(call(Varargs.class, "varArgs1", void.class,
+                AST.newArray(String[].class, constant("foo"), constant("bar"), constant("baz"))));
+
+        assertEquals("Varargs.varArgs1(\"foo\", \"bar\", \"baz\")", code);
+    }
+
+    @Test
+    public void varArgsWithNoOtherArgumentsShouldBeSupportedInStatic() {
+        final String code = codeFor(call(Varargs.class, "varArgs1", void.class,
+                AST.newArray(String[].class, constant("foo"), constant("bar"), constant("baz"))));
+
+        assertEquals("Varargs.varArgs1(\"foo\", \"bar\", \"baz\")", code);
+    }
+
+    // Support classes
+    //
+
     private static class Inner {
 
         private String str;
 
     }
+
+    private static class Varargs {
+
+        public void varArgs1(String ... args) {
+        }
+
+        public void varArgs2(int head, int ... tail) {
+        }
+
+    }
+
+    // Support methods
+    //
 
     private <T extends Element> CodePointer<T> codePointer(T element) {
         final CodePointer codePointer = mock(CodePointer.class);

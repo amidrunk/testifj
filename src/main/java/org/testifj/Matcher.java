@@ -1,9 +1,12 @@
 package org.testifj;
 
+import org.testifj.annotations.DSL;
+
 /**
  * TODO Should not return true false, but rather a match-result? No... would be cool though, since it would
  * be possible to determine which precise matcher failed in a sequence.
  */
+@DSL
 @FunctionalInterface
 public interface Matcher<T> {
 

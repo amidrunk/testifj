@@ -5,6 +5,9 @@ import org.testifj.lang.classfile.ClassFileFormatException;
 
 import java.lang.reflect.Type;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.testifj.Expect.expect;
 import static org.testifj.matchers.core.CollectionThatIs.empty;
 
@@ -106,4 +109,97 @@ public class MethodSignatureTest {
         expect(actualSignature.toString()).toBe(expectedSignature.toString());
     }
 
+    @Test(expected = AssertionError.class)
+    public void signatureShouldRejectNullMethod() {
+        MethodSignature.create(new Type[]{}, void.class).test(null);
+    }
+
+    @Test
+    public void fromMethodShouldCreateSignature() throws Exception {
+        assertEquals("()V", MethodSignature.from(getClass().getMethod("method1")).toString());
+        assertEquals("()Ljava/lang/Object;", MethodSignature.from(getClass().getMethod("method2")).toString());
+        assertEquals("(ILjava/lang/String;)V", MethodSignature.from(getClass().getMethod("method3", int.class, String.class)).toString());
+        assertEquals("(ILjava/lang/String;)Ljava/lang/Object;", MethodSignature.from(getClass().getMethod("method4", int.class, String.class)).toString());
+        assertEquals("([I)[Ljava/lang/Object;", MethodSignature.from(getClass().getMethod("method5", int[].class)).toString());
+    }
+
+    @Test(expected = AssertionError.class)
+    public void fromMethodShouldRejectNullMethod() {
+        MethodSignature.from(null);
+    }
+
+    @Test
+    public void testShouldMatchMethodVoidMethodWithNoParameters() throws Exception  {
+        final MethodSignature signature = MethodSignature.create(new Type[]{}, void.class);
+
+        assertTrue(signature.test(getClass().getMethod("method1")));
+        assertFalse(signature.test(getClass().getMethod("method2")));
+        assertFalse(signature.test(getClass().getMethod("method3", int.class, String.class)));
+        assertFalse(signature.test(getClass().getMethod("method4", int.class, String.class)));
+        assertFalse(signature.test(getClass().getMethod("method5", int[].class)));
+    }
+
+    @Test
+    public void testShouldMatchMethodWithNonVoidReturnType() throws Exception {
+        final MethodSignature signature = MethodSignature.create(new Type[]{}, Object.class);
+
+        assertFalse(signature.test(getClass().getMethod("method1")));
+        assertTrue(signature.test(getClass().getMethod("method2")));
+        assertFalse(signature.test(getClass().getMethod("method3", int.class, String.class)));
+        assertFalse(signature.test(getClass().getMethod("method4", int.class, String.class)));
+        assertFalse(signature.test(getClass().getMethod("method5", int[].class)));
+    }
+
+    @Test
+    public void testShouldMatchMethodWithVoidReturnTypeAndMultipleParameters() throws Exception {
+        final MethodSignature signature = MethodSignature.create(new Type[]{int.class, String.class}, void.class);
+
+        assertFalse(signature.test(getClass().getMethod("method1")));
+        assertFalse(signature.test(getClass().getMethod("method2")));
+        assertTrue(signature.test(getClass().getMethod("method3", int.class, String.class)));
+        assertFalse(signature.test(getClass().getMethod("method4", int.class, String.class)));
+        assertFalse(signature.test(getClass().getMethod("method5", int[].class)));
+    }
+
+    @Test
+    public void testShouldMatchMethodWithObjectReturnTypeAndMultipleParameters() throws Exception {
+        final MethodSignature signature = MethodSignature.create(new Type[]{int.class, String.class}, Object.class);
+
+        assertFalse(signature.test(getClass().getMethod("method1")));
+        assertFalse(signature.test(getClass().getMethod("method2")));
+        assertFalse(signature.test(getClass().getMethod("method3", int.class, String.class)));
+        assertTrue(signature.test(getClass().getMethod("method4", int.class, String.class)));
+        assertFalse(signature.test(getClass().getMethod("method5", int[].class)));
+    }
+
+    @Test
+    public void testShouldMatchMethodWithArrayReturnTypeAndArrayParameter() throws Exception {
+        final MethodSignature signature = MethodSignature.create(new Type[]{int[].class}, Object[].class);
+
+        assertFalse(signature.test(getClass().getMethod("method1")));
+        assertFalse(signature.test(getClass().getMethod("method2")));
+        assertFalse(signature.test(getClass().getMethod("method3", int.class, String.class)));
+        assertFalse(signature.test(getClass().getMethod("method4", int.class, String.class)));
+        assertTrue(signature.test(getClass().getMethod("method5", int[].class)));
+    }
+
+    // Support methods
+    //
+
+    public void method1() {}
+
+    public Object method2() {
+        return null;
+    }
+
+    public void method3(int a, String b) {
+    }
+
+    public Object method4(int a, String b) {
+        return null;
+    }
+
+    public Object[] method5(int[] a) {
+        return null;
+    }
 }

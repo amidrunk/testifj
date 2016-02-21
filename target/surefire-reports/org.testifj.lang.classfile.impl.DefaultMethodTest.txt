@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: org.testifj.lang.classfile.impl.DefaultMethodTest
+-------------------------------------------------------------------------------
+Tests run: 27, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.015 sec

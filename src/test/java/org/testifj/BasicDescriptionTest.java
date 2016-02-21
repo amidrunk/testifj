@@ -5,6 +5,7 @@ import org.testifj.matchers.core.CollectionThatIs;
 
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.testifj.Expect.expect;
 import static org.testifj.matchers.core.ObjectThatIs.*;
@@ -150,6 +151,18 @@ public class BasicDescriptionTest {
 
         expect(description1).not().toBe(equalTo(description2));
         expect(description1.hashCode()).not().toBe(equalTo(description2.hashCode()));
+    }
+
+    @Test(expected = AssertionError.class)
+    public void nullTextCannotBePreprended() {
+        new BasicDescription().prependText(null);
+    }
+
+    @Test
+    public void prependShouldInsertTextBeforeOtherElements() {
+        final Description description = new BasicDescription().appendText("foo").prependText("bar");
+
+        assertEquals("barfoo", description.toString());
     }
 
 }

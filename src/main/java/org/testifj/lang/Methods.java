@@ -1,17 +1,30 @@
 package org.testifj.lang;
 
 import org.testifj.lang.classfile.*;
+import org.testifj.lang.model.Signature;
 
 import java.util.Optional;
 
 public final class Methods {
 
+    public static Optional<java.lang.reflect.Method> findMethodForNameAndSignature(Class<?> type, String name, Signature signature) {
+        assert type != null : "type can't be null";
+        assert name != null && !name.isEmpty() : "name can't be null or empty";
+        assert signature != null : "signature can't be null";
+
+        for (final java.lang.reflect.Method method : type.getDeclaredMethods()) {
+            if (method.getName().equals(name) && signature.test(method)) {
+                return Optional.of(method);
+            }
+        }
+
+        return Optional.empty();
+    }
+
     public static Optional<Method> findMethodForNameAndLineNumber(ClassFile classFile, String methodName, int lineNumber) {
         assert classFile != null : "Class file can't be null";
         assert methodName != null && !methodName.isEmpty() : "Method name can't be null or empty";
         assert lineNumber >= 0 : "Line number must be positive";
-
-
 
         return Optional.empty();
     }

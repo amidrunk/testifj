@@ -4,12 +4,18 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.testifj.lang.classfile.*;
+import org.testifj.lang.classfile.Method;
 import org.testifj.lang.classfile.impl.*;
+import org.testifj.lang.model.Signature;
+import org.testifj.lang.model.impl.MethodSignature;
 
+import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testifj.Expect.expect;
@@ -35,6 +41,26 @@ public class MethodsTest {
                 methodWithoutLineNumbers,
                 methodWithLineNumbers1,
                 methodWithLineNumbers2));
+    }
+
+    @Test
+    public void findMethodForNameAndSignatureShouldRejectInvalidArguments() {
+        expect(() -> Methods.findMethodForNameAndSignature(null, "foo", mock(Signature.class))).toThrow(AssertionError.class);
+        expect(() -> Methods.findMethodForNameAndSignature(getClass(), null, mock(Signature.class))).toThrow(AssertionError.class);
+        expect(() -> Methods.findMethodForNameAndSignature(getClass(), "", mock(Signature.class))).toThrow(AssertionError.class);
+        expect(() -> Methods.findMethodForNameAndSignature(getClass(), "foo", null)).toThrow(AssertionError.class);
+    }
+
+    @Test
+    public void findMethodForNameAndSignatureShouldReturnEmptyOptionalIfMethodIsNotFound() {
+        assertFalse(Methods.findMethodForNameAndSignature(getClass(), "setup", MethodSignature.parse("()I")).isPresent());
+    }
+
+    @Test
+    public void findMethodForNameAndSignatureShouldReturnMatchingMethod() throws Exception {
+        final java.lang.reflect.Method expectedMethod = getClass().getDeclaredMethod("setup");
+
+        assertEquals(expectedMethod, Methods.findMethodForNameAndSignature(getClass(), "setup", MethodSignature.parse("()V")).get());
     }
 
     @Test

@@ -236,6 +236,17 @@ public final class AST {
         return type -> new TypeCastImpl(value, type);
     }
 
+    public static NewArray newArray(Class arrayType, Expression ... elements) {
+        final ArrayInitializer[] initializers = new ArrayInitializer[elements.length];
+
+        for (int i = 0; i < elements.length; i++) {
+            initializers[i] = new ArrayInitializerImpl(i, elements[i]);
+        }
+
+
+        return new NewArrayImpl(arrayType, arrayType.getComponentType(), constant(elements.length), Arrays.asList(initializers));
+    }
+
     public interface CastContinuation {
 
         TypeCast to(Type type);

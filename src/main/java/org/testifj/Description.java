@@ -4,6 +4,8 @@ import java.util.List;
 
 public interface Description {
 
+    Description prependText(String text);
+
     Description appendText(String text);
 
     Description appendDescription(Description description);

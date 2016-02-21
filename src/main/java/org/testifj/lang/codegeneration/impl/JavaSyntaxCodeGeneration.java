@@ -1,6 +1,7 @@
 package org.testifj.lang.codegeneration.impl;
 
 import org.testifj.annotations.DSL;
+import org.testifj.lang.Methods;
 import org.testifj.lang.classfile.ClassFile;
 import org.testifj.lang.classfile.Method;
 import org.testifj.lang.classfile.MethodReference;
@@ -531,7 +532,7 @@ public final class JavaSyntaxCodeGeneration implements CodeGeneratorDelegation {
      * @return A predicate that can test whether or not a method call element represents a DSL call.
      */
     public static Predicate<CodePointer<MethodCall>> isDSLMethodCall() {
-        return isStaticMethodCall().and(codePointer -> {
+        return codePointer -> {
             final Type targetType = codePointer.getElement().getTargetType();
 
             if (!(targetType instanceof Class)) {
@@ -539,7 +540,16 @@ public final class JavaSyntaxCodeGeneration implements CodeGeneratorDelegation {
             }
 
             return ((Class) targetType).getAnnotation(DSL.class) != null;
-        });
+        };
+    }
+
+    public static Predicate<CodePointer<MethodCall>> isMethodCall() {
+        return new Predicate<CodePointer<MethodCall>>() {
+            @Override
+            public boolean test(CodePointer<MethodCall> codePointer) {
+                return codePointer.getElement().getElementType() == ElementType.METHOD_CALL;
+            }
+        };
     }
 
     /**
@@ -609,7 +619,27 @@ public final class JavaSyntaxCodeGeneration implements CodeGeneratorDelegation {
         out.append(methodCall.getMethodName()).append('(');
 
         for (Iterator<Expression> i = methodCall.getParameters().iterator(); i.hasNext(); ) {
-            context.delegate(codePointer.forElement(i.next()));
+            final Expression parameter = i.next();
+
+            if (!i.hasNext()) {
+                if (parameter.getElementType() == ElementType.NEW_ARRAY) {
+                    if (isVarargsMethodCall(methodCall)) {
+                        final NewArray newArray = parameter.as(NewArray.class);
+
+                        for (final Iterator<ArrayInitializer> i2 = newArray.getInitializers().iterator(); i2.hasNext(); ) {
+                            context.delegate(codePointer.forElement(i2.next().getValue()));
+
+                            if (i2.hasNext()) {
+                                out.print(", ");
+                            }
+                        }
+
+                        break;
+                    }
+                }
+            }
+
+            context.delegate(codePointer.forElement(parameter));
 
             if (i.hasNext()) {
                 out.append(", ");
@@ -619,4 +649,25 @@ public final class JavaSyntaxCodeGeneration implements CodeGeneratorDelegation {
         out.append(')');
     }
 
+    /**
+     * Checks if the provided method call is a varargs call. This is true only if (1) the last parameter of
+     * the method call is an array and (2) the method is a varargs method.
+     *
+     * @param methodCall The method call to check.
+     * @return Whether or not the method call is a varargs method call.
+     */
+    private static boolean isVarargsMethodCall(MethodCall methodCall) {
+        final Optional<java.lang.reflect.Method> methodOptional = Methods.findMethodForNameAndSignature(
+                (Class) methodCall.getTargetType(),
+                methodCall.getMethodName(),
+                methodCall.getSignature());
+
+        if (methodOptional.isPresent()) {
+            if (methodOptional.get().isVarArgs()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

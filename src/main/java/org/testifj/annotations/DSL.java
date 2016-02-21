@@ -11,6 +11,6 @@ import java.lang.annotation.Target;
  * <code>expect(myObject).toBe(equalTo(myOtherObject))</code> => <code>expect myObject to be equal to myOtherObject</code>.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
+@Target({ElementType.TYPE, ElementType.METHOD})
 public @interface DSL {
 }

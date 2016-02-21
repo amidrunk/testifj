@@ -7,6 +7,7 @@ import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.util.Arrays;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.testifj.Expect.expect;
 import static org.testifj.Given.given;
@@ -515,5 +516,15 @@ public class ASTTest {
                 int.class));
     }
 
+    @Test
+    public void newArrayShouldCreateArray() {
+        final NewArray array = AST.newArray(int[].class, constant(1), constant(2));
+
+        assertEquals(int[].class, array.getType());
+        assertEquals(int.class, array.getComponentType());
+        assertEquals(constant(2), array.getLength());
+        assertEquals(constant(1), array.getInitializers().get(0).getValue());
+        assertEquals(constant(2), array.getInitializers().get(1).getValue());
+    }
 
 }

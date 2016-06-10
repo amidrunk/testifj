@@ -2,7 +2,7 @@ package org.testifj.integrationtest;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import org.testifj.Caller;
+import io.recode.Caller;
 
 import java.io.PrintStream;
 

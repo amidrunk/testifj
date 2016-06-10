@@ -1,7 +1,7 @@
 package org.testifj.matchers.core;
 
 import org.testifj.Matcher;
-import org.testifj.annotations.DSL;
+import io.recode.annotations.DSL;
 
 @DSL
 public final class ComparableThatIs {

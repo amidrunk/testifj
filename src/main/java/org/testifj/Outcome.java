@@ -1,5 +1,7 @@
 package org.testifj;
 
+import io.recode.Caller;
+
 import java.util.Optional;
 
 public final class Outcome {

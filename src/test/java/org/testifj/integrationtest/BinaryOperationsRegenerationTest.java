@@ -1,7 +1,7 @@
 package org.testifj.integrationtest;
 
 import org.junit.Test;
-import org.testifj.Caller;
+import io.recode.Caller;
 
 import static org.junit.Assert.assertEquals;
 import static org.testifj.Expect.expect;

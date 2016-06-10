@@ -1,14 +1,14 @@
 package org.testifj;
 
 import org.testifj.delegate.*;
-import org.testifj.lang.codegeneration.impl.JavaSyntaxCodeGeneration;
-import org.testifj.lang.decompile.CodeLocationDecompiler;
-import org.testifj.lang.classfile.ClassFileReader;
-import org.testifj.lang.decompile.Decompiler;
-import org.testifj.lang.decompile.impl.CodeLocationDecompilerImpl;
-import org.testifj.lang.classfile.impl.ClassFileReaderImpl;
-import org.testifj.lang.codegeneration.impl.CodePointerCodeGenerator;
-import org.testifj.lang.decompile.impl.DecompilerImpl;
+import io.recode.codegeneration.impl.JavaSyntaxCodeGeneration;
+import io.recode.decompile.CodeLocationDecompiler;
+import io.recode.classfile.ClassFileReader;
+import io.recode.decompile.Decompiler;
+import io.recode.decompile.impl.CodeLocationDecompilerImpl;
+import io.recode.classfile.impl.ClassFileReaderImpl;
+import io.recode.codegeneration.impl.CodePointerCodeGenerator;
+import io.recode.decompile.impl.DecompilerImpl;
 
 import java.util.concurrent.atomic.AtomicReference;
 

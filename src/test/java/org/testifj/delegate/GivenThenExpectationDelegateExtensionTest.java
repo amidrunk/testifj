@@ -2,11 +2,11 @@ package org.testifj.delegate;
 
 import org.junit.Test;
 import org.testifj.Action;
-import org.testifj.Caller;
+import io.recode.Caller;
 import org.testifj.ServiceContext;
 import org.testifj.ServiceContextImpl;
-import org.testifj.lang.decompile.impl.CodeLocationDecompilerImpl;
-import org.testifj.lang.codegeneration.impl.CodePointerCodeGenerator;
+import io.recode.decompile.impl.CodeLocationDecompilerImpl;
+import io.recode.codegeneration.impl.CodePointerCodeGenerator;
 
 import java.util.Collections;
 

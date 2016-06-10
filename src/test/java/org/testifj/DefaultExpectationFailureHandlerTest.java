@@ -1,8 +1,7 @@
 package org.testifj;
 
-import org.junit.Ignore;
+import io.recode.Caller;
 import org.junit.Test;
-import org.testifj.lang.ClassModelTestUtils;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -122,7 +121,7 @@ public class DefaultExpectationFailureHandlerTest {
         final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
         final int callerStackIndex = 2;
 
-        stackTrace[callerStackIndex] = ClassModelTestUtils.offset(stackTrace[callerStackIndex], offset);
+        stackTrace[callerStackIndex] = TestUtils.offset(stackTrace[callerStackIndex], offset);
 
         return new Caller(Arrays.asList(stackTrace), callerStackIndex);
     }

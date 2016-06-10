@@ -1,6 +1,6 @@
 package org.testifj;
 
-import org.testifj.annotations.DSL;
+import io.recode.annotations.DSL;
 
 /**
  * TODO Should not return true false, but rather a match-result? No... would be cool though, since it would

@@ -1,6 +1,7 @@
 package org.testifj;
 
-import org.testifj.annotations.DSL;
+import io.recode.Caller;
+import io.recode.annotations.DSL;
 import org.testifj.impl.ExpectedExceptionNotThrownImpl;
 import org.testifj.matchers.core.Equal;
 

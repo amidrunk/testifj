@@ -1,20 +1,22 @@
 package org.testifj;
 
-import org.testifj.lang.classfile.ClassFileReader;
-import org.testifj.lang.classfile.impl.ClassFileReaderImpl;
-import org.testifj.lang.decompile.CodeLocationDecompiler;
-import org.testifj.lang.codegeneration.CodeGenerator;
-import org.testifj.lang.decompile.CodePointer;
-import org.testifj.lang.decompile.Decompiler;
-import org.testifj.lang.decompile.impl.CodeLocationDecompilerImpl;
-import org.testifj.lang.codegeneration.impl.CodePointerCodeGenerator;
-import org.testifj.lang.decompile.impl.DecompilerImpl;
-import org.testifj.lang.model.Element;
-import org.testifj.lang.model.ElementType;
-import org.testifj.lang.model.Expression;
-import org.testifj.lang.model.MethodCall;
+import io.recode.Caller;
+import io.recode.classfile.ClassFileReader;
+import io.recode.classfile.impl.ClassFileReaderImpl;
+import io.recode.decompile.CodeLocationDecompiler;
+import io.recode.codegeneration.CodeGenerator;
+import io.recode.decompile.CodePointer;
+import io.recode.decompile.Decompiler;
+import io.recode.decompile.impl.CodeLocationDecompilerImpl;
+import io.recode.codegeneration.impl.CodePointerCodeGenerator;
+import io.recode.decompile.impl.DecompilerImpl;
+import io.recode.model.Element;
+import io.recode.model.ElementType;
+import io.recode.model.Expression;
+import io.recode.model.MethodCall;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -88,12 +90,12 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
                         inverted = true;
                     }
 
-                    procedureDescription = syntaxElementCodeGenerator.describe(codePointer.forElement(expectCall.getParameters().get(0)));
+                    procedureDescription = BasicDescription.from(syntaxElementCodeGenerator.generateCode(codePointer.forElement(expectCall.getParameters().get(0)), StandardCharsets.UTF_8));
                 }
             }
 
             if (procedureDescription == null) {
-                procedureDescription = syntaxElementCodeGenerator.describe(codePointers[0]);
+                procedureDescription = BasicDescription.from(syntaxElementCodeGenerator.generateCode(codePointers[0], StandardCharsets.UTF_8));
             }
 
             return BasicDescription.from("Expected [")
@@ -141,11 +143,11 @@ public final class DefaultExpectationFailureHandler implements ExpectationFailur
             }
         }
 
-        return syntaxElementCodeGenerator.describe(codePointer);
+        return BasicDescription.from(syntaxElementCodeGenerator.generateCode(codePointer, StandardCharsets.UTF_8));
     }
 
     private Description getValueDescription(CodePointer valueExpressionPointer, Optional<Object> optionalValue) {
-        final Description actualValueExpressionDescription = syntaxElementCodeGenerator.describe(valueExpressionPointer);
+        final Description actualValueExpressionDescription = BasicDescription.from(syntaxElementCodeGenerator.generateCode(valueExpressionPointer, StandardCharsets.UTF_8));
 
         if (optionalValue.isPresent()) {
             final Description actualValueDescription = new BasicDescription().appendValue(optionalValue.get());

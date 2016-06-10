@@ -1,7 +1,7 @@
 package org.testifj.impl;
 
 import org.junit.Test;
-import org.testifj.Caller;
+import io.recode.Caller;
 
 import java.util.Arrays;
 

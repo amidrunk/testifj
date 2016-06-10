@@ -2,13 +2,14 @@ package org.testifj.delegate;
 
 import org.testifj.BasicDescription;
 import org.testifj.Description;
-import org.testifj.lang.decompile.CodeLocationDecompiler;
-import org.testifj.lang.decompile.CodePointer;
-import org.testifj.lang.codegeneration.impl.CodePointerCodeGenerator;
-import org.testifj.lang.model.Expression;
-import org.testifj.lang.model.MethodCall;
+import io.recode.decompile.CodeLocationDecompiler;
+import io.recode.decompile.CodePointer;
+import io.recode.codegeneration.impl.CodePointerCodeGenerator;
+import io.recode.model.Expression;
+import io.recode.model.MethodCall;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 public final class GivenThenExpectationDelegateExtension implements ExpectationDelegateExtension<GivenThenExpectation> {
 
@@ -47,13 +48,14 @@ public final class GivenThenExpectationDelegateExtension implements ExpectationD
         final Expression specificationExpression = thenMethodCall.getParameters().get(0);
 
         final CodePointerCodeGenerator codeGenerator = context.get(CodePointerCodeGenerator.class);
-        final Description givenValueDescription = codeGenerator.describe(codePointer.forElement(givenValueExpression));
-        final Description specificationDescription = codeGenerator.describe(codePointer.forElement(specificationExpression));
+        final String givenValueDescription = codeGenerator.generateCode(codePointer.forElement(givenValueExpression), StandardCharsets.UTF_8);
+        final String specificationDescription = codeGenerator.generateCode(codePointer.forElement(specificationExpression), StandardCharsets.UTF_8);
 
+        // TODO Should NOT be static text!
         return BasicDescription
                 .from("Given ")
-                .appendDescription(givenValueDescription)
+                .appendText(givenValueDescription)
                 .appendText(" then ")
-                .appendDescription(specificationDescription);
+                .appendText(specificationDescription);
     }
 }

@@ -1,6 +1,6 @@
 package org.testifj.delegate;
 
-import org.testifj.Caller;
+import io.recode.Caller;
 
 public interface Expectation {
 

@@ -1,7 +1,7 @@
 package org.testifj.integrationtest;
 
 import org.junit.Test;
-import org.testifj.Caller;
+import io.recode.Caller;
 
 import java.util.function.Function;
 import java.util.function.Supplier;

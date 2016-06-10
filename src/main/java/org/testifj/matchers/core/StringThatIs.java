@@ -1,9 +1,8 @@
 package org.testifj.matchers.core;
 
 import org.testifj.Matcher;
-import org.testifj.annotations.DSL;
+import io.recode.annotations.DSL;
 
-import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 
 @DSL

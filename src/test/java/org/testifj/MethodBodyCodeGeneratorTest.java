@@ -1,11 +1,19 @@
 package org.testifj;
 
+import io.recode.classfile.ClassFile;
+import io.recode.classfile.ClassFileResolver;
+import io.recode.classfile.ClassPathClassFileResolver;
+import io.recode.classfile.Method;
+import io.recode.classfile.impl.ClassFileReaderImpl;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.testifj.lang.ClassModelTestUtils;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.function.Supplier;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
 import static org.testifj.Expect.expect;
 
 public class MethodBodyCodeGeneratorTest {
@@ -13,46 +21,55 @@ public class MethodBodyCodeGeneratorTest {
     private final MethodBodyCodeGenerator describer = new MethodBodyCodeGenerator();
 
     @Test
-    public void describeShouldNotAcceptNullMethod() {
-        expect(() -> describer.describe(null)).toThrow(AssertionError.class);
+    public void generateCodeToStringShouldRejectNullMethodOrNullCharset() {
+        expect(() -> describer.generateCode(null, StandardCharsets.UTF_8)).toThrow(AssertionError.class);
+        expect(() -> describer.generateCode(mock(Method.class), (Charset) null)).toThrow(AssertionError.class);
     }
 
     @Test
     public void emptyMethodCanBeDescribed() {
-        expect(descriptionOf("emptyMethod")).toBe("");
+        assertEquals("", descriptionOf("emptyMethod"));
     }
 
     @Test
     public void returnOfConstantCanBeDescribed() {
-        expect(descriptionOf("integerReturn")).toBe("return 1234;");
+        assertEquals("return 1234;", descriptionOf("integerReturn"));
     }
 
     @Test
     public void methodCallCanBeDescribed() {
-        expect(descriptionOf("delegatingMethod")).toBe("emptyMethod();");
+        assertEquals("emptyMethod();", descriptionOf("delegatingMethod"));
     }
 
     @Test
     public void methodCallWithArgumentsCanBeDescribed() {
-        expect(descriptionOf("delegatingMethodWithParametersInCall")).toBe("exampleMethodWithParameters(1, 2);");
+        assertEquals("exampleMethodWithParameters(1, 2);", descriptionOf("delegatingMethodWithParametersInCall"));
     }
 
     @Test
     public void methodWithFieldReferenceInThisCanBeDescribed() {
-        expect(descriptionOf("methodWithFieldReferenceInThis")).toBe("string.toString();");
+        assertEquals("string.toString();", descriptionOf("methodWithFieldReferenceInThis"));
     }
 
     @Test
     @Ignore("Try to fix generics later")
     public void methodWithLambdaCanBeDescribed() {
-        expect(descriptionOf("methodWithLambda")).toBe(
+        assertEquals(
                 "Supplier<String> s = () -> \"foo\";\n" +
-                "s.get();"
-        );
+                        "s.get();"
+                , descriptionOf("methodWithLambda"));
     }
 
     private String descriptionOf(String methodName) {
-        return ClassModelTestUtils.describeMethod(SampleClass.class, methodName).toString();
+        final MethodBodyCodeGenerator codeGenerator = new MethodBodyCodeGenerator();
+        final ClassFileResolver classFileResolver = new ClassPathClassFileResolver(new ClassFileReaderImpl());
+        final ClassFile classFile = classFileResolver.resolveClassFile(SampleClass.class);
+        final Method method = classFile.getMethods().stream()
+                .filter(m -> m.getName().equals(methodName))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Method '" + methodName + "' not found in class " + classFile.getName()));
+
+        return codeGenerator.generateCode(method, StandardCharsets.UTF_8);
     }
 
     public static final class SampleClass {

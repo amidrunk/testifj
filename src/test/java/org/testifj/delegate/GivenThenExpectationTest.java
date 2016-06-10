@@ -2,7 +2,7 @@ package org.testifj.delegate;
 
 import org.junit.Test;
 import org.testifj.Action;
-import org.testifj.Caller;
+import io.recode.Caller;
 
 import java.util.Arrays;
 

@@ -4,8 +4,8 @@ import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.testifj.lang.classfile.ConstantPoolEntry;
-import org.testifj.lang.classfile.impl.DefaultConstantPool;
+import io.recode.classfile.ConstantPoolEntry;
+import io.recode.classfile.impl.DefaultConstantPool;
 
 import java.util.Arrays;
 
@@ -21,7 +21,6 @@ import static org.testifj.matchers.core.CollectionThatIs.collectionOf;
 import static org.testifj.matchers.core.ObjectThatIs.equalTo;
 import static org.testifj.matchers.core.ObjectThatIs.instanceOf;
 import static org.testifj.matchers.core.StringShould.containString;
-import static org.testifj.matchers.core.StringThatIs.stringContaining;
 
 public class ExpectTest {
 

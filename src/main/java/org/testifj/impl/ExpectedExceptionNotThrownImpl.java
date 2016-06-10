@@ -1,6 +1,6 @@
 package org.testifj.impl;
 
-import org.testifj.Caller;
+import io.recode.Caller;
 import org.testifj.ExpectedExceptionNotThrown;
 
 public final class ExpectedExceptionNotThrownImpl implements ExpectedExceptionNotThrown {

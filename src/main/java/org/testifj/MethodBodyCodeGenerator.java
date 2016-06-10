@@ -1,16 +1,16 @@
 package org.testifj;
 
-import org.testifj.lang.classfile.Method;
-import org.testifj.lang.codegeneration.CodeGenerator;
-import org.testifj.lang.decompile.CodePointer;
-import org.testifj.lang.decompile.CodeStream;
-import org.testifj.lang.decompile.Decompiler;
-import org.testifj.lang.codegeneration.impl.CodePointerCodeGenerator;
-import org.testifj.lang.decompile.impl.CodePointerImpl;
-import org.testifj.lang.decompile.impl.DecompilerImpl;
-import org.testifj.lang.decompile.impl.InputStreamCodeStream;
-import org.testifj.lang.model.Element;
-import org.testifj.lang.model.ElementType;
+import io.recode.classfile.Method;
+import io.recode.codegeneration.CodeGenerator;
+import io.recode.decompile.CodePointer;
+import io.recode.decompile.CodeStream;
+import io.recode.decompile.Decompiler;
+import io.recode.codegeneration.impl.CodePointerCodeGenerator;
+import io.recode.decompile.impl.CodePointerImpl;
+import io.recode.decompile.impl.DecompilerImpl;
+import io.recode.decompile.impl.InputStreamCodeStream;
+import io.recode.model.Element;
+import io.recode.model.ElementType;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -57,34 +57,4 @@ public final class MethodBodyCodeGenerator implements CodeGenerator<Method> {
         }
     }
 
-    @Override
-    public Description describe(Method method) {
-        assert method != null : "Method can't be null";
-
-        final StringBuilder buffer = new StringBuilder();
-        final Element[] statements;
-
-        try (CodeStream code = new InputStreamCodeStream(method.getCode().getCode())) {
-            statements = decompiler.parse(method, code);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        for (int i = 0; i < statements.length; i++) {
-            final Element statement = statements[i];
-
-            if (i == statements.length - 1 && statement.getElementType() == ElementType.RETURN) {
-                // Ignore final void-return
-                continue;
-            }
-
-            if (i > 0) {
-                buffer.append("\n");
-            }
-
-            buffer.append(methodElementCodeGenerator.describe(new CodePointerImpl(method, statement))).append(";");
-        }
-
-        return BasicDescription.from(buffer.toString());
-    }
 }

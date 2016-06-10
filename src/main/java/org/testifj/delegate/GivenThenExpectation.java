@@ -1,7 +1,7 @@
 package org.testifj.delegate;
 
 import org.testifj.Action;
-import org.testifj.Caller;
+import io.recode.Caller;
 
 public final class GivenThenExpectation implements Expectation {
 

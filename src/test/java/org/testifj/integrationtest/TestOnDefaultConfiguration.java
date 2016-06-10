@@ -1,18 +1,19 @@
 package org.testifj.integrationtest;
 
-import org.testifj.Caller;
+import io.recode.Caller;
 import org.testifj.Procedure;
-import org.testifj.lang.codegeneration.impl.JavaSyntaxCodeGeneration;
-import org.testifj.lang.decompile.CodeLocationDecompiler;
-import org.testifj.lang.classfile.ClassFileReader;
-import org.testifj.lang.decompile.CodePointer;
-import org.testifj.lang.decompile.Decompiler;
-import org.testifj.lang.decompile.impl.CodeLocationDecompilerImpl;
-import org.testifj.lang.classfile.impl.ClassFileReaderImpl;
-import org.testifj.lang.codegeneration.impl.CodePointerCodeGenerator;
-import org.testifj.lang.decompile.impl.DecompilerImpl;
+import io.recode.codegeneration.impl.JavaSyntaxCodeGeneration;
+import io.recode.decompile.CodeLocationDecompiler;
+import io.recode.classfile.ClassFileReader;
+import io.recode.decompile.CodePointer;
+import io.recode.decompile.Decompiler;
+import io.recode.decompile.impl.CodeLocationDecompilerImpl;
+import io.recode.classfile.impl.ClassFileReaderImpl;
+import io.recode.codegeneration.impl.CodePointerCodeGenerator;
+import io.recode.decompile.impl.DecompilerImpl;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.fail;
 import static org.testifj.Expect.expect;
@@ -49,7 +50,7 @@ public abstract class TestOnDefaultConfiguration {
                     buffer.append("\n");
                 }
 
-                buffer.append(codeGenerator.describe(codePointer));
+                buffer.append(codeGenerator.generateCode(codePointer, StandardCharsets.UTF_8));
             }
 
             fail("One code pointer expected, was: \n" + buffer.toString());
@@ -57,7 +58,7 @@ public abstract class TestOnDefaultConfiguration {
 
         expect(codePointers).toBe(ofLength(1));
 
-        return codeGenerator.describe(codePointers[0]).toString();
+        return codeGenerator.generateCode(codePointers[0], StandardCharsets.UTF_8);
     }
 
     protected String messageOfFailure(Procedure.WithoutException procedure) {

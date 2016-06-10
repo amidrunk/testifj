@@ -2,11 +2,9 @@ package org.testifj.delegate;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.testifj.Caller;
+import io.recode.Caller;
 import org.testifj.Predicate;
 import org.testifj.ServiceContext;
-
-import java.util.Arrays;
 
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;

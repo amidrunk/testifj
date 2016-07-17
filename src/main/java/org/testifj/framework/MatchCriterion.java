@@ -13,7 +13,7 @@ public class MatchCriterion implements Criterion {
 
     @Override
     @SuppressWarnings("unchecked")
-    public VerificationResult verify(Expectation expectation) {
+    public VerificationResult verify(Expectation<?> expectation) {
         assert expectation != null : "expectation can't be null";
 
         if (!(expectation instanceof ValueExpectation)) {

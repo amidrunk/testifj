@@ -2,6 +2,7 @@ package org.testifj.matchers.core;
 
 import org.testifj.Matcher;
 import io.recode.annotations.DSL;
+import org.testifj.framework.Criterion;
 
 @DSL
 public final class ObjectThatIs {

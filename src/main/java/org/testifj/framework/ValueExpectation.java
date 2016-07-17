@@ -24,7 +24,7 @@ public class ValueExpectation implements Expectation<Object> {
 
     @Override
     public Object getSubject() {
-        return null;
+        return subject;
     }
 
     /**
@@ -34,17 +34,17 @@ public class ValueExpectation implements Expectation<Object> {
      * @return The expected value, if available or an empty optional otherwise.
      */
     public Optional<Object> getExpectedValue() {
-        return null;
+        return Optional.ofNullable(expectedValue);
     }
 
     @Override
     public ExpectationReference getExpectationReference() {
-        return null;
+        return expectationReference;
     }
 
     @Override
     public Criterion getCriterion() {
-        return null;
+        return criterion;
     }
 
     public static Builder builder() {

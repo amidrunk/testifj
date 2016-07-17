@@ -20,6 +20,31 @@ public final class CollectionThatIs {
     }
 
     @SafeVarargs
+    public static <E, C extends Collection<E>> Matcher<C> containing(Matcher<E> ... matchers) {
+        assert matchers != null : "matchers can't be null";
+
+        return value -> {
+            if (value == null) {
+                return false;
+            }
+
+            for (final Matcher<E> matcher : matchers) {
+                boolean matched = false;
+
+                for (final Iterator<E> i = value.iterator(); i.hasNext() && !matched; ) {
+                    matched = matcher.matches(i.next());
+                }
+
+                if (!matched) {
+                    return false;
+                }
+            }
+
+            return true;
+        };
+    }
+
+    @SafeVarargs
     public static <E, T extends Collection<? extends E>> Matcher<T> collectionWithElements(Matcher<E>... matchers) {
         assert matchers != null : "Matchers can't be null";
 

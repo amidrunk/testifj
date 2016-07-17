@@ -1,9 +1,11 @@
 package org.testifj.matchers.core;
 
+import io.recode.annotations.DSL;
 import org.testifj.Matcher;
 
 import java.util.Objects;
 
+@DSL
 public final class ArrayThatIs {
 
     public static <T> Matcher<T[]> ofLength(int length) {

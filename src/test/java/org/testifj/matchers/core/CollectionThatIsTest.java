@@ -8,6 +8,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -120,4 +122,19 @@ public class CollectionThatIsTest {
         expect(ofSize(3).matches(Arrays.asList("foo", "bar", "baz"))).toBe(true);
     }
 
+    @Test
+    public void containingMatcherShouldMatchCollectionThatContainsElements() {
+        final Matcher<Collection<String>> matcher = CollectionThatIs.containing(
+                ObjectThatIs.equalTo("foo"),
+                ObjectThatIs.equalTo("bar")
+        );
+
+        assertTrue(matcher.matches(Arrays.asList("foo", "bar")));
+        assertTrue(matcher.matches(Arrays.asList("bar", "foo")));
+        assertTrue(matcher.matches(Arrays.asList("bar", "foo", "baz")));
+        assertTrue(matcher.matches(Arrays.asList("baz", "bar", "foo")));
+        assertFalse(matcher.matches(Arrays.asList("foo", "baz")));
+        assertFalse(matcher.matches(Arrays.asList("bar", "baz")));
+        assertFalse(matcher.matches(Collections.emptyList()));
+    }
 }

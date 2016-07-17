@@ -4,6 +4,8 @@ import org.junit.Test;
 
 import java.util.Optional;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.testifj.Expect.expect;
 import static org.testifj.matchers.core.OptionalThatIs.present;
 
@@ -54,6 +56,12 @@ public class OptionalThatIsTest {
     @Test
     public void optionalOfMatcherShouldNotMatchNull() {
         expect(OptionalThatIs.optionalOf("foo").matches(null)).toBe(false);
+    }
+
+    @Test
+    public void emptyMatcherShouldOnlyMatchEmptyOptional() {
+        assertTrue(OptionalThatIs.empty().matches(Optional.empty()));
+        assertFalse(OptionalThatIs.empty().matches(Optional.of("foo")));
     }
 
 }

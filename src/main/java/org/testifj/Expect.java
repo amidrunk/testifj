@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 @DSL
+@Deprecated
 @SuppressWarnings("unchecked")
 public final class Expect {
 

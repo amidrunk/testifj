@@ -12,7 +12,7 @@ package org.testifj.framework;
  * gone wrong when validating a criterion.
  * </p>
  */
-public interface Expectation<T> {
+public interface Expectation<T> extends CastSuffix<Expectation<T>> {
 
     /**
      * Returns the subject of the expectation. When performing an expectation on a value, this is typically

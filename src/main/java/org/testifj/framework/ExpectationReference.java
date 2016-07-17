@@ -1,4 +1,4 @@
 package org.testifj.framework;
 
-public interface ExpectationReference {
+public interface ExpectationReference extends CastSuffix<ExpectationReference> {
 }

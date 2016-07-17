@@ -40,6 +40,6 @@ public class ValueExpectationTest {
         assertEquals(criterion, expectation.getCriterion());
         assertEquals(expectationReference, expectation.getExpectationReference());
         assertEquals("foo", expectation.getSubject());
-        assertEquals(Optional.of("bar"), expectation.getExpectedValue().isPresent());
+        assertEquals(Optional.of("bar"), expectation.getExpectedValue());
     }
 }

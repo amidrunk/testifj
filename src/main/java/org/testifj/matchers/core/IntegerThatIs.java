@@ -1,7 +1,9 @@
 package org.testifj.matchers.core;
 
+import io.recode.annotations.DSL;
 import org.testifj.Matcher;
 
+@DSL
 public class IntegerThatIs {
 
     public static Matcher<Integer> negative() {

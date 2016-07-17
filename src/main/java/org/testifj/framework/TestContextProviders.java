@@ -51,4 +51,14 @@ public class TestContextProviders {
 
         return DEFAULT_TEST_CONTEXT_PROVIDER.get();
     }
+
+    public static TestContextProviderOverride overrideTestContextProvider(TestContextProvider newProvider) {
+        final TestContextProvider originalProvider = DEFAULT_TEST_CONTEXT_PROVIDER.getAndSet(newProvider);
+        return () -> DEFAULT_TEST_CONTEXT_PROVIDER.set(originalProvider);
+    }
+
+    public interface TestContextProviderOverride {
+
+        void restore();
+    }
 }

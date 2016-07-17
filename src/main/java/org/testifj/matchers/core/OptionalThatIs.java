@@ -12,6 +12,10 @@ public final class OptionalThatIs {
         return Optional<T>::isPresent;
     }
 
+    public static <T> Matcher<Optional<T>> empty() {
+        return o -> !o.isPresent();
+    }
+
     public static <T> Matcher<Optional<T>> optionalOf(T instance) {
         assert instance != null : "Instance can't be null";
 

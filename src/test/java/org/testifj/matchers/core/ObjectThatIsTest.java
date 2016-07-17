@@ -87,4 +87,5 @@ public class ObjectThatIsTest {
         expect(() -> ObjectThatIs.instanceOf(String.class).thatIs(null)).toThrow(AssertionError.class);
     }
 
+
 }

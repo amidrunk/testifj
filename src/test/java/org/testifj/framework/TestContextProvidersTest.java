@@ -1,12 +1,15 @@
 package org.testifj.framework;
 
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.testifj.RecordingTestContextProvider;
 
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 public class TestContextProvidersTest {
 
@@ -23,5 +26,18 @@ public class TestContextProvidersTest {
         final TestContextProvider provider = TestContextProviders.configuredTestContextProvider();
 
         assertTrue(provider instanceof RecordingTestContextProvider);
+    }
+
+    @Test
+    public void itShouldBePossibleToOverrideAndRestoreTestContextProvider() {
+        final TestContextProvider newProvider = mock(TestContextProvider.class);
+        final TestContextProvider originalProvider = TestContextProviders.configuredTestContextProvider();
+        final TestContextProviders.TestContextProviderOverride override = TestContextProviders.overrideTestContextProvider(newProvider);
+
+        assertSame(newProvider, TestContextProviders.configuredTestContextProvider());
+
+        override.restore();
+
+        assertSame(originalProvider, TestContextProviders.configuredTestContextProvider());
     }
 }
